@@ -29,7 +29,7 @@ from fpdf import FPDF
 import io
 
 app = Flask(__name__)
-app.secret_key = "super-secret-key"
+app.secret_key = os.environ.get("FLASK_SECRET_KEY", "super-secret-key-fallback")
 
 # PROXY FIX: Trust headers from Render/Heroku/AWS (X-Forwarded-Proto)
 from werkzeug.middleware.proxy_fix import ProxyFix
@@ -183,10 +183,10 @@ def get_db():
 
 # ---------- SUPER ADMIN AUTO-CREATION ----------
 SEED_ADMINS = [
-    {"name": "ADULA MAHENDHAR", "email": "yadavmahendhar65@gmail.com", "password": "Mahi@2004"},
-    {"name": "MOHAMMED YASEEN", "email": "yaseenashu18@gmail.com", "password": "Ysn@1874"},
-    {"name": "MILKURI VAMSHI KRISHNA", "email": "krishnapatel000813@gmail.com", "password": "White666@2005"},
-    {"name": "BURRA RIKSHITH", "email": "burrarikshith@gmail.com", "password": "Bikky@0027"}
+    {"name": "ADULA MAHENDHAR", "email": "yadavmahendhar65@gmail.com", "password": "Placeholder123!"},
+    {"name": "MOHAMMED YASEEN", "email": "yaseenashu18@gmail.com", "password": "Placeholder123!"},
+    {"name": "MILKURI VAMSHI KRISHNA", "email": "krishnapatel000813@gmail.com", "password": "Placeholder123!"},
+    {"name": "BURRA RIKSHITH", "email": "burrarikshith@gmail.com", "password": "Placeholder123!"}
 ]
 
 def init_super_admin():
