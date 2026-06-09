@@ -2,7 +2,7 @@
 
 Foundify is an intelligent, automated Lost & Found platform designed specifically for college campuses and large communities. It leverages AI-based image matching (using Computer Vision) to automatically pair reported lost items with found items, significantly reducing the manual effort of recovering lost valuables.
 
-## 🚀 Key Features
+## Key Features
 
 *   **AI-Powered Image Matching**: Uses OpenCV and Spacy for NLP to cross-reference images and descriptions, providing a confidence score for potential matches.
 *   **Distinct User Roles**:
@@ -12,7 +12,7 @@ Foundify is an intelligent, automated Lost & Found platform designed specificall
 *   **Real-time Chat**: Integrated `flask-socketio` for live, secure messaging between users who have successfully matched items.
 *   **Secure Authentication**: Includes Google OAuth integration, standard email/password login, and password recovery via secure email links.
 
-## 🛠️ Technology Stack
+##  Technology Stack
 
 *   **Backend**: Python, Flask, Flask-SocketIO
 *   **Database**: MongoDB (Atlas) + GridFS for image storage
@@ -20,7 +20,7 @@ Foundify is an intelligent, automated Lost & Found platform designed specificall
 *   **AI/ML**: OpenCV (image processing), SpaCy (text matching), Pillow-HEIF
 *   **Deployment**: Ready for Render/Heroku (Gunicorn, Eventlet)
 
-## 💻 Local Setup Instructions
+##  Local Setup Instructions
 
 1.  **Clone the Repository**
     ```bash
@@ -59,12 +59,12 @@ Foundify is an intelligent, automated Lost & Found platform designed specificall
     ```
     The application will start with SocketIO support on `http://127.0.0.1:5000`.
 
-## 🌍 Deployment
+##  Deployment
 
 The application is fully configured for cloud deployment on platforms like **Render** or **Heroku**:
 *   A `Procfile` is included (`web: gunicorn --worker-class eventlet -w 1 app:app`).
 *   `app.py` dynamically binds to the port provided by the host environment.
 *   Ensure all `.env` variables are added to your hosting provider's Environment Secrets panel.
 
-## 👨‍💻 Contributing
+##  Contributing
 This project is built by DevSquad. Contributions, issues, and feature requests are welcome!
