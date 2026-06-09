@@ -10,3 +10,7 @@ numpy
 spacy
 pillow
 pillow-heif
+gunicorn
+eventlet
+flask-socketio
+python-dotenv

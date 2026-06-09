@@ -41,9 +41,10 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USERNAME'] = 'burrarikshith@gmail.com' # REPLACE WITH YOUR EMAIL
-app.config['MAIL_PASSWORD'] = 'jjef uhoe avwu rfjn'    # REPLACE WITH YOUR APP PASSWORD
-app.config['MAIL_DEFAULT_SENDER'] = 'burrarikshith@gmail.com'
+app.config['MAIL_USERNAME'] = os.environ.get("MAIL_USERNAME", 'burrarikshith@gmail.com')
+app.config['MAIL_PASSWORD'] = os.environ.get("MAIL_PASSWORD", 'jjef uhoe avwu rfjn')
+app.config['MAIL_DEFAULT_SENDER'] = os.environ.get("MAIL_USERNAME", 'burrarikshith@gmail.com')
+
 
 mail = Mail(app)
 serializer = URLSafeTimedSerializer(app.secret_key)
@@ -138,8 +139,9 @@ def uploaded_file(filename):
     return send_from_directory('uploads', filename)
 
 # ---------- MONGODB CONNECTION ----------
-MONGO_URI = "mongodb+srv://devsquaddatabase:DEVSQUAD@devsquad239.jdlqcko.mongodb.net/?appName=devsquad239"
-DB_NAME = "lost_found_ai"
+MONGO_URI = os.environ.get("MONGO_URI", "mongodb+srv://devsquaddatabase:DEVSQUAD@devsquad239.jdlqcko.mongodb.net/?appName=devsquad239")
+DB_NAME = os.environ.get("DB_NAME", "lost_found_ai")
+
 
 import certifi
 
@@ -268,6 +270,8 @@ def serve_db_upload(file_id):
     except Exception as e:
         print(f"Error serving DB image: {e}")
         return send_from_directory('static', 'images/default_item.png')
+
+@app.route("/")
 def index():
     if "user_id" in session:
         db = get_db()
@@ -442,6 +446,9 @@ def google_login():
 def google_callback():
     # Get Authorization Code
     code = request.args.get("code")
+    if not code:
+        flash("Google sign-in failed: missing authorization code.", "error")
+        return redirect("/login")
     
     # Find Token Endpoint
     google_provider_cfg = get_google_provider_cfg()
@@ -457,12 +464,29 @@ def google_callback():
             "client_secret": GOOGLE_CLIENT_SECRET,
             "redirect_uri": url_for("google_callback", _external=True),
             "grant_type": "authorization_code"
-        }
+        },
+        timeout=15
     )
+    if token_response.status_code != 200:
+        flash("Google sign-in failed while fetching token. Please try again.", "error")
+        return redirect("/login")
     
     # Parse User Info
     userinfo_endpoint = google_provider_cfg["userinfo_endpoint"]
-    userinfo_response = requests.get(userinfo_endpoint, headers={"Authorization": f"Bearer {token_response.json()['access_token']}"})
+    token_json = token_response.json()
+    access_token = token_json.get("access_token")
+    if not access_token:
+        flash("Google sign-in failed: access token missing.", "error")
+        return redirect("/login")
+
+    userinfo_response = requests.get(
+        userinfo_endpoint,
+        headers={"Authorization": f"Bearer {access_token}"},
+        timeout=15
+    )
+    if userinfo_response.status_code != 200:
+        flash("Google sign-in failed while fetching user profile.", "error")
+        return redirect("/login")
     
     if userinfo_response.json().get("email_verified"):
         unique_id = userinfo_response.json()["sub"]
@@ -471,6 +495,9 @@ def google_callback():
         
         # Logic: Login or Register
         db = get_db()
+        if db is None:
+            flash("Database is currently unavailable. Please try again shortly.", "error")
+            return redirect("/login")
         user = db.users.find_one({"email": users_email})
         
         if not user:
@@ -545,11 +572,23 @@ def user_profile():
         return redirect("/user/dashboard")
 
     user = db.users.find_one({"_id": ObjectId(user_id)})
+    
+    # Calculate Stats
+    found_count = db.found_items.count_documents({"user_id": ObjectId(user_id)})
+    lost_count = db.lost_items.count_documents({"user_id": ObjectId(user_id)})
+    
+    # People Helped (Count of resolved/matched found items by this user)
+    helped_count = db.found_items.count_documents({
+        "user_id": ObjectId(user_id),
+        "status": {"$in": ["matched", "resolved"]}
+    })
+    
     # Add id alias for templates expecting 'id' or '_id'
     if user:
         user['id'] = str(user['_id'])
         
-    return render_template("user_profile.html", user=user)
+    return render_template("user_profile.html", user=user, found_count=found_count, lost_count=lost_count, helped_count=helped_count)
+
 
 # ---------- USER DASHBOARD ----------
 @app.route("/user/dashboard")
@@ -562,53 +601,106 @@ def user_dashboard():
         flash("System unavailable. Please try again later.", "error")
         return redirect("/login")
 
-    user = db.users.find_one({"_id": ObjectId(session["user_id"])})
+    user_id = session["user_id"]
+    user = db.users.find_one({"_id": ObjectId(user_id)})
     if user:
         user['id'] = str(user['_id'])
 
-    # LEADERBOARD LOGIC
-    # aggregated counts of 'matched' or 'resolved' found items
+    # USER STATS
+    found_count = db.found_items.count_documents({"user_id": ObjectId(user_id)})
+    lost_count = db.lost_items.count_documents({"user_id": ObjectId(user_id)})
+    helped_count = db.found_items.count_documents({"user_id": ObjectId(user_id), "status": {"$in": ["matched", "resolved"]}})
+    
+    resolution_rate = int((helped_count / found_count) * 100) if found_count > 0 else 0
+    community_points = (helped_count * 50) + (found_count * 10) + (lost_count * 5)
+
+    # LEADERBOARD LOGIC (Community Heroes)
     pipeline = [
         {"$match": {"status": {"$in": ["matched", "resolved"]}}},
         {"$group": {"_id": "$user_id", "count": {"$sum": 1}}},
         {"$sort": {"count": -1}},
-        {"$limit": 5}
+        {"$limit": 3}
     ]
     formatted_leaderboard = []
-    
     try:
         leaderboard_data = list(db.found_items.aggregate(pipeline))
-        
         for entry in leaderboard_data:
-            finder = db.users.find_one({"_id": entry["_id"]})
-            if finder:
+            hero = db.users.find_one({"_id": entry["_id"]})
+            if hero:
                 formatted_leaderboard.append({
-                    "name": finder["name"],
+                    "name": hero["name"],
                     "count": entry["count"],
-                    "photo": finder.get("profile_photo")
+                    "photo": hero.get("profile_photo")
                 })
     except Exception as e:
         print(f"Leaderboard Error: {e}")
 
-    # RECENT ACTIVITY LOGIC
+    # RECENT ACTIVITY LOGIC (System-wide)
     recent_activity = []
     try:
-        # Get last 3 resolved/matched items to show hope
-        recent_found = list(db.found_items.find({"status": {"$in": ["matched", "resolved"]}}).sort("_id", -1).limit(3))
-        for item in recent_found:
-             finder = db.users.find_one({"_id": item["user_id"]})
-             recent_activity.append({
-                 "item": item["item_name"],
-                 "finder": finder["name"] if finder else "A Helper",
-                 "finder_photo": finder.get("profile_photo") if finder else None,
-                 "status": item["status"],
-                 "image": item.get("image_path"),
-                 "time": item.get("created_at", datetime.datetime.utcnow()).strftime("%d %b")
-             })
+        recent_f = list(db.found_items.find().sort("created_at", -1).limit(5))
+        recent_l = list(db.lost_items.find().sort("created_at", -1).limit(5))
+        
+        combined = []
+        for item in recent_f:
+            item['type'] = 'FOUND'
+            combined.append(item)
+        for item in recent_l:
+            item['type'] = 'LOST'
+            combined.append(item)
+            
+        combined.sort(key=lambda x: x.get('created_at', datetime.datetime.min), reverse=True)
+        
+        def time_ago(dt):
+            if not dt: return "Just now"
+            diff = datetime.datetime.utcnow() - dt
+            if diff.days > 0: return f"{diff.days} days ago"
+            hours = diff.seconds // 3600
+            if hours > 0: return f"{hours} hours ago"
+            mins = diff.seconds // 60
+            return f"{mins} mins ago" if mins > 0 else "Just now"
+            
+        for item in combined[:3]:
+            reporter = db.users.find_one({"_id": item["user_id"]})
+            reporter_name = reporter["name"] if reporter else "Anonymous"
+            recent_activity.append({
+                "type": item["type"],
+                "item": item["item_name"],
+                "location": item.get("location", "Unknown Location"),
+                "reporter": reporter_name,
+                "time_ago": time_ago(item.get("created_at")),
+                "image": item.get("image_path")
+            })
     except Exception as e:
         print(f"Activity Error: {e}")
 
-    return render_template("user_dashboard.html", user=user, leaderboard=formatted_leaderboard, recent_activity=recent_activity)
+    # NEARBY ITEMS LOGIC (System-wide pending found items)
+    nearby_items = []
+    try:
+        pending_found = list(db.found_items.find({"status": "pending"}).sort("created_at", -1).limit(3))
+        # Add dummy distances for UI display
+        distances = ["0.5 km", "0.8 km", "1.2 km"]
+        for i, item in enumerate(pending_found):
+            nearby_items.append({
+                "item": item["item_name"],
+                "distance": distances[i % len(distances)],
+                "image": item.get("image_path")
+            })
+    except Exception as e:
+        print(f"Nearby Error: {e}")
+
+    return render_template(
+        "user_dashboard.html", 
+        user=user, 
+        found_count=found_count,
+        lost_count=lost_count,
+        helped_count=helped_count,
+        resolution_rate=resolution_rate,
+        community_points=community_points,
+        leaderboard=formatted_leaderboard, 
+        recent_activity=recent_activity,
+        nearby_items=nearby_items
+    )
 
 # ---------- USER HISTORY ----------
 @app.route("/user/history")
@@ -1560,6 +1652,9 @@ def on_send_message(data):
     }, room=room)
 
 if __name__ == "__main__":
-    # Use socketio.run instead of app.run for better stability on Windows
-    print("Starting Foundify with SocketIO...")
-    socketio.run(app, debug=True, allow_unsafe_werkzeug=True)
+    # Get port from environment for deployment (e.g., Render/Heroku)
+    port = int(os.environ.get("PORT", 5000))
+    debug_mode = os.environ.get("FLASK_DEBUG", "True").lower() == "true"
+    
+    print(f"Starting Foundify with SocketIO on port {port} (Debug: {debug_mode})...")
+    socketio.run(app, host="0.0.0.0", port=port, debug=debug_mode, allow_unsafe_werkzeug=True)

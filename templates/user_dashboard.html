@@ -1,257 +1,416 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="en" class="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard // Foundify</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/memories.css') }}">
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <style>
-        /* STATIC CARD (No Animation, No Gradient) */
-        .paper-card-static {
-            background: white;
-            border-radius: var(--radius-soft);
-            padding: 2rem;
-            box-shadow: var(--shadow-soft);
-            border: 1px solid rgba(0, 0, 0, 0.02);
-            position: relative;
-            overflow: hidden;
-            transition: none !important;
-            transform: none !important;
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#D45D1C",
+                        primaryLight: "#FFF0E8",
+                        secondary: "#006B56",
+                        secondaryLight: "#E8F5F2",
+                        textDark: "#191C1D",
+                        textMuted: "#889096",
+                        bgLight: "#F8F9FA",
+                    },
+                    fontFamily: {
+                        sans: ["Plus Jakarta Sans", "sans-serif"],
+                    }
+                }
+            }
         }
+    </script>
+    <style>
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .icon-fill { font-variation-settings: 'FILL' 1; }
+        body { background-color: #FAFAFA; color: #191C1D; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
     </style>
 </head>
-
-<body class="layout-compact">
+<body class="flex min-h-screen overflow-hidden">
     {% include 'loader.html' %}
 
     <!-- SIDEBAR -->
-    <aside class="sidebar" style="height: 100vh;">
-        <div style="margin-bottom: 2rem;">
-            <img src="/uploads/foundify_logo.png" alt="Foundify" style="height: 36px;">
-            <div
-                style="font-weight: 700; font-size: 1.1rem; display: inline-block; vertical-align: middle; margin-left: 0.5rem;">
-                Foundify</div>
+    <aside class="w-64 bg-white border-r border-gray-100 flex flex-col h-screen flex-shrink-0 z-20 hidden md:flex">
+        <!-- Logo -->
+        <div class="px-6 py-6">
+            <h1 class="text-2xl font-bold text-primary tracking-tight">Foundify</h1>
+        </div>
+        
+        <!-- User Profile Card -->
+        <div class="px-6 mb-6 flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-primaryLight text-primary flex items-center justify-center font-bold text-lg border border-primary/20 shrink-0">
+                {% if user.profile_photo %}
+                    <img src="/{{ user.profile_photo }}" class="w-full h-full rounded-full object-cover">
+                {% else %}
+                    {{ user.name[0] | upper }}
+                {% endif %}
+            </div>
+            <div class="overflow-hidden">
+                <h3 class="text-sm font-bold text-textDark truncate">Hello, {{ user.name.split(' ')[0] }}</h3>
+                <p class="text-[10px] text-textMuted font-medium">Foundify Member</p>
+            </div>
         </div>
 
-        <nav>
-            <a href="/user/dashboard" class="sidebar-link active">
-                <span class="material-icons">dashboard</span> Dashboard
+        <!-- Navigation -->
+        <nav class="flex-1 overflow-y-auto hide-scrollbar px-4 space-y-1">
+            <a href="/user/dashboard" class="flex items-center gap-3 px-4 py-3 bg-primaryLight text-primary rounded-xl font-semibold text-sm transition-colors">
+                <span class="material-symbols-outlined icon-fill">dashboard</span> Dashboard
             </a>
-            <a href="/user/report-lost" class="sidebar-link">
-                <span class="material-icons">search_off</span> I Lost Something
+            <a href="/user/report-lost" class="flex items-center gap-3 px-4 py-3 text-textMuted hover:bg-gray-50 hover:text-textDark rounded-xl font-medium text-sm transition-colors">
+                <span class="material-symbols-outlined">search_off</span> I Lost Something
             </a>
-            <a href="/user/report-found" class="sidebar-link">
-                <span class="material-icons">volunteer_activism</span> I Found Something
+            <a href="/user/report-found" class="flex items-center gap-3 px-4 py-3 text-textMuted hover:bg-gray-50 hover:text-textDark rounded-xl font-medium text-sm transition-colors">
+                <span class="material-symbols-outlined">volunteer_activism</span> I Found Something
             </a>
-            <a href="/user/chats" class="sidebar-link">
-                <span class="material-icons">mark_email_unread</span> Messages
+            <a href="/user/chats" class="flex items-center gap-3 px-4 py-3 text-textMuted hover:bg-gray-50 hover:text-textDark rounded-xl font-medium text-sm transition-colors">
+                <span class="material-symbols-outlined">mail</span> Messages
             </a>
-            <a href="/user/history" class="sidebar-link">
-                <span class="material-icons">history_edu</span> History
+            <a href="/user/history" class="flex items-center gap-3 px-4 py-3 text-textMuted hover:bg-gray-50 hover:text-textDark rounded-xl font-medium text-sm transition-colors">
+                <span class="material-symbols-outlined">history</span> History
             </a>
-            <!-- Removed 'Your Account' link from sidebar as per user preference for top-right access -->
+            <a href="/user/profile" class="flex items-center gap-3 px-4 py-3 text-textMuted hover:bg-gray-50 hover:text-textDark rounded-xl font-medium text-sm transition-colors">
+                <span class="material-symbols-outlined">person</span> My Activity
+            </a>
+            <a href="#" class="flex items-center gap-3 px-4 py-3 text-textMuted hover:bg-gray-50 hover:text-textDark rounded-xl font-medium text-sm transition-colors">
+                <span class="material-symbols-outlined">bookmark</span> Saved Items
+            </a>
+            <a href="#" class="flex items-center gap-3 px-4 py-3 text-textMuted hover:bg-gray-50 hover:text-textDark rounded-xl font-medium text-sm transition-colors">
+                <span class="material-symbols-outlined">groups</span> Community
+            </a>
+            <a href="#" class="flex items-center gap-3 px-4 py-3 text-textMuted hover:bg-gray-50 hover:text-textDark rounded-xl font-medium text-sm transition-colors">
+                <span class="material-symbols-outlined">settings</span> Settings
+            </a>
         </nav>
 
-        <div style="margin-top: auto;">
-            <a href="/logout" class="sidebar-link" style="color: var(--accent-rose);">
-                <span class="material-icons">logout</span> Logout
+        <!-- Actions -->
+        <div class="p-4 mt-auto">
+            <a href="/user/report-lost" class="w-full bg-primary hover:bg-primary/90 text-white rounded-full py-3 px-4 flex items-center justify-center gap-2 font-bold text-sm shadow-md transition-all">
+                <span class="material-symbols-outlined text-xl">add_circle</span> Report New Item
+            </a>
+            <a href="/logout" class="mt-4 flex items-center gap-3 px-4 py-2 text-red-500 hover:bg-red-50 rounded-xl font-bold text-sm transition-colors w-max">
+                <span class="material-symbols-outlined">logout</span> Logout
             </a>
         </div>
     </aside>
 
     <!-- MAIN CONTENT -->
-    <main class="main-with-sidebar">
-
-        <!-- Header -->
-        <header
-            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-shrink: 0;">
-            <div>
-                <h1 style="margin-bottom: 0.2rem; font-size: 1.8rem;">Hello, <span class="highlight-peach">{{ user.name
-                        }}</span></h1>
-                <p style="color: var(--text-pencil); font-size: 0.9rem;">Ready to help the community today?</p>
+    <main class="flex-1 flex flex-col h-screen overflow-hidden bg-[#FAFAFA]">
+        
+        <!-- TOP APP BAR -->
+        <header class="h-20 bg-white/80 backdrop-blur-md border-b border-gray-100 flex items-center justify-between px-8 z-10">
+            <div class="relative w-96">
+                <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">search</span>
+                <input type="text" placeholder="Search for items, locations..." class="w-full bg-gray-50 border-none rounded-full py-3 pl-12 pr-4 text-sm focus:ring-1 focus:ring-primary outline-none text-textDark placeholder-gray-400">
             </div>
-
-            <div style="display: flex; gap: 1rem; align-items: center;">
-                <div
-                    style="background: white; padding: 0.5rem 1rem; border-radius: var(--radius-round); box-shadow: var(--shadow-soft); font-size: 0.9rem;">
-                    <span class="material-icons"
-                        style="vertical-align: middle; color: var(--accent-mint); font-size: 1.2rem;">energy_savings_leaf</span>
-                    <span style="font-weight: 700;">{{ leaderboard|length }}</span> Helpers
-                </div>
-
-                <!-- PROFILE LINK (Top Right "Letter") -->
-                <a href="/user/profile" style="text-decoration: none;">
+            
+            <div class="flex items-center gap-6">
+                <button class="relative text-textMuted hover:text-textDark transition-colors">
+                    <span class="material-symbols-outlined">notifications</span>
+                    <span class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white">3</span>
+                </button>
+                <button class="relative text-textMuted hover:text-textDark transition-colors">
+                    <span class="material-symbols-outlined">chat_bubble</span>
+                    <span class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white">1</span>
+                </button>
+                <div class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm shadow-sm cursor-pointer border-2 border-white">
                     {% if user.profile_photo %}
-                    <img src="/{{ user.profile_photo }}"
-                        style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid white; box-shadow: var(--shadow-soft);">
+                        <img src="/{{ user.profile_photo }}" class="w-full h-full rounded-full object-cover">
                     {% else %}
-                    <div
-                        style="width: 40px; height: 40px; background: var(--accent-peach); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; border: 2px solid white; box-shadow: var(--shadow-soft);">
-                        {{ user.name[0] }}
-                    </div>
+                        {{ user.name[0] | upper }}
                     {% endif %}
-                </a>
+                </div>
             </div>
         </header>
 
-        <!-- DASHBOARD CONTENT (Leaderboard Removed) -->
-        <div style="flex: 1; min-height: 0; display: flex; flex-direction: column;">
-
-            <div class="scroll-panel" style="display: flex; flex-direction: column; gap: 1rem; height: 100%;">
-                <div style="display: flex; flex-direction: column; gap: 1.5rem;">
-
-                    <a href="/user/report-lost" class="paper-card-static"
-                        style="text-decoration: none; display: flex; flex-direction: column; align-items: flex-start; border-left: 6px solid var(--accent-rose); text-align: left; padding: 1.5rem; gap: 1rem;">
-                        <div style="display: flex; align-items: center; gap: 1rem;">
-                            <div
-                                style="background: rgba(255, 107, 107, 0.1); width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                                <span class="material-icons"
-                                    style="font-size: 1.8rem; color: var(--accent-rose);">search_off</span>
-                            </div>
-                            <div>
-                                <h2 style="margin: 0; font-size: 1.2rem; color: var(--text-ink);">Report Loss</h2>
-                                <p style="color: var(--text-pencil); font-size: 0.9rem; margin: 0;">Create a missing
-                                    item poster.</p>
-                            </div>
-                        </div>
-
-                        <div class="btn-hope btn-primary"
-                            style="width: 100%; font-size: 0.9rem; margin-top: 0.5rem; min-height: 48px;">Lost
-                            Something?
-                        </div>
-                    </a>
-
-                    <a href="/user/report-found" class="paper-card-static"
-                        style="text-decoration: none; display: flex; flex-direction: column; align-items: flex-start; border-left: 6px solid var(--accent-mint); text-align: left; padding: 1.5rem; gap: 1rem;">
-                        <div style="display: flex; align-items: center; gap: 1rem;">
-                            <div
-                                style="background: rgba(29, 209, 161, 0.1); width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                                <span class="material-icons"
-                                    style="font-size: 1.8rem; color: var(--accent-mint);">travel_explore</span>
-                            </div>
-                            <div>
-                                <h2 style="margin: 0; font-size: 1.2rem; color: var(--text-ink);">Report Find</h2>
-                                <p style="color: var(--text-pencil); font-size: 0.9rem; margin: 0;">Log an item you’ve
-                                    found.</p>
-                            </div>
-                        </div>
-
-                        <div class="btn-hope btn-primary"
-                            style="width: 100%; font-size: 0.9rem; background: var(--accent-mint); margin-top: 0.5rem; min-height: 48px;">
-                            Found Something?</div>
-                    </a>
-
-                </div>
-
-            </div>
-
-            <!-- NEW: Premium Top Heroes -->
-            <div style="margin-top: 2rem;">
-                <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1rem;">
-                    <h3 style="font-size: 1.2rem; color: var(--text-main); margin: 0;">Top Heroes</h3>
-                    <div style="font-size: 0.85rem; color: var(--text-pencil); font-style: italic;">
-                        Join the Hall of Fame by returning lost items!
+        <!-- DASHBOARD SCROLL AREA -->
+        <div class="flex-1 overflow-y-auto hide-scrollbar p-8">
+            <div class="max-w-6xl mx-auto space-y-8">
+                
+                <!-- HERO SECTION -->
+                <div class="flex justify-between items-end relative pb-4">
+                    <div>
+                        <h2 class="text-4xl font-extrabold tracking-tight text-textDark mb-2">Hello, <span class="text-primary">{{ user.name.split(' ')[0] }}</span></h2>
+                        <p class="text-textMuted font-medium text-sm">Welcome back! We've found <span class="text-secondary font-bold">community strength</span> in your activity today.</p>
+                    </div>
+                    <!-- Decorative Hands (Using a generic illustration placeholder for now) -->
+                    <div class="absolute right-0 bottom-0 opacity-20 pointer-events-none md:block hidden">
+                        <span class="material-symbols-outlined" style="font-size: 120px; font-variation-settings: 'FILL' 1;">handshake</span>
                     </div>
                 </div>
 
-                {% if leaderboard %}
-                <div class="paper-card-static" style="padding: 0; overflow: hidden; border: none;">
-                    <!-- Hide gradient for this list -->
-                    <style>
-                        .paper-card::before {
-                            display: none !important;
-                        }
-                    </style>
-                    {% for helper in leaderboard[:3] %}
-                    <div
-                        style="display: flex; align-items: center; padding: 1rem 1.5rem; border-bottom: 1px solid rgba(0,0,0,0.05);">
-                        <div
-                            style="font-weight: 900; font-size: 1.5rem; width: 40px; color: {% if loop.index == 1 %}#FFD700{% elif loop.index == 2 %}#C0C0C0{% else %}#CD7F32{% endif %}; text-shadow: 1px 1px 0 rgba(0,0,0,0.1);">
-                            #{{ loop.index }}
+                <!-- STATS CARDS (4 COLUMNS) -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-full bg-green-50 text-green-600 flex items-center justify-center">
+                            <span class="material-symbols-outlined icon-fill text-xl">location_on</span>
                         </div>
+                        <div>
+                            <h4 class="text-2xl font-black text-textDark leading-none">{{ lost_count + found_count }}</h4>
+                            <p class="text-[11px] text-textMuted font-semibold mt-1">Items Reported</p>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-full bg-orange-50 text-orange-600 flex items-center justify-center">
+                            <span class="material-symbols-outlined icon-fill text-xl">group</span>
+                        </div>
+                        <div>
+                            <h4 class="text-2xl font-black text-textDark leading-none">{{ helped_count }}</h4>
+                            <p class="text-[11px] text-textMuted font-semibold mt-1">Items Found</p>
+                        </div>
+                    </div>
 
-                        <!-- Avatar -->
-                        <div style="position: relative; margin-right: 1.5rem;">
-                            {% if helper.photo %}
-                            <img src="/{{ helper.photo }}"
-                                style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid white; box-shadow: var(--shadow-soft);">
+                    <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center">
+                            <span class="material-symbols-outlined icon-fill text-xl">verified_user</span>
+                        </div>
+                        <div>
+                            <h4 class="text-2xl font-black text-textDark leading-none">{{ resolution_rate }}%</h4>
+                            <p class="text-[11px] text-textMuted font-semibold mt-1">Resolution Rate</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-full bg-yellow-50 text-yellow-600 flex items-center justify-center">
+                            <span class="material-symbols-outlined icon-fill text-xl">star</span>
+                        </div>
+                        <div>
+                            <h4 class="text-2xl font-black text-textDark leading-none">{{ community_points }}</h4>
+                            <p class="text-[11px] text-textMuted font-semibold mt-1">Community Points</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ACTION CARDS (2 COLUMNS) -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-[#FFF4ED] p-8 rounded-[2rem] relative overflow-hidden group">
+                        <div class="w-12 h-12 bg-white/60 rounded-full flex items-center justify-center text-primary mb-6 backdrop-blur-sm shadow-sm">
+                            <span class="material-symbols-outlined icon-fill">search_off</span>
+                        </div>
+                        <h3 class="text-2xl font-bold text-textDark mb-2">Report Loss</h3>
+                        <p class="text-sm text-textMuted mb-6 max-w-[60%]">Lost your valuables? Let our community help you find it.</p>
+                        <a href="/user/report-lost" class="inline-flex items-center gap-2 bg-[#B74C18] hover:bg-[#9B3E11] text-white px-6 py-3 rounded-full font-bold text-sm transition-colors shadow-lg shadow-orange-900/20">
+                            Create Missing Report <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                        </a>
+                        <span class="material-symbols-outlined absolute -right-6 -bottom-6 text-[180px] text-orange-900/5 rotate-12 group-hover:rotate-6 transition-transform">wallet</span>
+                    </div>
+
+                    <div class="bg-[#EAFBF6] p-8 rounded-[2rem] relative overflow-hidden group">
+                        <div class="w-12 h-12 bg-white/60 rounded-full flex items-center justify-center text-[#006B56] mb-6 backdrop-blur-sm shadow-sm">
+                            <span class="material-symbols-outlined icon-fill">volunteer_activism</span>
+                        </div>
+                        <h3 class="text-2xl font-bold text-textDark mb-2">Report Find</h3>
+                        <p class="text-sm text-textMuted mb-6 max-w-[60%]">Found something? Be a hero and return it today.</p>
+                        <a href="/user/report-found" class="inline-flex items-center gap-2 bg-[#006B56] hover:bg-[#005242] text-white px-6 py-3 rounded-full font-bold text-sm transition-colors shadow-lg shadow-teal-900/20">
+                            List Found Item <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                        </a>
+                        <span class="material-symbols-outlined absolute -right-6 -bottom-6 text-[180px] text-teal-900/5 -rotate-12 group-hover:-rotate-6 transition-transform">backpack</span>
+                    </div>
+                </div>
+
+                <!-- MIDDLE SECTION (3 COLUMNS: Heroes, Insights) -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    
+                    <!-- Community Heroes -->
+                    <div class="lg:col-span-7 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex flex-col">
+                        <div class="flex justify-between items-center mb-2">
+                            <h3 class="text-lg font-bold text-textDark">Community Heroes</h3>
+                            <a href="#" class="text-xs font-bold text-blue-600 hover:underline">View all</a>
+                        </div>
+                        <p class="text-xs text-textMuted mb-6">Thank you to our top contributors this week!</p>
+                        
+                        <div class="flex gap-4 overflow-x-auto hide-scrollbar pb-2 flex-1 items-center">
+                            {% for hero in leaderboard %}
+                            <div class="flex items-center gap-3 bg-gray-50/50 p-3 rounded-xl border border-gray-50 flex-1 min-w-[160px]">
+                                <div class="relative">
+                                    <div class="w-10 h-10 rounded-full bg-gray-200 overflow-hidden border-2 border-white shadow-sm shrink-0">
+                                        {% if hero.photo %}
+                                            <img src="/{{ hero.photo }}" class="w-full h-full object-cover">
+                                        {% else %}
+                                            <div class="w-full h-full bg-primary/20 flex items-center justify-center text-primary font-bold text-sm">{{ hero.name[0] | upper }}</div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="absolute -bottom-1 -right-1 w-4 h-4 bg-yellow-400 text-white text-[9px] font-bold rounded-full flex items-center justify-center border border-white">
+                                        {{ loop.index }}
+                                    </div>
+                                </div>
+                                <div class="overflow-hidden">
+                                    <h4 class="text-xs font-bold text-textDark truncate">{{ hero.name }}</h4>
+                                    <p class="text-[10px] text-textMuted"><span class="font-bold text-textDark">{{ hero.count }}</span> Contributions</p>
+                                </div>
+                            </div>
                             {% else %}
-                            <div
-                                style="width: 50px; height: 50px; background: var(--accent-peach); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 1.2rem; border: 2px solid white; box-shadow: var(--shadow-soft);">
-                                {{ helper.name[0] }}
-                            </div>
-                            {% endif %}
-                            {% if loop.index == 1 %}
-                            <span class="material-icons"
-                                style="position: absolute; top: -10px; right: -5px; color: #FFD700; font-size: 1.2rem; transform: rotate(15deg);">emoji_events</span>
-                            {% endif %}
+                            <p class="text-sm text-textMuted italic">No heroes found yet.</p>
+                            {% endfor %}
                         </div>
-
-                        <!-- Info -->
-                        <div style="flex: 1;">
-                            <div style="font-size: 1rem; font-weight: 700; color: var(--text-ink);">{{ helper.name }}
-                            </div>
-                            <div style="font-size: 0.85rem; color: var(--text-pencil);">Community Hero</div>
-                        </div>
-
-                        <!-- Score -->
-                        <div style="text-align: right;">
-                            <div style="font-size: 1.2rem; font-weight: 800; color: var(--accent-mint);">{{ helper.count
-                                }}</div>
-                            <div
-                                style="font-size: 0.75rem; color: var(--text-pencil); text-transform: uppercase; letter-spacing: 0.5px;">
-                                Returns</div>
-                        </div>
-
                     </div>
-                    {% endfor %}
-                </div>
-                {% else %}
-                <div class="paper-card"
-                    style="padding: 2rem; text-align: center; display: flex; flex-direction: column; align-items: center;">
-                    <div
-                        style="background: rgba(0,0,0,0.03); width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 1rem;">
-                        <span class="material-icons" style="font-size: 2rem; color: #ccc;">emoji_events</span>
+
+                    <!-- Quick Insights -->
+                    <div class="lg:col-span-5 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex flex-col">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="text-lg font-bold text-textDark">Quick Insights</h3>
+                            <button class="text-xs font-semibold text-textMuted bg-gray-50 px-3 py-1 rounded-full flex items-center gap-1">This Week <span class="material-symbols-outlined text-[14px]">expand_more</span></button>
+                        </div>
+                        
+                        <div class="flex gap-3 h-full">
+                            <div class="flex-1 bg-[#F2FAF7] rounded-xl p-4 flex flex-col justify-between">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="material-symbols-outlined text-[#006B56] text-sm">sell</span>
+                                    <span class="text-xl font-bold text-textDark">{{ found_count + lost_count }}</span>
+                                </div>
+                                <p class="text-[10px] text-textMuted mb-2">Items Reported</p>
+                                <p class="text-[10px] font-bold text-[#006B56] flex items-center gap-1"><span class="material-symbols-outlined text-[12px]">arrow_upward</span> 20%</p>
+                            </div>
+
+                            <div class="flex-1 bg-[#FFF6F0] rounded-xl p-4 flex flex-col justify-between">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="material-symbols-outlined text-[#D45D1C] text-sm">group</span>
+                                    <span class="text-xl font-bold text-textDark">{{ helped_count }}</span>
+                                </div>
+                                <p class="text-[10px] text-textMuted mb-2">Items Found</p>
+                                <p class="text-[10px] font-bold text-[#D45D1C] flex items-center gap-1"><span class="material-symbols-outlined text-[12px]">arrow_upward</span> 10%</p>
+                            </div>
+
+                            <div class="flex-1 bg-[#F0F5FF] rounded-xl p-4 flex flex-col justify-between">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="material-symbols-outlined text-blue-600 text-sm">verified_user</span>
+                                    <span class="text-xl font-bold text-textDark">{{ resolution_rate }}%</span>
+                                </div>
+                                <p class="text-[10px] text-textMuted mb-2">Resolution Rate</p>
+                                <p class="text-[10px] font-bold text-blue-600 flex items-center gap-1"><span class="material-symbols-outlined text-[12px]">arrow_upward</span> 15%</p>
+                            </div>
+                        </div>
                     </div>
-                    <h4 style="margin: 0 0 0.5rem 0; color: var(--text-ink);">No Heroes Yet</h4>
-                    <p style="color: var(--text-pencil); margin: 0; font-size: 0.9rem;">Return an item to claim the #1
-                        spot!</p>
                 </div>
-                {% endif %}
+
+                <!-- BOTTOM SECTION (2 COLUMNS: Activity, Map) -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-10">
+                    
+                    <!-- Recent Activity -->
+                    <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex flex-col">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="text-lg font-bold text-textDark">Recent Activity</h3>
+                            <button class="text-xs font-semibold text-textMuted flex items-center gap-1">View all <span class="material-symbols-outlined text-[14px]">expand_more</span></button>
+                        </div>
+
+                        <div class="space-y-4 flex-1">
+                            {% for act in recent_activity %}
+                            <div class="flex items-center gap-4 group">
+                                <div class="w-14 text-center shrink-0">
+                                    {% if act.type == 'FOUND' %}
+                                        <span class="bg-[#EAFBF6] text-[#006B56] text-[10px] font-bold px-2 py-1 rounded">FOUND</span>
+                                    {% else %}
+                                        <span class="bg-[#FFF4ED] text-[#D45D1C] text-[10px] font-bold px-2 py-1 rounded">LOST</span>
+                                    {% endif %}
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm text-textDark truncate"><span class="font-bold">{{ act.item }}</span> {{ act.type | lower }} near {{ act.location }}</p>
+                                    <p class="text-xs text-textMuted">{{ act.time_ago }} by {{ act.reporter }}</p>
+                                </div>
+                                <div class="w-10 h-10 rounded-lg bg-gray-100 overflow-hidden shrink-0 border border-gray-200">
+                                    {% if act.image %}
+                                        <img src="/{{ act.image }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform">
+                                    {% else %}
+                                        <div class="w-full h-full flex items-center justify-center text-gray-300">
+                                            <span class="material-symbols-outlined text-sm">image</span>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% else %}
+                            <p class="text-sm text-textMuted italic">No recent activity.</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Nearby Found Items -->
+                    <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex flex-col">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="text-lg font-bold text-textDark">Nearby Found Items</h3>
+                            <button class="text-xs font-semibold text-textMuted flex items-center gap-1">View all <span class="material-symbols-outlined text-[14px]">expand_more</span></button>
+                        </div>
+
+                        <div class="flex gap-6 h-full min-h-[200px]">
+                            <!-- Google Maps UI Placeholder -->
+                            <div class="flex-1 bg-gray-100 rounded-xl overflow-hidden relative border border-gray-200">
+                                <!-- Dummy Map Image / Grid -->
+                                <div class="absolute inset-0 opacity-20" style="background-image: radial-gradient(#000 1px, transparent 1px); background-size: 20px 20px;"></div>
+                                <div class="absolute inset-0 bg-gradient-to-tr from-green-50 to-orange-50 mix-blend-multiply opacity-50"></div>
+                                
+                                <!-- Dummy Map Pins -->
+                                <div class="absolute top-[30%] left-[25%] text-green-600 animate-bounce">
+                                    <span class="material-symbols-outlined icon-fill drop-shadow-md">location_on</span>
+                                </div>
+                                <div class="absolute top-[60%] left-[65%] text-orange-500 animate-bounce" style="animation-delay: 0.5s;">
+                                    <span class="material-symbols-outlined icon-fill drop-shadow-md">location_on</span>
+                                </div>
+                            </div>
+
+                            <!-- List -->
+                            <div class="w-48 flex flex-col gap-3 justify-center">
+                                {% for nb in nearby_items %}
+                                <div class="flex items-center gap-3 p-2 rounded-xl hover:bg-gray-50 cursor-pointer transition-colors border border-transparent hover:border-gray-100">
+                                    <div class="w-10 h-10 rounded-lg bg-gray-100 overflow-hidden shrink-0">
+                                        {% if nb.image %}
+                                            <img src="/{{ nb.image }}" class="w-full h-full object-cover">
+                                        {% else %}
+                                            <div class="w-full h-full flex items-center justify-center text-gray-300">
+                                                <span class="material-symbols-outlined text-sm">image</span>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <h4 class="text-xs font-bold text-textDark truncate">{{ nb.item }}</h4>
+                                        <p class="text-[10px] text-textMuted">{{ nb.distance }} away</p>
+                                    </div>
+                                    <span class="material-symbols-outlined text-gray-400 text-sm shrink-0">chevron_right</span>
+                                </div>
+                                {% else %}
+                                <p class="text-xs text-textMuted italic text-center">No nearby items.</p>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
             </div>
-
         </div>
-
-        </div>
-
-        </div>
-
     </main>
 
-
-    <!-- MOBILE BOTTOM NAV -->
-    <div class="mobile-nav">
-        <a href="/user/dashboard" class="mobile-nav-link active">
-            <span class="material-icons">dashboard</span>
-            Dashboard
+    <!-- MOBILE BOTTOM NAV (From original layout, just restyled to fit optionally or hidden as requested, but keeping to avoid breaking mobile) -->
+    <div class="md:hidden fixed bottom-0 left-0 w-full bg-white border-t border-gray-100 flex justify-around py-3 z-50">
+        <a href="/user/dashboard" class="flex flex-col items-center text-primary">
+            <span class="material-symbols-outlined icon-fill text-xl">home</span>
+            <span class="text-[9px] font-bold mt-1">HOME</span>
         </a>
-        <a href="/user/chats" class="mobile-nav-link">
-            <span class="material-icons">mark_email_unread</span>
-            Chats
+        <a href="/user/chats" class="flex flex-col items-center text-gray-400 hover:text-gray-600">
+            <span class="material-symbols-outlined text-xl">mail</span>
+            <span class="text-[9px] font-bold mt-1">MESSAGES</span>
         </a>
-        <a href="/user/profile" class="mobile-nav-link">
-            <span class="material-icons">account_circle</span>
-            Profile
+        <a href="/user/report-lost" class="flex flex-col items-center text-gray-400 hover:text-gray-600 -mt-5">
+            <div class="w-12 h-12 bg-primary text-white rounded-full flex items-center justify-center shadow-lg border-4 border-[#FAFAFA]">
+                <span class="material-symbols-outlined icon-fill">add</span>
+            </div>
+            <span class="text-[9px] font-bold mt-1">REPORT</span>
         </a>
-        <a href="/user/history" class="mobile-nav-link">
-            <span class="material-icons">history_edu</span>
-            History
+        <a href="/user/history" class="flex flex-col items-center text-gray-400 hover:text-gray-600">
+            <span class="material-symbols-outlined text-xl">history</span>
+            <span class="text-[9px] font-bold mt-1">HISTORY</span>
+        </a>
+        <a href="/user/profile" class="flex flex-col items-center text-gray-400 hover:text-gray-600">
+            <span class="material-symbols-outlined text-xl">person</span>
+            <span class="text-[9px] font-bold mt-1">PROFILE</span>
         </a>
     </div>
 
     <script src="{{ url_for('static', filename='js/memories_core.js') }}"></script>
 </body>
-
 </html>

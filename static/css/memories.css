@@ -44,6 +44,71 @@ body {
     background-size: 20px 20px;
 }
 
+/* App Shell Layout (Desktop first) */
+body.layout-compact {
+    min-height: 100vh;
+    display: flex;
+}
+
+.sidebar {
+    width: 270px;
+    min-width: 270px;
+    background: #ffffff;
+    border-right: 1px solid rgba(0, 0, 0, 0.06);
+    box-shadow: var(--shadow-soft);
+    padding: 2rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    position: sticky;
+    top: 0;
+}
+
+.sidebar nav {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.sidebar-link {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    text-decoration: none;
+    color: var(--text-pencil);
+    border-radius: 14px;
+    padding: 0.8rem 0.9rem;
+    font-weight: 600;
+    transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.sidebar-link:hover {
+    background: var(--bg-cream);
+    color: var(--text-ink);
+    transform: translateX(2px);
+}
+
+.sidebar-link.active {
+    background: rgba(255, 159, 67, 0.14);
+    color: var(--accent-peach);
+}
+
+.sidebar-link .material-icons {
+    font-size: 1.25rem;
+}
+
+.main-with-sidebar {
+    flex: 1;
+    min-width: 0;
+    min-height: 100vh;
+    padding: 1.75rem 2rem;
+    overflow-y: auto;
+}
+
+.scroll-panel {
+    min-height: 0;
+}
+
 /* TYPOGRAPHY */
 h1,
 h2,
@@ -252,7 +317,7 @@ h5 {
     }
 
     .main-with-sidebar {
-        margin-left: 0;
+        min-height: auto;
         padding: 1rem 1rem 6rem 1rem;
         /* Extra bottom padding for nav bar */
     }
@@ -280,19 +345,22 @@ h5 {
     }
 }
 
-/* Mobile Bottom Navigation */
+/* Mobile Bottom Navigation (Updated to match "Curated Canvas" design) */
 .mobile-nav {
     display: none;
     position: fixed;
     bottom: 0;
     left: 0;
     width: 100%;
-    background: white;
-    box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.05);
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(16px);
+    box-shadow: 0 -8px 32px rgba(25, 28, 29, 0.08);
     z-index: 1000;
     justify-content: space-around;
-    padding: 0.8rem 0;
-    border-top: 1px solid rgba(0, 0, 0, 0.05);
+    padding: 0.6rem 0.5rem 1.2rem 0.5rem;
+    border-top-left-radius: 2.5rem;
+    border-top-right-radius: 2.5rem;
+    border-top: 1px solid rgba(0, 0, 0, 0.03);
 }
 
 .mobile-nav-link {
@@ -300,19 +368,33 @@ h5 {
     flex-direction: column;
     align-items: center;
     text-decoration: none;
-    color: var(--text-pencil);
-    font-size: 0.7rem;
-    gap: 0.2rem;
-    transition: 0.3s;
+    color: #94a3b8;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    gap: 0.25rem;
+    padding: 0.6rem 1.25rem;
+    border-radius: 1.5rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.mobile-nav-link span {
+.mobile-nav-link span.material-icons,
+.mobile-nav-link span.material-symbols-outlined {
     font-size: 1.5rem;
+    transition: transform 0.2s;
 }
 
 .mobile-nav-link.active {
-    color: var(--accent-peach);
-    font-weight: 600;
+    background: #ffdbca;
+    color: #984713;
+    transform: translateY(-4px);
+    box-shadow: 0 4px 12px rgba(152, 71, 19, 0.1);
+}
+
+.mobile-nav-link.active span.material-icons,
+.mobile-nav-link.active span.material-symbols-outlined {
+    font-variation-settings: 'FILL' 1;
 }
 
 @media (max-width: 768px) {
@@ -320,6 +402,7 @@ h5 {
         display: flex;
     }
 }
+
 
 /* Chat Bubbles */
 .chat-bubble {
