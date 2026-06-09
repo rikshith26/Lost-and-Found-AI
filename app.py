@@ -41,9 +41,9 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USERNAME'] = os.environ.get("MAIL_USERNAME", 'burrarikshith@gmail.com')
-app.config['MAIL_PASSWORD'] = os.environ.get("MAIL_PASSWORD", 'jjef uhoe avwu rfjn')
-app.config['MAIL_DEFAULT_SENDER'] = os.environ.get("MAIL_USERNAME", 'burrarikshith@gmail.com')
+app.config['MAIL_USERNAME'] = os.environ.get("MAIL_USERNAME", "")
+app.config['MAIL_PASSWORD'] = os.environ.get("MAIL_PASSWORD", "")
+app.config['MAIL_DEFAULT_SENDER'] = os.environ.get("MAIL_USERNAME", "")
 
 
 mail = Mail(app)
@@ -139,7 +139,7 @@ def uploaded_file(filename):
     return send_from_directory('uploads', filename)
 
 # ---------- MONGODB CONNECTION ----------
-MONGO_URI = os.environ.get("MONGO_URI", "mongodb+srv://devsquaddatabase:DEVSQUAD@devsquad239.jdlqcko.mongodb.net/?appName=devsquad239")
+MONGO_URI = os.environ.get("MONGO_URI", "")
 DB_NAME = os.environ.get("DB_NAME", "lost_found_ai")
 
 
