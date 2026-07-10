@@ -16,13 +16,13 @@
             theme: {
                 extend: {
                     colors: {
-                        "primary": "#ff9f43", // Peach from Morning Light
-                        "secondary": "#54a0ff", // Sky Blue from Morning Light
-                        "accent": "#1dd1a1", // Mint Green from Morning Light
-                        "rose": "#ff6b6b", // Rose from Morning Light
-                        "ink": "#2d3436", // Dark Ink from Morning Light
-                        "background-light": "#fdfbf7", // Paper/Cream from Morning Light
-                        "background-dark": "#101022", // Keeping a very dark variant for hero if needed
+                        "primary": "#4f46e5", // Indigo from Corporate Theme
+                        "secondary": "#0ea5e9", // Sky Blue
+                        "accent": "#14b8a6", // Teal
+                        "rose": "#f43f5e", // Rose (keeping for accents)
+                        "ink": "#0f172a", // Dark Slate
+                        "background-light": "#ffffff", // Pure White
+                        "background-dark": "#0f172a", // Slate
                     },
                     fontFamily: {
                         "display": ["Outfit", "sans-serif"]
@@ -45,20 +45,18 @@
         }
 
         .hero-gradient {
-            background: radial-gradient(circle at 50% 50%, rgba(255, 159, 67, 0.1) 0%, rgba(253, 251, 247, 0) 70%);
+            background: radial-gradient(circle at 50% 0%, rgba(79, 70, 229, 0.05) 0%, rgba(255, 255, 255, 0) 70%);
         }
 
         .text-gradient {
-            background: linear-gradient(135deg, #ff9f43 0%, #ff6b6b 100%);
+            background: linear-gradient(135deg, #0f172a 0%, #4f46e5 100%);
             -webkit-background-clip: text;
             background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
         body {
-            background-color: #fdfbf7;
-            background-image: radial-gradient(#e6e6e6 1px, transparent 1px);
-            background-size: 20px 20px;
+            background-color: #ffffff;
         }
     </style>
 </head>
@@ -72,11 +70,8 @@
         <header class="sticky top-0 z-50 w-full glass border-b border-black/5">
             <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
                 <div class="flex items-center gap-3">
-                    <div
-                        class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
-                        <span class="material-symbols-outlined text-white text-2xl">search_insights</span>
-                    </div>
-                    <span class="text-2xl font-bold tracking-tight text-ink">Foundify</span>
+                    <img src="{{ url_for('static', filename='images/logo.jpeg') }}" alt="Foundify Logo" class="h-10 w-auto rounded-md object-contain">
+                    <span class="text-2xl font-bold tracking-tight text-gray-900">Foundify</span>
                 </div>
                 <nav class="hidden md:flex items-center gap-8">
                     <a class="text-sm font-medium hover:text-primary transition-colors" href="#">How it works</a>
@@ -231,7 +226,7 @@
                         searchable
                         immediately.</p>
                 </div>
-                <div class="p-8 rounded-2xl bg-gradient-to-br from-primary to-rose p-[1px] shadow-lg">
+                <div class="p-8 rounded-2xl bg-gradient-to-br from-primary to-secondary p-[1px] shadow-lg">
                     <div
                         class="bg-white rounded-2xl p-8 h-full flex flex-col justify-center items-center text-center gap-4">
                         <p class="font-bold text-xl">And much more...</p>
@@ -298,8 +293,8 @@
                     <p class="text-sm text-slate-500">Join a network of thousands of helpful users worldwide.</p>
                 </div>
                 <div class="flex flex-col items-center text-center gap-4">
-                    <div class="size-16 rounded-full bg-rose/10 flex items-center justify-center">
-                        <span class="material-symbols-outlined text-rose text-3xl">verified_user</span>
+                    <div class="size-16 rounded-full bg-secondary/10 flex items-center justify-center">
+                        <span class="material-symbols-outlined text-secondary text-3xl">verified_user</span>
                     </div>
                     <h5 class="font-bold text-xl">Secure & Reliable</h5>
                     <p class="text-sm text-slate-500">End-to-end encryption and identity verification for your safety.
@@ -308,10 +303,70 @@
             </div>
         </section>
 
+        <!-- Meet the Team / About Us -->
+        <section class="py-24 px-6 bg-[#f4f5f7]" id="about-us">
+            <div class="max-w-7xl mx-auto">
+                <div class="mb-12 text-left">
+                    <span class="text-[#7e22ce] font-medium text-lg tracking-wide">Our team</span>
+                    <h2 class="text-4xl md:text-5xl font-bold text-gray-900 mt-2">The Minds Behind Foundify</h2>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-12">
+                    <!-- Member 1 -->
+                    <div class="flex flex-col text-left">
+                        <!-- Add your photo path in src="" below -->
+                        <div class="w-full aspect-square bg-gray-200 mb-5 relative overflow-hidden">
+                            <img src="" alt="Burra Rikshith" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                            <div class="absolute inset-0 bg-gray-300 flex items-center justify-center text-5xl font-bold text-gray-400" style="display:none;">
+                                BR
+                            </div>
+                        </div>
+                        <h3 class="text-2xl font-bold text-[#0f172a] mb-1">Burra Rikshith</h3>
+                        <p class="text-[#7e22ce] text-base">Lead Software Engineer</p>
+                    </div>
+                    <!-- Member 2 -->
+                    <div class="flex flex-col text-left">
+                        <!-- Add your photo path in src="" below -->
+                        <div class="w-full aspect-square bg-gray-200 mb-5 relative overflow-hidden">
+                            <img src="" alt="Mohammed Yaseen" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                            <div class="absolute inset-0 bg-gray-300 flex items-center justify-center text-5xl font-bold text-gray-400" style="display:none;">
+                                MY
+                            </div>
+                        </div>
+                        <h3 class="text-2xl font-bold text-[#0f172a] mb-1">Mohammed Yaseen</h3>
+                        <p class="text-[#7e22ce] text-base">Chief Technology Officer (CTO)</p>
+                    </div>
+                    <!-- Member 3 -->
+                    <div class="flex flex-col text-left">
+                        <!-- Add your photo path in src="" below -->
+                        <div class="w-full aspect-square bg-gray-200 mb-5 relative overflow-hidden">
+                            <img src="" alt="Adula Mahendhar" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                            <div class="absolute inset-0 bg-gray-300 flex items-center justify-center text-5xl font-bold text-gray-400" style="display:none;">
+                                AM
+                            </div>
+                        </div>
+                        <h3 class="text-2xl font-bold text-[#0f172a] mb-1">Adula Mahendhar</h3>
+                        <p class="text-[#7e22ce] text-base">Head of Product Design (UI/UX)</p>
+                    </div>
+                    <!-- Member 4 -->
+                    <div class="flex flex-col text-left">
+                        <!-- Add your photo path in src="" below -->
+                        <div class="w-full aspect-square bg-gray-200 mb-5 relative overflow-hidden">
+                            <img src="" alt="Milkuri Vamshi Krishna" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                            <div class="absolute inset-0 bg-gray-300 flex items-center justify-center text-5xl font-bold text-gray-400" style="display:none;">
+                                MK
+                            </div>
+                        </div>
+                        <h3 class="text-2xl font-bold text-[#0f172a] mb-1">Milkuri Vamshi Krishna</h3>
+                        <p class="text-[#7e22ce] text-base">Lead AI Engineer</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <!-- CTA Section -->
         <section class="py-24 px-6">
             <div
-                class="max-w-4xl mx-auto bg-gradient-to-br from-primary to-rose rounded-[2.5rem] p-12 md:p-20 text-center relative overflow-hidden shadow-2xl shadow-primary/20">
+                class="max-w-4xl mx-auto bg-gradient-to-br from-primary to-secondary rounded-[2.5rem] p-12 md:p-20 text-center relative overflow-hidden shadow-2xl shadow-primary/20">
                 <div
                     class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-5">
                 </div>
@@ -337,10 +392,8 @@
             <div class="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-12 mb-20">
                 <div class="col-span-2 md:col-span-1 flex flex-col gap-6">
                     <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                            <span class="material-symbols-outlined text-white text-xl">search_insights</span>
-                        </div>
-                        <span class="text-xl font-bold tracking-tight">Foundify</span>
+                        <img src="{{ url_for('static', filename='images/logo.jpeg') }}" alt="Foundify Logo" class="h-8 w-auto rounded object-contain">
+                        <span class="text-xl font-bold tracking-tight text-gray-900">Foundify</span>
                     </div>
                     <p class="text-sm text-slate-500">Making the world's lost and found searchable and efficient through
                         the
@@ -349,7 +402,7 @@
                 <div>
                     <h6 class="font-bold mb-6">Company</h6>
                     <ul class="flex flex-col gap-4 text-sm text-slate-500">
-                        <li><a class="hover:text-primary transition-colors" href="#">About Us</a></li>
+                        <li><a class="hover:text-primary transition-colors" href="#about-us">About Us</a></li>
                         <li><a class="hover:text-primary transition-colors" href="#">How it works</a></li>
                         <li><a class="hover:text-primary transition-colors" href="#">Success Stories</a></li>
                         <li><a class="hover:text-primary transition-colors" href="#">Contact</a></li>

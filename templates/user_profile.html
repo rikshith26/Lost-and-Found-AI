@@ -118,7 +118,10 @@
     <aside
         class="h-screen w-64 bg-slate-50 flex flex-col py-8 space-y-2 sticky top-0 hidden md:flex border-r border-gray-100 shadow-sm">
         <div class="px-6 mb-8">
-            <h1 class="text-xl font-bold text-orange-700 tracking-tight">Foundify</h1>
+            <div class="flex items-center gap-3">
+                <img src="{{ url_for('static', filename='images/logo.jpeg') }}" alt="Foundify Logo" class="h-8 w-auto rounded-md object-contain">
+                <h1 class="text-xl font-bold text-gray-900 tracking-tight">Foundify</h1>
+            </div>
             <p class="text-[10px] font-semibold uppercase tracking-widest text-slate-400">Lost & Found</p>
         </div>
         <nav class="flex-1 space-y-1">

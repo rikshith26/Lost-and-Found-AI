@@ -41,7 +41,10 @@
     <aside class="w-64 bg-white border-r border-gray-100 flex flex-col h-screen flex-shrink-0 z-20 hidden md:flex">
         <!-- Logo -->
         <div class="px-6 py-6">
-            <h1 class="text-2xl font-bold text-primary tracking-tight">Foundify</h1>
+            <div class="flex items-center gap-3">
+                <img src="{{ url_for('static', filename='images/logo.jpeg') }}" alt="Foundify Logo" class="h-8 w-auto rounded-md object-contain">
+                <h1 class="text-2xl font-bold text-gray-900 tracking-tight">Foundify</h1>
+            </div>
         </div>
         
         <!-- User Profile Card -->
