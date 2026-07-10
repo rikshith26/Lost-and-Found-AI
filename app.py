@@ -182,11 +182,12 @@ def get_db():
 
 
 # ---------- SUPER ADMIN AUTO-CREATION ----------
+SEED_ADMIN_PASSWORD = os.environ.get("DEFAULT_ADMIN_PASSWORD", "FoundifyAdmin2026!")
 SEED_ADMINS = [
-    {"name": "ADULA MAHENDHAR", "email": "yadavmahendhar65@gmail.com", "password": "Placeholder123!"},
-    {"name": "MOHAMMED YASEEN", "email": "yaseenashu18@gmail.com", "password": "Placeholder123!"},
-    {"name": "MILKURI VAMSHI KRISHNA", "email": "krishnapatel000813@gmail.com", "password": "Placeholder123!"},
-    {"name": "BURRA RIKSHITH", "email": "burrarikshith@gmail.com", "password": "Placeholder123!"}
+    {"name": "ADULA MAHENDHAR", "email": "yadavmahendhar65@gmail.com", "password": SEED_ADMIN_PASSWORD},
+    {"name": "MOHAMMED YASEEN", "email": "yaseenashu18@gmail.com", "password": SEED_ADMIN_PASSWORD},
+    {"name": "MILKURI VAMSHI KRISHNA", "email": "krishnapatel000813@gmail.com", "password": SEED_ADMIN_PASSWORD},
+    {"name": "BURRA RIKSHITH", "email": "burrarikshith@gmail.com", "password": SEED_ADMIN_PASSWORD}
 ]
 
 def init_super_admin():
