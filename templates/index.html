@@ -91,15 +91,7 @@
         <section class="relative pt-12 pb-24 px-6 md:pt-24 max-w-7xl mx-auto">
             <div class="flex flex-col items-center justify-center gap-16">
                 <div class="flex flex-col gap-8 text-center max-w-3xl mx-auto">
-                    <div
-                        class="inline-flex items-center self-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold uppercase tracking-wider">
-                        <span class="relative flex h-2 w-2">
-                            <span
-                                class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                            <span class="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
-                        </span>
-                        AI-Powered Retrieval System
-                    </div>
+
                     <h1 class="text-5xl md:text-7xl font-bold leading-[1.1] tracking-tight text-ink">
                         Lost Something? <br />
                         <span class="text-gradient">Foundify Helps You Find It.</span>
@@ -111,13 +103,11 @@
                     </p>
                     <div class="flex flex-col sm:flex-row gap-4 justify-center">
                         <a href="/prompt-login"
-                            class="px-8 py-4 bg-primary hover:scale-105 transition-transform text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-primary/20">
-                            <span class="material-symbols-outlined">report</span>
+                            class="px-8 py-4 bg-primary hover:scale-105 transition-transform text-white rounded-xl font-bold flex items-center justify-center shadow-lg shadow-primary/20">
                             Report Lost Item
                         </a>
                         <a href="/prompt-login"
-                            class="px-8 py-4 bg-secondary/10 hover:bg-secondary/20 text-secondary rounded-xl font-bold border border-secondary/30 transition-all flex items-center justify-center gap-2">
-                            <span class="material-symbols-outlined">search</span>
+                            class="px-8 py-4 bg-secondary/10 hover:bg-secondary/20 text-secondary rounded-xl font-bold border border-secondary/30 transition-all flex items-center justify-center">
                             Search Found Items
                         </a>
                     </div>
@@ -315,7 +305,7 @@
                     <div class="flex flex-col text-left">
                         <!-- Add your photo path in src="" below -->
                         <div class="w-full aspect-square bg-gray-200 mb-5 relative overflow-hidden">
-                            <img src="" alt="Burra Rikshith" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                            <img src="{{ url_for('static', filename='images/rikshith.jpeg') }}" alt="Burra Rikshith" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
                             <div class="absolute inset-0 bg-gray-300 flex items-center justify-center text-5xl font-bold text-gray-400" style="display:none;">
                                 BR
                             </div>
@@ -327,7 +317,7 @@
                     <div class="flex flex-col text-left">
                         <!-- Add your photo path in src="" below -->
                         <div class="w-full aspect-square bg-gray-200 mb-5 relative overflow-hidden">
-                            <img src="" alt="Mohammed Yaseen" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                            <img src="{{ url_for('static', filename='images/yaseen.png') }}" alt="Mohammed Yaseen" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
                             <div class="absolute inset-0 bg-gray-300 flex items-center justify-center text-5xl font-bold text-gray-400" style="display:none;">
                                 MY
                             </div>
@@ -339,7 +329,7 @@
                     <div class="flex flex-col text-left">
                         <!-- Add your photo path in src="" below -->
                         <div class="w-full aspect-square bg-gray-200 mb-5 relative overflow-hidden">
-                            <img src="" alt="Adula Mahendhar" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                            <img src="{{ url_for('static', filename='images/mahendhar.jpeg') }}" alt="Adula Mahendhar" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
                             <div class="absolute inset-0 bg-gray-300 flex items-center justify-center text-5xl font-bold text-gray-400" style="display:none;">
                                 AM
                             </div>
@@ -351,7 +341,7 @@
                     <div class="flex flex-col text-left">
                         <!-- Add your photo path in src="" below -->
                         <div class="w-full aspect-square bg-gray-200 mb-5 relative overflow-hidden">
-                            <img src="" alt="Milkuri Vamshi Krishna" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                            <img src="{{ url_for('static', filename='images/vamshi.jpg') }}" alt="Milkuri Vamshi Krishna" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
                             <div class="absolute inset-0 bg-gray-300 flex items-center justify-center text-5xl font-bold text-gray-400" style="display:none;">
                                 MK
                             </div>
@@ -372,9 +362,7 @@
                 </div>
                 <div class="relative z-10 flex flex-col gap-8">
                     <h2 class="text-4xl md:text-6xl font-bold text-white">Start Finding <br />What Matters.</h2>
-                    <p class="text-white/80 text-lg max-w-lg mx-auto">Join over 100,000 users who have already found
-                        their
-                        lost items with the power of AI.</p>
+
                     <div class="flex flex-col sm:flex-row gap-4 justify-center">
                         <a href="/prompt-login"
                             class="px-10 py-4 bg-white text-primary rounded-xl font-bold text-lg hover:bg-slate-50 transition-colors shadow-xl">Get
@@ -433,7 +421,7 @@
             </div>
             <div
                 class="max-w-7xl mx-auto pt-10 border-t border-slate-100 flex flex-col md:flex-row justify-between items-center gap-6">
-                <p class="text-xs text-slate-500">© 2024 Foundify AI Platform. All rights reserved.</p>
+                <p class="text-xs text-slate-500">© 2026 Foundify AI Platform. All rights reserved.</p>
                 <div class="flex items-center gap-6">
                     <span class="text-xs text-slate-500 hover:text-primary cursor-pointer transition-colors">System
                         Status</span>

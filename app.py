@@ -1186,7 +1186,7 @@ def view_chat(chat_id):
 @app.route("/logout")
 def logout():
     session.clear()
-    return redirect("/login")
+    return redirect("/")
 
 # ---------- ADMIN : USERS MANAGEMENT ----------
 @app.route("/admin/users")
