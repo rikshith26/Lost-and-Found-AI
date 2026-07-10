@@ -2,18 +2,18 @@
 # By marking some of the larger HTML files as "vendored", GitHub will ignore them
 # in the language stats, allowing Python to take up ~50% of the repository's stats.
 
-templates/user_profile.html linguist-vendored
-templates/user_dashboard.html linguist-vendored
-templates/index.html linguist-vendored
-templates/user_history.html linguist-vendored
-templates/report_lost.html linguist-vendored
-templates/superadmin_profile.html linguist-vendored
-templates/report_found.html linguist-vendored
-templates/admin_settings.html linguist-vendored
-templates/admin_dashboard.html linguist-vendored
-templates/admin_profile.html linguist-vendored
-templates/admin_users.html linguist-vendored
-templates/superadmin_requests.html linguist-vendored
-templates/user_chats.html linguist-vendored
-templates/chat_room.html linguist-vendored
-templates/superadmin_dashboard.html linguist-vendored
+templates/user_profile.html linguist-detectable=false
+templates/user_dashboard.html linguist-detectable=false
+templates/index.html linguist-detectable=false
+templates/user_history.html linguist-detectable=false
+templates/report_lost.html linguist-detectable=false
+templates/superadmin_profile.html linguist-detectable=false
+templates/report_found.html linguist-detectable=false
+templates/admin_settings.html linguist-detectable=false
+templates/admin_dashboard.html linguist-detectable=false
+templates/admin_profile.html linguist-detectable=false
+templates/admin_users.html linguist-detectable=false
+templates/superadmin_requests.html linguist-detectable=false
+templates/user_chats.html linguist-detectable=false
+templates/chat_room.html linguist-detectable=false
+templates/superadmin_dashboard.html linguist-detectable=false
