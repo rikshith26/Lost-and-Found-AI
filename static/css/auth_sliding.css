@@ -11,12 +11,12 @@
 }
 
 :root {
-    --bg-paper: #fdfbf7;
-    --text-ink: #2d3436;
-    --text-pencil: #636e72;
-    --accent-peach: #ff9f43;
-    --accent-rose: #ff6b6b;
-    --accent-sky: #54a0ff;
+    --bg-paper: #ffffff;
+    --text-ink: #0f172a;
+    --text-pencil: #475569;
+    --accent-peach: #4f46e5;
+    --accent-rose: #0ea5e9;
+    --accent-sky: #0ea5e9;
     --font-primary: 'Outfit', sans-serif;
     --font-hand: 'Caveat', cursive;
 }
@@ -29,8 +29,6 @@ body {
     min-height: 100vh;
     margin: 0;
     font-family: var(--font-primary);
-    background-image: radial-gradient(#e6e6e6 1px, transparent 1px);
-    background-size: 20px 20px;
 }
 
 .auth-container {
@@ -73,8 +71,8 @@ body {
     overflow: hidden;
     transition: transform 0.6s ease-in-out;
     z-index: 100;
-    /* WARM GRADIENT */
-    background: linear-gradient(135deg, #ff9f43, #ff6b6b);
+    /* PROFESSIONAL GRADIENT */
+    background: linear-gradient(135deg, #0f172a, #4f46e5);
     color: #ffffff;
     display: flex;
     flex-direction: column;
