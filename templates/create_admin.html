@@ -1,122 +1,138 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="en" class="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Create Admin // Foundify</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/memories.css') }}">
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#4f46e5",
+                        primaryLight: "#e0e7ff",
+                        secondary: "#14b8a6",
+                        secondaryLight: "#ccfbf1",
+                        textDark: "#0f172a",
+                        textMuted: "#64748b",
+                        bgLight: "#f8fafc",
+                    },
+                    fontFamily: {
+                        sans: ["Plus Jakarta Sans", "sans-serif"],
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        /* Custom "No-Card" Form Styles */
-        .organic-form-container {
-            width: 100%;
-            max-width: 480px;
-            padding: 2rem;
-            position: relative;
-        }
-
-        .blob-bg {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 600px;
-            height: 600px;
-            background: linear-gradient(135deg, rgba(255, 107, 107, 0.05), rgba(255, 159, 67, 0.05));
-            border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%;
-            z-index: -1;
-        }
-
-        .form-label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 600;
-            color: var(--text-ink);
-            font-size: 1.1rem;
-        }
-
-        .minimal-input {
-            width: 100%;
-            padding: 1rem 0;
-            border: none;
-            border-bottom: 2px solid rgba(0, 0, 0, 0.1);
-            background: transparent;
-            font-family: var(--font-primary);
-            font-size: 1.2rem;
-            color: var(--text-ink);
-            transition: all 0.3s ease;
-            margin-bottom: 2rem;
-        }
-
-        .minimal-input:focus {
-            outline: none;
-            border-bottom-color: var(--accent-rose);
-        }
-
-        .minimal-input::placeholder {
-            color: rgba(0, 0, 0, 0.3);
-        }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .icon-fill { font-variation-settings: 'FILL' 1; }
+        body { background-color: #f8fafc; color: #0f172a; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
     </style>
 </head>
+<body class="flex min-h-screen overflow-hidden bg-bgLight">
+    {% include 'loader.html' %}
 
-<body style="min-height: 100vh; display: flex; align-items: center; justify-content: center; overflow-x: hidden;">
-
-    <!-- Back Link (Floating Top Left) -->
-    <a href="/superadmin/dashboard"
-        style="position: absolute; top: 2rem; left: 2rem; text-decoration: none; color: var(--text-pencil); display: flex; align-items: center; gap: 0.5rem; font-weight: 500; transition: color 0.3s; z-index: 10;">
-        <span class="material-icons">arrow_back</span> Dashboard
-    </a>
-
-    <div class="organic-form-container">
-
-        <!-- Background Blob -->
-        <div class="blob-bg"></div>
-
-        <div style="text-align: center; margin-bottom: 3rem;">
-            <div
-                style="display: inline-flex; align-items: center; justify-content: center; width: 60px; height: 60px; background: rgba(255, 107, 107, 0.1); border-radius: 50%; margin-bottom: 1rem;">
-                <span class="material-icons" style="color: var(--accent-rose); font-size: 2rem;">person_add</span>
+    <!-- SIDEBAR -->
+    <aside class="w-64 bg-white border-r border-gray-100 flex flex-col h-screen flex-shrink-0 z-20 hidden md:flex shadow-sm">
+        <div class="px-6 py-8">
+            <div class="flex items-center gap-3">
+                <img src="{{ url_for('static', filename='images/logo.jpeg') }}" alt="Foundify Logo" class="h-8 w-auto rounded-md object-contain">
+                <h1 class="text-xl font-bold text-gray-900 tracking-tight">Foundify</h1>
             </div>
-            <h1 style="font-size: 2.5rem; line-height: 1.2; margin-bottom: 0.5rem;">New Admin</h1>
-            <p style="color: var(--text-pencil);">Expand the team.</p>
+            <p class="text-[10px] font-semibold uppercase tracking-widest text-primary mt-1">Super Admin</p>
         </div>
 
-        <!-- Flash Messages -->
-        {% with messages = get_flashed_messages() %}
-        {% if messages %}
-        <div style="margin-bottom: 2rem;">
-            {% for message in messages %}
-            <p
-                style="color: var(--accent-rose); text-align: center; background: rgba(255, 107, 107, 0.1); padding: 0.5rem; border-radius: 8px;">
-                {{ message }}</p>
-            {% endfor %}
+        <nav class="flex-1 overflow-y-auto hide-scrollbar px-4 space-y-2">
+            <a href="/superadmin/dashboard" class="flex items-center gap-3 px-4 py-3 text-textMuted hover:bg-gray-50 hover:text-textDark rounded-xl font-medium text-sm transition-colors">
+                <span class="material-symbols-outlined">dashboard</span> Dashboard
+            </a>
+            <a href="/admin/users" class="flex items-center gap-3 px-4 py-3 text-textMuted hover:bg-gray-50 hover:text-textDark rounded-xl font-medium text-sm transition-colors">
+                <span class="material-symbols-outlined">people</span> All Users
+            </a>
+            <a href="/superadmin/unblock-requests" class="flex items-center gap-3 px-4 py-3 text-textMuted hover:bg-gray-50 hover:text-textDark rounded-xl font-medium text-sm transition-colors">
+                <span class="material-symbols-outlined">lock_open</span> Unblock Requests
+            </a>
+            <a href="/superadmin/create-admin" class="flex items-center gap-3 px-4 py-3 bg-primaryLight text-primary rounded-xl font-semibold text-sm transition-colors shadow-sm border border-primary/10">
+                <span class="material-symbols-outlined icon-fill">person_add</span> Create Admin
+            </a>
+            <a href="/admin/settings" class="flex items-center gap-3 px-4 py-3 text-textMuted hover:bg-gray-50 hover:text-textDark rounded-xl font-medium text-sm transition-colors">
+                <span class="material-symbols-outlined">settings</span> System Settings
+            </a>
+            <a href="/superadmin/profile" class="flex items-center gap-3 px-4 py-3 text-textMuted hover:bg-gray-50 hover:text-textDark rounded-xl font-medium text-sm transition-colors">
+                <span class="material-symbols-outlined">account_circle</span> My Profile
+            </a>
+        </nav>
+
+        <div class="p-4 mt-auto">
+            <a href="/logout" class="w-full flex items-center justify-center gap-2 px-4 py-3 text-red-500 hover:bg-red-50 rounded-xl font-bold text-sm transition-colors">
+                <span class="material-symbols-outlined">logout</span> Logout
+            </a>
         </div>
-        {% endif %}
-        {% endwith %}
+    </aside>
 
-        <form method="POST">
+    <!-- MAIN CONTENT -->
+    <main class="flex-1 flex flex-col h-screen overflow-hidden">
+        <header class="h-20 bg-white/80 backdrop-blur-md border-b border-gray-100 flex items-center px-8 z-10 shadow-sm">
+            <a href="/superadmin/dashboard" class="flex items-center gap-2 text-textMuted hover:text-textDark transition-colors font-medium text-sm">
+                <span class="material-symbols-outlined text-[20px]">arrow_back</span> Back to Dashboard
+            </a>
+        </header>
 
-            <label class="form-label">Name</label>
-            <input type="text" name="name" class="minimal-input" placeholder="e.g. Sarah Connor" required>
+        <div class="flex-1 overflow-y-auto hide-scrollbar p-8 flex items-center justify-center">
+            
+            <div class="w-full max-w-md bg-white p-10 rounded-[2rem] border border-gray-100 shadow-lg relative overflow-hidden">
+                <div class="absolute -right-16 -top-16 w-48 h-48 bg-primaryLight rounded-full opacity-30 blur-2xl"></div>
+                <div class="absolute -left-16 -bottom-16 w-48 h-48 bg-secondaryLight rounded-full opacity-30 blur-2xl"></div>
 
-            <label class="form-label">Email Address</label>
-            <input type="email" name="email" class="minimal-input" placeholder="name@foundify.com" required>
+                <div class="relative z-10 text-center mb-8">
+                    <div class="w-16 h-16 bg-primaryLight text-primary rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="material-symbols-outlined icon-fill text-3xl">person_add</span>
+                    </div>
+                    <h2 class="text-2xl font-bold text-textDark">Create Admin</h2>
+                    <p class="text-sm text-textMuted mt-1">Deploy a new moderator to the system.</p>
+                </div>
 
-            <label class="form-label">Secure Password</label>
-            <input type="password" name="password" class="minimal-input" placeholder="••••••••" required minlength="8"
-                title="Must be at least 8 characters">
+                {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                <div class="mb-6 space-y-2 relative z-10">
+                    {% for message in messages %}
+                    <div class="bg-red-50 text-red-600 px-4 py-3 rounded-xl text-sm font-bold text-center border border-red-100">
+                        {{ message }}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                {% endwith %}
 
-            <button type="submit" class="btn-hope btn-primary"
-                style="width: 100%; padding: 1.2rem; font-size: 1.1rem; margin-top: 1rem; background: var(--text-ink); color: white; border-radius: 50px;">
-                Create Account
-            </button>
+                <form method="POST" class="relative z-10 space-y-5">
+                    <div>
+                        <label class="block text-sm font-bold text-textDark mb-1.5">Full Name</label>
+                        <input type="text" name="name" placeholder="e.g. Sarah Connor" required class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3.5 text-sm focus:ring-primary focus:border-primary transition-colors">
+                    </div>
 
-        </form>
+                    <div>
+                        <label class="block text-sm font-bold text-textDark mb-1.5">Email Address</label>
+                        <input type="email" name="email" placeholder="name@foundify.com" required class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3.5 text-sm focus:ring-primary focus:border-primary transition-colors">
+                    </div>
 
-    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-textDark mb-1.5">Secure Password</label>
+                        <input type="password" name="password" placeholder="••••••••" required minlength="8" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3.5 text-sm focus:ring-primary focus:border-primary transition-colors">
+                        <p class="text-[10px] text-textMuted mt-1 ml-1">Must be at least 8 characters</p>
+                    </div>
 
-    <script src="{{ url_for('static', filename='js/memories_core.js') }}"></script>
+                    <button type="submit" class="w-full mt-4 bg-textDark hover:bg-black text-white py-4 rounded-xl font-bold transition-all shadow-md active:scale-95 text-sm">
+                        Create Account
+                    </button>
+                </form>
+            </div>
+            
+        </div>
+    </main>
 </body>
-
 </html>

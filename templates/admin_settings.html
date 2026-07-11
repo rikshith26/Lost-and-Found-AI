@@ -1,236 +1,194 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="en" class="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Settings - Admin Panel</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/memories.css') }}">
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <title>System Settings // Foundify</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#4f46e5",
+                        primaryLight: "#e0e7ff",
+                        secondary: "#14b8a6",
+                        secondaryLight: "#ccfbf1",
+                        textDark: "#0f172a",
+                        textMuted: "#64748b",
+                        bgLight: "#f8fafc",
+                    },
+                    fontFamily: {
+                        sans: ["Plus Jakarta Sans", "sans-serif"],
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        /* STATIC CARD (No Animation, No Gradient) */
-        .paper-card-static {
-            background: white;
-            border-radius: var(--radius-soft);
-            padding: 2rem;
-            box-shadow: var(--shadow-soft);
-            border: 1px solid rgba(0, 0, 0, 0.02);
-            position: relative;
-            overflow: hidden;
-            transition: none !important;
-            transform: none !important;
-            height: 100%;
-        }
-
-        .setting-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1rem 0;
-            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-        }
-
-        .setting-item:last-child {
-            border-bottom: none;
-        }
-
-        /* Toggle Switch (Custom for Memories Theme) */
-        .switch {
-            position: relative;
-            display: inline-block;
-            width: 46px;
-            height: 24px;
-            flex-shrink: 0;
-        }
-
-        .switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .icon-fill { font-variation-settings: 'FILL' 1; }
+        body { background-color: #f8fafc; color: #0f172a; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        
+        /* Toggle Switch Tailwind Alternative */
+        .toggle-checkbox:checked {
             right: 0;
-            bottom: 0;
-            background-color: #E2E8F0;
-            transition: .3s;
-            border-radius: 34px;
+            border-color: #14b8a6;
         }
-
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 18px;
-            width: 18px;
-            left: 3px;
-            bottom: 3px;
-            background-color: white;
-            transition: .3s;
-            border-radius: 50%;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: #14b8a6;
         }
-
-        input:checked+.slider {
-            background-color: var(--accent-mint);
+        .toggle-checkbox {
+            right: 0;
+            z-index: 1;
+            border-color: #e2e8f0;
+            transition: all 0.3s;
         }
-
-        input:checked+.slider:before {
-            transform: translateX(22px);
-        }
-
-        .icon-box {
-            width: 48px;
-            height: 48px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        .toggle-label {
+            width: 3rem;
+            height: 1.5rem;
+            background-color: #e2e8f0;
+            border-radius: 9999px;
+            transition: all 0.3s;
         }
     </style>
 </head>
-
-<body class="layout-compact">
+<body class="flex min-h-screen overflow-hidden bg-bgLight">
+    {% include 'loader.html' %}
 
     <!-- SIDEBAR -->
-    <aside class="sidebar" style="height: 100vh;">
-        <div style="margin-bottom: 2rem;">
-            {% if session.get('role') == 'super_admin' %}
-            <img src="{{ url_for('static', filename='images/logo.jpeg') }}" alt="Foundify Logo" style="height: 36px; border-radius: 6px; object-fit: contain;">
-            <div
-                style="font-weight: 700; font-size: 1.1rem; display: inline-block; vertical-align: middle; margin-left: 0.5rem;">
-                Foundify <span style="font-size: 0.8em; color: var(--accent-rose); font-weight: 400;">Admin</span>
+    <aside class="w-64 bg-white border-r border-gray-100 flex flex-col h-screen flex-shrink-0 z-20 hidden md:flex shadow-sm">
+        <div class="px-6 py-8">
+            <div class="flex items-center gap-3">
+                <img src="{{ url_for('static', filename='images/logo.jpeg') }}" alt="Foundify Logo" class="h-8 w-auto rounded-md object-contain">
+                <h1 class="text-xl font-bold text-gray-900 tracking-tight">Foundify</h1>
             </div>
-            {% else %}
-            <div style="font-weight: 700; color: var(--text-ink); font-size: 1.2rem;">Admin Desk</div>
-            {% endif %}
+            <p class="text-[10px] font-semibold uppercase tracking-widest {{ 'text-primary' if session.get('role') == 'super_admin' else 'text-secondary' }} mt-1">
+                {{ 'Super Admin' if session.get('role') == 'super_admin' else 'Moderator Desk' }}
+            </p>
         </div>
 
-        <nav>
-            <a href="{{ '/superadmin/dashboard' if session.get('role') == 'super_admin' else '/admin/dashboard' }}"
-                class="sidebar-link">
-                <span class="material-icons">dashboard</span> Dashboard
+        <nav class="flex-1 overflow-y-auto hide-scrollbar px-4 space-y-2">
+            <a href="{{ '/superadmin/dashboard' if session.get('role') == 'super_admin' else '/admin/dashboard' }}" class="flex items-center gap-3 px-4 py-3 text-textMuted hover:bg-gray-50 hover:text-textDark rounded-xl font-medium text-sm transition-colors">
+                <span class="material-symbols-outlined">dashboard</span> Dashboard
             </a>
-
-            <a href="/admin/users" class="sidebar-link">
-                <span class="material-icons">people</span> Users
+            <a href="/admin/users" class="flex items-center gap-3 px-4 py-3 text-textMuted hover:bg-gray-50 hover:text-textDark rounded-xl font-medium text-sm transition-colors">
+                <span class="material-symbols-outlined">people</span> All Users
             </a>
-
-            <a href="/admin/settings" class="sidebar-link active">
-                <span class="material-icons">settings</span> Settings
+            {% if session.get('role') == 'super_admin' %}
+            <a href="/superadmin/unblock-requests" class="flex items-center gap-3 px-4 py-3 text-textMuted hover:bg-gray-50 hover:text-textDark rounded-xl font-medium text-sm transition-colors">
+                <span class="material-symbols-outlined">lock_open</span> Unblock Requests
             </a>
-
-            <a href="{{ '/superadmin/profile' if session.get('role') == 'super_admin' else '/admin/profile' }}"
-                class="sidebar-link">
-                <span class="material-icons">account_circle</span> {{ 'My Profile' if session.get('role') ==
-                'super_admin' else 'Profile' }}
+            <a href="/superadmin/create-admin" class="flex items-center gap-3 px-4 py-3 text-textMuted hover:bg-gray-50 hover:text-textDark rounded-xl font-medium text-sm transition-colors">
+                <span class="material-symbols-outlined">person_add</span> Create Admin
+            </a>
+            {% endif %}
+            <a href="/admin/settings" class="flex items-center gap-3 px-4 py-3 bg-{{ 'primary' if session.get('role') == 'super_admin' else 'secondary' }}Light text-{{ 'primary' if session.get('role') == 'super_admin' else 'secondary' }} rounded-xl font-semibold text-sm transition-colors shadow-sm border border-{{ 'primary' if session.get('role') == 'super_admin' else 'secondary' }}/10">
+                <span class="material-symbols-outlined icon-fill">settings</span> System Settings
+            </a>
+            <a href="{{ '/superadmin/profile' if session.get('role') == 'super_admin' else '/admin/profile' }}" class="flex items-center gap-3 px-4 py-3 text-textMuted hover:bg-gray-50 hover:text-textDark rounded-xl font-medium text-sm transition-colors">
+                <span class="material-symbols-outlined">account_circle</span> My Profile
             </a>
         </nav>
 
-        <div style="margin-top: auto;">
-            <a href="/logout" class="sidebar-link" style="color: var(--accent-rose);">
-                <span class="material-icons">logout</span> Logout
+        <div class="p-4 mt-auto">
+            <a href="/logout" class="w-full flex items-center justify-center gap-2 px-4 py-3 text-red-500 hover:bg-red-50 rounded-xl font-bold text-sm transition-colors">
+                <span class="material-symbols-outlined">logout</span> Logout
             </a>
         </div>
     </aside>
 
     <!-- MAIN CONTENT -->
-    <main class="main-with-sidebar">
-
-        <header style="margin-bottom: 2rem;">
-            <h1 style="font-size: 1.8rem; margin-bottom: 0.2rem;">Settings</h1>
-            <p style="color: var(--text-pencil); font-size: 0.9rem;">Manage your account and system preferences.</p>
+    <main class="flex-1 flex flex-col h-screen overflow-hidden">
+        <header class="h-20 bg-white/80 backdrop-blur-md border-b border-gray-100 flex items-center justify-between px-8 z-10 shadow-sm">
+            <div>
+                <h2 class="text-2xl font-bold text-textDark">System Settings</h2>
+                <p class="text-xs text-textMuted font-medium">Manage preferences and security.</p>
+            </div>
         </header>
 
-        <div class="grid-layout" style="grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem;">
-
-            <!-- Account Security Card -->
-            <div class="paper-card-static">
-                <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
-                    <div class="icon-box" style="background: #EEF2FF; color: #4F46E5;">
-                        <span class="material-icons">security</span>
+        <div class="flex-1 overflow-y-auto hide-scrollbar p-8">
+            <div class="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
+                
+                <!-- Account Security -->
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
+                    <div class="flex items-center gap-4 mb-6">
+                        <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center">
+                            <span class="material-symbols-outlined icon-fill text-2xl">security</span>
+                        </div>
+                        <h3 class="text-lg font-bold text-textDark">Account Security</h3>
                     </div>
-                    <h3 style="margin: 0; font-size: 1.1rem;">Account Security</h3>
+                    
+                    <form onsubmit="event.preventDefault(); alert('Password updated! (Simulated)');">
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-bold text-textDark mb-1">Current Password</label>
+                                <input type="password" placeholder="••••••••" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-primary focus:border-primary transition-colors">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold text-textDark mb-1">New Password</label>
+                                <input type="password" placeholder="••••••••" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-primary focus:border-primary transition-colors">
+                            </div>
+                            <button type="submit" class="w-full mt-2 bg-textDark hover:bg-black text-white py-3 rounded-xl font-bold text-sm transition-colors shadow-md">
+                                Update Password
+                            </button>
+                        </div>
+                    </form>
                 </div>
 
-                <form onsubmit="event.preventDefault(); alert('Password updated! (Simulated)');">
-                    <div style="margin-bottom: 1rem;">
-                        <label
-                            style="display: block; font-size: 0.9rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-ink);">Current
-                            Password</label>
-                        <input type="password" class="input-field" placeholder="••••••••"
-                            style="background: #fafafa; border: 1px solid #eee;">
+                <!-- System Preferences -->
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
+                    <div class="flex items-center gap-4 mb-6">
+                        <div class="w-12 h-12 bg-orange-50 text-orange-500 rounded-xl flex items-center justify-center">
+                            <span class="material-symbols-outlined icon-fill text-2xl">tune</span>
+                        </div>
+                        <h3 class="text-lg font-bold text-textDark">System Preferences</h3>
                     </div>
-                    <div style="margin-bottom: 1.5rem;">
-                        <label
-                            style="display: block; font-size: 0.9rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-ink);">New
-                            Password</label>
-                        <input type="password" class="input-field" placeholder="••••••••"
-                            style="background: #fafafa; border: 1px solid #eee;">
+                    
+                    <div class="space-y-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h4 class="text-sm font-bold text-textDark">Maintenance Mode</h4>
+                                <p class="text-xs text-textMuted mt-0.5">Temporarily disable user access.</p>
+                            </div>
+                            <div class="relative inline-block w-12 align-middle select-none transition duration-200 ease-in">
+                                <input type="checkbox" name="toggle" id="toggle1" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"/>
+                                <label for="toggle1" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"></label>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h4 class="text-sm font-bold text-textDark">Auto-Approve Matches</h4>
+                                <p class="text-xs text-textMuted mt-0.5">Skip verification for >95% confidence.</p>
+                            </div>
+                            <div class="relative inline-block w-12 align-middle select-none transition duration-200 ease-in">
+                                <input type="checkbox" name="toggle" id="toggle2" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"/>
+                                <label for="toggle2" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"></label>
+                            </div>
+                        </div>
                     </div>
-                    <button type="submit" class="btn-hope btn-primary" style="width: 100%; border-radius: 12px;">Update
-                        Password</button>
-                </form>
+                </div>
+
+                <!-- Data Management -->
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 md:col-span-2">
+                    <div class="flex items-center gap-4 mb-4">
+                        <div class="w-12 h-12 bg-gray-100 text-gray-600 rounded-xl flex items-center justify-center">
+                            <span class="material-symbols-outlined icon-fill text-2xl">database</span>
+                        </div>
+                        <h3 class="text-lg font-bold text-textDark">Data Management</h3>
+                    </div>
+                    <p class="text-sm text-textMuted mb-6">Generate and download a complete system report containing user statistics, resolved cases, and active reports for backup or auditing purposes.</p>
+                    <a href="/admin/export-data" class="inline-flex items-center gap-2 bg-textDark hover:bg-black text-white px-6 py-3 rounded-xl font-bold text-sm transition-colors shadow-md">
+                        <span class="material-symbols-outlined text-[18px]">download</span> Export System Data PDF
+                    </a>
+                </div>
+
             </div>
-
-            <!-- System Preferences Card -->
-            <div class="paper-card-static">
-                <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
-                    <div class="icon-box" style="background: #FFF7ED; color: #F97316;">
-                        <span class="material-icons">tune</span>
-                    </div>
-                    <h3 style="margin: 0; font-size: 1.1rem;">System Preferences</h3>
-                </div>
-
-                <div class="setting-item">
-                    <div>
-                        <div style="font-weight: 600; color: var(--text-ink);">Maintenance Mode</div>
-                        <div style="font-size: 0.85rem; color: var(--text-pencil);">Temporarily disable access.</div>
-                    </div>
-                    <label class="switch">
-                        <input type="checkbox">
-                        <span class="slider"></span>
-                    </label>
-                </div>
-
-                <div class="setting-item">
-                    <div>
-                        <div style="font-weight: 600; color: var(--text-ink);">Auto-Approve Matches</div>
-                        <div style="font-size: 0.85rem; color: var(--text-pencil);">Skip manual verification >95%</div>
-                    </div>
-                    <label class="switch">
-                        <input type="checkbox">
-                        <span class="slider"></span>
-                    </label>
-                </div>
-            </div>
-
-            <!-- Data Management Card -->
-            <div class="paper-card-static">
-                <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
-                    <div class="icon-box" style="background: #F3F4F6; color: #4B5563;">
-                        <span class="material-icons">database</span>
-                    </div>
-                    <h3 style="margin: 0; font-size: 1.1rem;">Data Management</h3>
-                </div>
-
-                <p style="color: var(--text-pencil); font-size: 0.9rem; margin-bottom: 2rem;">Generate and download a
-                    complete system report for backup or auditing purposes.</p>
-
-                <a href="/admin/export-data" class="btn-hope btn-primary"
-                    style="width: 100%; border-radius: 12px; background: var(--text-ink);">
-                    <span class="material-icons">download</span> Export System Data
-                </a>
-            </div>
-
         </div>
-
     </main>
-
-    <script src="{{ url_for('static', filename='js/memories_core.js') }}"></script>
 </body>
-
 </html>

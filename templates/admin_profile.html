@@ -1,199 +1,161 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="en" class="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Profile // Foundify</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/memories.css') }}">
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <title>Profile // Foundify</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#4f46e5",
+                        primaryLight: "#e0e7ff",
+                        secondary: "#14b8a6",
+                        secondaryLight: "#ccfbf1",
+                        textDark: "#0f172a",
+                        textMuted: "#64748b",
+                        bgLight: "#f8fafc",
+                    },
+                    fontFamily: {
+                        sans: ["Plus Jakarta Sans", "sans-serif"],
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        /* STATIC CARD (No Animation) */
-        .paper-card-static {
-            background: white;
-            border-radius: var(--radius-soft);
-            padding: 2rem;
-            box-shadow: var(--shadow-soft);
-            border: 1px solid rgba(0, 0, 0, 0.02);
-            position: relative;
-            overflow: hidden;
-            transition: none !important;
-            transform: none !important;
-            height: 100%;
-        }
-
-        .profile-header-bg {
-            background: linear-gradient(135deg, #f8f9fa 0%, #fff 100%);
-            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-            padding: 3rem 2rem;
-            text-align: center;
-            position: relative;
-        }
-
-        /* Standard Admin Badge */
-        .admin-badge {
-            background: #e2e8f0;
-            color: var(--text-pencil);
-            padding: 0.3rem 0.8rem;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            display: inline-block;
-            margin-top: 0.5rem;
-        }
-
-        .info-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 1rem 0;
-            border-bottom: 1px solid rgba(0, 0, 0, 0.03);
-        }
-
-        .info-label {
-            color: var(--text-pencil);
-            font-weight: 500;
-        }
-
-        .info-value {
-            color: var(--text-ink);
-            font-weight: 600;
-            text-align: right;
-        }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .icon-fill { font-variation-settings: 'FILL' 1; }
+        body { background-color: #f8fafc; color: #0f172a; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
     </style>
 </head>
-
-<body class="layout-compact">
+<body class="flex min-h-screen overflow-hidden bg-bgLight">
+    {% include 'loader.html' %}
 
     <!-- SIDEBAR -->
-    <aside class="sidebar" style="height: 100vh;">
-        <div style="margin-bottom: 2rem;">
-            <div style="font-weight: 700; color: var(--text-ink); font-size: 1.2rem;">Admin Desk</div>
+    <aside class="w-64 bg-white border-r border-gray-100 flex flex-col h-screen flex-shrink-0 z-20 hidden md:flex shadow-sm">
+        <div class="px-6 py-8">
+            <div class="flex items-center gap-3">
+                <img src="{{ url_for('static', filename='images/logo.jpeg') }}" alt="Foundify Logo" class="h-8 w-auto rounded-md object-contain">
+                <h1 class="text-xl font-bold text-gray-900 tracking-tight">Foundify</h1>
+            </div>
+            <p class="text-[10px] font-semibold uppercase tracking-widest text-secondary mt-1">Moderator Desk</p>
         </div>
 
-        <nav>
-            <a href="/admin/dashboard" class="sidebar-link">
-                <span class="material-icons">dashboard</span> Dashboard
+        <nav class="flex-1 overflow-y-auto hide-scrollbar px-4 space-y-2">
+            <a href="/admin/dashboard" class="flex items-center gap-3 px-4 py-3 text-textMuted hover:bg-gray-50 hover:text-textDark rounded-xl font-medium text-sm transition-colors">
+                <span class="material-symbols-outlined">inbox</span> Inbox / Matches
             </a>
-
-            <a href="/admin/users" class="sidebar-link">
-                <span class="material-icons">people</span> Users
+            <a href="/admin/users" class="flex items-center gap-3 px-4 py-3 text-textMuted hover:bg-gray-50 hover:text-textDark rounded-xl font-medium text-sm transition-colors">
+                <span class="material-symbols-outlined">people</span> Manage Users
             </a>
-
-            <a href="/admin/settings" class="sidebar-link">
-                <span class="material-icons">settings</span> Settings
+            <a href="/admin/settings" class="flex items-center gap-3 px-4 py-3 text-textMuted hover:bg-gray-50 hover:text-textDark rounded-xl font-medium text-sm transition-colors">
+                <span class="material-symbols-outlined">settings</span> Settings
             </a>
-
-            <a href="/admin/profile" class="sidebar-link active">
-                <span class="material-icons">account_circle</span> Profile
+            <a href="/admin/profile" class="flex items-center gap-3 px-4 py-3 bg-secondaryLight text-secondary rounded-xl font-semibold text-sm transition-colors shadow-sm border border-secondary/10">
+                <span class="material-symbols-outlined icon-fill">account_circle</span> My Profile
             </a>
         </nav>
 
-        <div style="margin-top: auto;">
-            <a href="/logout" class="sidebar-link" style="color: var(--accent-rose);">
-                <span class="material-icons">logout</span> Logout
+        <div class="p-4 mt-auto">
+            <a href="/logout" class="w-full flex items-center justify-center gap-2 px-4 py-3 text-red-500 hover:bg-red-50 rounded-xl font-bold text-sm transition-colors">
+                <span class="material-symbols-outlined">logout</span> Leave Desk
             </a>
         </div>
     </aside>
 
     <!-- MAIN CONTENT -->
-    <main class="main-with-sidebar">
-
-        <header style="margin-bottom: 2rem;">
-            <h1 style="font-size: 1.8rem; margin-bottom: 0.2rem;">My Profile</h1>
-            <p style="color: var(--text-pencil); font-size: 0.9rem;">Manage your administrator details.</p>
+    <main class="flex-1 flex flex-col h-screen overflow-hidden">
+        <header class="h-20 bg-white/80 backdrop-blur-md border-b border-gray-100 flex items-center justify-between px-8 z-10 shadow-sm">
+            <div>
+                <h2 class="text-2xl font-bold text-textDark">My Profile</h2>
+                <p class="text-xs text-textMuted font-medium">Manage your moderator identity.</p>
+            </div>
         </header>
 
-        <div class="grid-layout" style="grid-template-columns: 1fr 2fr; gap: 2rem;">
-
-            <!-- LEFT: Identity Card -->
-            <div class="paper-card-static" style="padding: 0; text-align: center;">
-                <div class="profile-header-bg">
-                    <div style="position: relative; display: inline-block; margin-bottom: 1rem;">
-                        {% if user.profile_photo %}
-                        <img src="/{{ user.profile_photo }}"
-                            style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 4px solid white; box-shadow: var(--shadow-soft);">
-                        {% else %}
-                        <div
-                            style="width: 120px; height: 120px; background: var(--accent-sky); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 3rem; font-weight: 700; border: 4px solid white; box-shadow: var(--shadow-soft); margin: 0 auto;">
-                            {{ user.name[0] }}
+        <div class="flex-1 overflow-y-auto hide-scrollbar p-8">
+            <div class="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
+                
+                <!-- IDENTITY CARD -->
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
+                    <div class="bg-gradient-to-br from-teal-50 to-white p-8 flex flex-col items-center border-b border-gray-100 relative">
+                        <div class="relative mb-4">
+                            {% if user.profile_photo %}
+                            <img src="/{{ user.profile_photo }}" class="w-32 h-32 rounded-full object-cover border-4 border-white shadow-md">
+                            {% else %}
+                            <div class="w-32 h-32 rounded-full bg-secondary text-white flex items-center justify-center text-4xl font-bold border-4 border-white shadow-md">
+                                {{ user.name[0] | upper }}
+                            </div>
+                            {% endif %}
+                            <div onclick="document.getElementById('photoInput').click()" class="absolute bottom-0 right-0 bg-white w-8 h-8 rounded-full flex items-center justify-center shadow-md cursor-pointer border border-gray-100 text-textDark hover:text-secondary transition-colors">
+                                <span class="material-symbols-outlined text-[16px]">edit</span>
+                            </div>
                         </div>
-                        {% endif %}
-                        <div onclick="document.getElementById('photoInput').click()"
-                            style="position: absolute; bottom: 5px; right: 5px; background: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-soft); cursor: pointer; color: var(--text-ink); border: 1px solid #eee;">
-                            <span class="material-icons" style="font-size: 16px;">edit</span>
+                        <h2 class="text-xl font-bold text-textDark">{{ user.name }}</h2>
+                        <div class="bg-gradient-to-r from-gray-700 to-gray-900 text-white px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest mt-2 shadow-sm">
+                            Moderator
                         </div>
                     </div>
-
-                    <h2 style="margin: 0; font-size: 1.4rem;">{{ user.name }}</h2>
-                    <div class="admin-badge">Administrator</div>
-                </div>
-
-                <div style="padding: 1.5rem;">
-                    <div class="info-row">
-                        <span class="info-label">Status</span>
-                        <span style="color: #10B981; font-weight: 700;">Active</span>
+                    <div class="p-6 space-y-4">
+                        <div class="flex justify-between items-center py-2 border-b border-gray-50">
+                            <span class="text-sm font-medium text-textMuted">Status</span>
+                            <span class="text-sm font-bold text-green-500">Active</span>
+                        </div>
+                        <div class="flex justify-between items-center py-2 border-b border-gray-50">
+                            <span class="text-sm font-medium text-textMuted">Member Since</span>
+                            <span class="text-sm font-bold text-textDark">{{ user.created_at.strftime('%b %Y') if user.created_at else 'Jan 2026' }}</span>
+                        </div>
+                        <div class="flex justify-between items-center py-2">
+                            <span class="text-sm font-medium text-textMuted">Access Level</span>
+                            <span class="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs font-mono font-bold">Admin</span>
+                        </div>
                     </div>
-                    <div class="info-row">
-                        <span class="info-label">Member Since</span>
-                        <span class="info-value">{{ user.created_at.strftime('%b %Y') if user.created_at else 'Jan 2026'
-                            }}</span>
+                </div>
+
+                <!-- EDIT DETAILS FORM -->
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 lg:col-span-2">
+                    <div class="mb-6">
+                        <h3 class="text-lg font-bold text-textDark">Moderator Details</h3>
+                        <p class="text-sm text-textMuted">Update your official contact information.</p>
                     </div>
-                </div>
-            </div>
 
-            <!-- RIGHT: Edit Details Form -->
-            <div class="paper-card-static">
-                <div style="margin-bottom: 2rem;">
-                    <h3 style="margin: 0; font-size: 1.2rem;">Personal Details</h3>
-                    <p style="color: var(--text-pencil); font-size: 0.9rem; margin: 0;">Update your official
-                        information.</p>
-                </div>
+                    <form method="POST" enctype="multipart/form-data" class="space-y-6">
+                        <input type="file" id="photoInput" name="photo" accept="image/*" class="hidden" onchange="this.form.submit()">
 
-                <form method="POST" enctype="multipart/form-data">
-                    <input type="file" id="photoInput" name="photo" accept="image/*" style="display: none;"
-                        onchange="this.form.submit()">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-bold text-textDark mb-1.5">Department</label>
+                                <input type="text" name="college" value="{{ user.college or '' }}" placeholder="Administration" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-secondary focus:border-secondary transition-colors">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold text-textDark mb-1.5">Designation</label>
+                                <input type="text" name="study" value="{{ user.study or '' }}" placeholder="Moderator" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-secondary focus:border-secondary transition-colors">
+                            </div>
+                        </div>
 
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
                         <div>
-                            <label
-                                style="display: block; font-size: 0.9rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-ink);">College
-                                / Department</label>
-                            <input type="text" name="college" value="{{ user.college or '' }}" class="input-field"
-                                placeholder="Administration" style="background: #fafafa; border: 1px solid #eee;">
+                            <label class="block text-sm font-bold text-textDark mb-1.5">Contact Phone</label>
+                            <input type="text" name="phone" value="{{ user.phone or '' }}" placeholder="+91 ..." class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-secondary focus:border-secondary transition-colors">
                         </div>
-                        <div>
-                            <label
-                                style="display: block; font-size: 0.9rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-ink);">Designation</label>
-                            <input type="text" name="study" value="{{ user.study or '' }}" class="input-field"
-                                placeholder="Manager" style="background: #fafafa; border: 1px solid #eee;">
+
+                        <div class="pt-6 border-t border-gray-100 flex items-center justify-between">
+                            <div class="flex items-center gap-2 text-textMuted text-xs font-medium">
+                                <span class="material-symbols-outlined text-[16px]">lock</span> Secure Connection
+                            </div>
+                            <button type="submit" class="bg-textDark hover:bg-black text-white px-8 py-3 rounded-xl font-bold text-sm transition-colors shadow-md">
+                                Save Changes
+                            </button>
                         </div>
-                    </div>
+                    </form>
+                </div>
 
-                    <div style="margin-bottom: 2rem;">
-                        <label
-                            style="display: block; font-size: 0.9rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-ink);">Contact
-                            Phone</label>
-                        <input type="text" name="phone" value="{{ user.phone or '' }}" class="input-field"
-                            placeholder="+91 ..." style="background: #fafafa; border: 1px solid #eee;">
-                    </div>
-
-                    <div
-                        style="display: flex; justify-content: flex-end; border-top: 1px solid #f0f0f0; padding-top: 1.5rem;">
-                        <button type="submit" class="btn-hope btn-primary"
-                            style="background: var(--text-ink); border-radius: 12px; padding: 0.8rem 2rem;">
-                            Save Changes
-                        </button>
-                    </div>
-                </form>
             </div>
-
         </div>
-
     </main>
-
-    <script src="{{ url_for('static', filename='js/memories_core.js') }}"></script>
 </body>
-
 </html>

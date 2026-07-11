@@ -1,154 +1,212 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="en" class="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Super Admin // Foundify</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/memories.css') }}">
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#4f46e5",
+                        primaryLight: "#e0e7ff",
+                        secondary: "#14b8a6",
+                        secondaryLight: "#ccfbf1",
+                        textDark: "#0f172a",
+                        textMuted: "#64748b",
+                        bgLight: "#f8fafc",
+                    },
+                    fontFamily: {
+                        sans: ["Plus Jakarta Sans", "sans-serif"],
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        /* Custom Styles for Organic Blobs */
-        .organic-action {
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-            padding: 3rem;
-            text-decoration: none;
-            color: var(--text-ink);
-            max-width: 300px;
-        }
-
-        .blob-bg {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 220px;
-            height: 220px;
-            z-index: -1;
-            opacity: 0.15;
-        }
-
-        .organic-action:hover .blob-bg {
-            opacity: 0.25;
-        }
-
-        .action-icon {
-            font-size: 4rem;
-            margin-bottom: 1rem;
-            z-index: 1;
-        }
-
-        .action-title {
-            font-size: 1.5rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-            z-index: 1;
-        }
-
-        .action-desc {
-            font-size: 0.95rem;
-            color: var(--text-pencil);
-            line-height: 1.4;
-            z-index: 1;
-        }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .icon-fill { font-variation-settings: 'FILL' 1; }
+        body { background-color: #f8fafc; color: #0f172a; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
     </style>
 </head>
-
-<body class="layout-compact">
+<body class="flex min-h-screen overflow-hidden bg-bgLight">
+    {% include 'loader.html' %}
 
     <!-- SIDEBAR -->
-    <aside class="sidebar" style="height: 100vh;">
-        <div style="margin-bottom: 3rem;">
-            <img src="{{ url_for('static', filename='images/logo.jpeg') }}" alt="Foundify Logo" style="height: 36px; border-radius: 6px; object-fit: contain;">
-            <div
-                style="font-weight: 700; font-size: 1.1rem; display: inline-block; vertical-align: middle; margin-left: 0.5rem;">
-                Foundify <span style="font-size: 0.8em; color: var(--accent-rose); font-weight: 400;">Admin</span></div>
+    <aside class="w-64 bg-white border-r border-gray-100 flex flex-col h-screen flex-shrink-0 z-20 hidden md:flex shadow-sm">
+        <div class="px-6 py-8">
+            <div class="flex items-center gap-3">
+                <img src="{{ url_for('static', filename='images/logo.jpeg') }}" alt="Foundify Logo" class="h-8 w-auto rounded-md object-contain">
+                <h1 class="text-xl font-bold text-gray-900 tracking-tight">Foundify</h1>
+            </div>
+            <p class="text-[10px] font-semibold uppercase tracking-widest text-primary mt-1">Super Admin</p>
         </div>
 
-        <nav>
-            <!-- Minimized Sidebar as per request -->
-            <a href="/superadmin/dashboard" class="sidebar-link active">
-                <span class="material-icons">dashboard</span> Dashboard
+        <nav class="flex-1 overflow-y-auto hide-scrollbar px-4 space-y-2">
+            <a href="/superadmin/dashboard" class="flex items-center gap-3 px-4 py-3 bg-primaryLight text-primary rounded-xl font-semibold text-sm transition-colors shadow-sm border border-primary/10">
+                <span class="material-symbols-outlined icon-fill">dashboard</span> Dashboard
             </a>
-
-            <a href="/admin/users" class="sidebar-link">
-                <span class="material-icons">people</span> Users
+            <a href="/admin/users" class="flex items-center gap-3 px-4 py-3 text-textMuted hover:bg-gray-50 hover:text-textDark rounded-xl font-medium text-sm transition-colors">
+                <span class="material-symbols-outlined">people</span> All Users
             </a>
-
-            <a href="/admin/settings" class="sidebar-link">
-                <span class="material-icons">settings</span> Settings
+            <a href="/superadmin/unblock-requests" class="flex items-center gap-3 px-4 py-3 text-textMuted hover:bg-gray-50 hover:text-textDark rounded-xl font-medium text-sm transition-colors">
+                <span class="material-symbols-outlined">lock_open</span> Unblock Requests
+                {% if pending_unblocks > 0 %}
+                <span class="ml-auto bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">{{ pending_unblocks }}</span>
+                {% endif %}
             </a>
-
-            <a href="/superadmin/profile" class="sidebar-link">
-                <span class="material-icons">account_circle</span> My Profile
+            <a href="/superadmin/create-admin" class="flex items-center gap-3 px-4 py-3 text-textMuted hover:bg-gray-50 hover:text-textDark rounded-xl font-medium text-sm transition-colors">
+                <span class="material-symbols-outlined">person_add</span> Create Admin
+            </a>
+            <a href="/admin/settings" class="flex items-center gap-3 px-4 py-3 text-textMuted hover:bg-gray-50 hover:text-textDark rounded-xl font-medium text-sm transition-colors">
+                <span class="material-symbols-outlined">settings</span> System Settings
+            </a>
+            <a href="/superadmin/profile" class="flex items-center gap-3 px-4 py-3 text-textMuted hover:bg-gray-50 hover:text-textDark rounded-xl font-medium text-sm transition-colors">
+                <span class="material-symbols-outlined">account_circle</span> My Profile
             </a>
         </nav>
 
-        <div style="margin-top: auto;">
-            <a href="/logout" class="sidebar-link" style="color: var(--accent-rose);">
-                <span class="material-icons">logout</span> Logout
+        <div class="p-4 mt-auto">
+            <a href="/admin/export-data" class="w-full bg-secondary hover:bg-secondary/90 text-white rounded-xl py-3 px-4 flex items-center justify-center gap-2 font-bold text-sm shadow-md transition-all mb-3">
+                <span class="material-symbols-outlined text-xl">download</span> Export Data
+            </a>
+            <a href="/logout" class="w-full flex items-center justify-center gap-2 px-4 py-3 text-red-500 hover:bg-red-50 rounded-xl font-bold text-sm transition-colors">
+                <span class="material-symbols-outlined">logout</span> Logout
             </a>
         </div>
     </aside>
 
     <!-- MAIN CONTENT -->
-    <main class="main-with-sidebar"
-        style="display: flex; flex-direction: column; justify-content: center; min-height: 90vh;">
-
-        <!-- Header -->
-        <header style="margin-bottom: 4rem; text-align: center;">
-            <h1 style="margin-bottom: 0.5rem; font-size: 2.5rem; letter-spacing: -1px;">System Control</h1>
-            <p style="color: var(--text-pencil); font-size: 1.1rem;">Operational Command Center</p>
+    <main class="flex-1 flex flex-col h-screen overflow-hidden">
+        <header class="h-20 bg-white/80 backdrop-blur-md border-b border-gray-100 flex items-center justify-between px-8 z-10 shadow-sm">
+            <div>
+                <h2 class="text-2xl font-bold text-textDark">System Overview</h2>
+            </div>
+            <div class="flex items-center gap-4">
+                <span class="bg-primaryLight text-primary px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+                    <span class="material-symbols-outlined text-[14px]">shield</span> Root Access
+                </span>
+            </div>
         </header>
 
-        <!-- ORGANIC ACTIONS AREA -->
-        <!-- No Boxes. Just Shapes and Content. -->
-        <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 4rem; align-items: center;">
+        <div class="flex-1 overflow-y-auto hide-scrollbar p-8">
+            <div class="max-w-6xl mx-auto space-y-8">
+                
+                <!-- STATS CARDS -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm relative overflow-hidden group">
+                        <div class="absolute -right-4 -top-4 w-24 h-24 bg-primaryLight rounded-full opacity-50 group-hover:scale-110 transition-transform"></div>
+                        <span class="material-symbols-outlined text-primary text-3xl mb-2 relative z-10">group</span>
+                        <h4 class="text-3xl font-black text-textDark relative z-10">{{ total_users }}</h4>
+                        <p class="text-xs text-textMuted font-semibold mt-1 relative z-10">Total Users</p>
+                    </div>
+                    
+                    <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm relative overflow-hidden group">
+                        <div class="absolute -right-4 -top-4 w-24 h-24 bg-secondaryLight rounded-full opacity-50 group-hover:scale-110 transition-transform"></div>
+                        <span class="material-symbols-outlined text-secondary text-3xl mb-2 relative z-10">admin_panel_settings</span>
+                        <h4 class="text-3xl font-black text-textDark relative z-10">{{ total_admins }}</h4>
+                        <p class="text-xs text-textMuted font-semibold mt-1 relative z-10">Active Admins</p>
+                    </div>
 
-            <!-- Create Admin -->
-            <a href="/superadmin/create-admin" class="organic-action">
-                <!-- Rose Blob -->
-                <div class="blob-bg"
-                    style="background-color: var(--accent-rose); border-radius: 46% 54% 39% 61% / 55% 36% 64% 45%;">
+                    <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm relative overflow-hidden group">
+                        <div class="absolute -right-4 -top-4 w-24 h-24 bg-orange-100 rounded-full opacity-50 group-hover:scale-110 transition-transform"></div>
+                        <span class="material-symbols-outlined text-orange-500 text-3xl mb-2 relative z-10">cases</span>
+                        <h4 class="text-3xl font-black text-textDark relative z-10">{{ total_lost + total_found }}</h4>
+                        <p class="text-xs text-textMuted font-semibold mt-1 relative z-10">Total Items Logged</p>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm relative overflow-hidden group">
+                        <div class="absolute -right-4 -top-4 w-24 h-24 bg-blue-100 rounded-full opacity-50 group-hover:scale-110 transition-transform"></div>
+                        <span class="material-symbols-outlined text-blue-500 text-3xl mb-2 relative z-10">monitoring</span>
+                        <h4 class="text-3xl font-black text-textDark relative z-10">{{ resolution_rate }}%</h4>
+                        <p class="text-xs text-textMuted font-semibold mt-1 relative z-10">Resolution Rate</p>
+                    </div>
                 </div>
 
-                <span class="material-icons action-icon" style="color: var(--accent-rose);">person_add</span>
-                <div class="action-title">Create Admin</div>
-                <div class="action-desc">Deploy new administrative personnel.</div>
-            </a>
+                <!-- MAIN ACTIONS -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <a href="/admin/run-scan" class="bg-gradient-to-br from-primary to-indigo-700 p-8 rounded-[2rem] text-white shadow-xl hover:-translate-y-1 transition-transform relative overflow-hidden group">
+                        <span class="material-symbols-outlined text-6xl opacity-20 absolute -right-4 -bottom-4 group-hover:rotate-12 transition-transform">psychology</span>
+                        <div class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center mb-6 backdrop-blur-sm">
+                            <span class="material-symbols-outlined">radar</span>
+                        </div>
+                        <h3 class="text-xl font-bold mb-2">Run AI Scan</h3>
+                        <p class="text-indigo-100 text-sm">Force a system-wide AI scan to match pending lost and found items.</p>
+                    </a>
 
-            <!-- Unblock Requests -->
-            <a href="/superadmin/unblock-requests" class="organic-action">
-                <!-- Orange/Peach Blob -->
-                <div class="blob-bg"
-                    style="background-color: #F59E0B; border-radius: 68% 32% 56% 44% / 44% 46% 54% 56%;"></div>
+                    <a href="/superadmin/create-admin" class="bg-white p-8 rounded-[2rem] border border-gray-100 shadow-sm hover:border-primary/50 transition-colors relative overflow-hidden group">
+                        <div class="w-12 h-12 bg-primaryLight text-primary rounded-full flex items-center justify-center mb-6">
+                            <span class="material-symbols-outlined icon-fill">person_add</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-textDark mb-2">Deploy Admin</h3>
+                        <p class="text-textMuted text-sm">Create a new administrator account with moderation capabilities.</p>
+                    </a>
 
-                <span class="material-icons action-icon" style="color: #F59E0B;">lock_open</span>
-                <div class="action-title">Unblock Requests</div>
-                <div class="action-desc">Review and restore blocked accounts.</div>
-            </a>
-
-            <!-- AI Operations -->
-            <a href="/admin/dashboard" class="organic-action">
-                <!-- Sky Blob -->
-                <div class="blob-bg"
-                    style="background-color: var(--accent-sky); border-radius: 34% 66% 36% 64% / 59% 36% 64% 41%;">
+                    <a href="/superadmin/unblock-requests" class="bg-white p-8 rounded-[2rem] border border-gray-100 shadow-sm hover:border-orange-500/50 transition-colors relative overflow-hidden group">
+                        <div class="w-12 h-12 bg-orange-50 text-orange-600 rounded-full flex items-center justify-center mb-6">
+                            <span class="material-symbols-outlined icon-fill">lock_open</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-textDark mb-2">Unblock Requests</h3>
+                        <p class="text-textMuted text-sm">Review appeals from banned users and restore their access.</p>
+                        {% if pending_unblocks > 0 %}
+                        <div class="absolute top-6 right-6 bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-sm">{{ pending_unblocks }} Pending</div>
+                        {% endif %}
+                    </a>
                 </div>
 
-                <span class="material-icons action-icon" style="color: var(--accent-sky);">psychology</span>
-                <div class="action-title">AI Operations</div>
-                <div class="action-desc">Monitor neural network matching.</div>
-            </a>
+                <!-- RECENT ADMINS -->
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+                    <h3 class="text-lg font-bold text-textDark mb-6">Active Administrators</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead>
+                                <tr class="text-xs uppercase text-textMuted border-b border-gray-100">
+                                    <th class="pb-3 font-semibold">Name</th>
+                                    <th class="pb-3 font-semibold">Email</th>
+                                    <th class="pb-3 font-semibold">Joined</th>
+                                    <th class="pb-3 font-semibold">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for admin in recent_admins %}
+                                <tr class="border-b border-gray-50 last:border-0 hover:bg-gray-50 transition-colors">
+                                    <td class="py-4">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-8 h-8 rounded-full bg-primaryLight text-primary flex items-center justify-center font-bold text-xs">
+                                                {{ admin.name[0] | upper }}
+                                            </div>
+                                            <span class="font-bold text-sm text-textDark">{{ admin.name }}</span>
+                                        </div>
+                                    </td>
+                                    <td class="py-4 text-sm text-textMuted">{{ admin.email }}</td>
+                                    <td class="py-4 text-sm text-textMuted">{{ admin.created_at.strftime('%b %d, %Y') if admin.created_at else 'N/A' }}</td>
+                                    <td class="py-4">
+                                        {% if admin.is_active %}
+                                        <span class="bg-secondaryLight text-secondary px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider">Active</span>
+                                        {% else %}
+                                        <span class="bg-red-50 text-red-600 px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider">Blocked</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="4" class="py-8 text-center text-sm text-textMuted">No administrators found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
 
+            </div>
         </div>
-
     </main>
 
     <script src="{{ url_for('static', filename='js/memories_core.js') }}"></script>
 </body>
-
 </html>

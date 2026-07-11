@@ -1,156 +1,202 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="en" class="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Desk // Admin</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/memories.css') }}">
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <title>Admin Dashboard // Foundify</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#4f46e5",
+                        primaryLight: "#e0e7ff",
+                        secondary: "#14b8a6",
+                        secondaryLight: "#ccfbf1",
+                        textDark: "#0f172a",
+                        textMuted: "#64748b",
+                        bgLight: "#f8fafc",
+                    },
+                    fontFamily: {
+                        sans: ["Plus Jakarta Sans", "sans-serif"],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .icon-fill { font-variation-settings: 'FILL' 1; }
+        body { background-color: #f8fafc; color: #0f172a; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+    </style>
 </head>
+<body class="flex min-h-screen overflow-hidden bg-bgLight">
+    {% include 'loader.html' %}
 
-<body class="layout-compact">
-
-    <aside class="sidebar" style="background: var(--bg-cream); height: 100vh;">
-        <div style="margin-bottom: 2rem;">
-            <div style="font-weight: 700; color: var(--text-ink); font-size: 1.2rem;">Admin Desk</div>
+    <!-- SIDEBAR -->
+    <aside class="w-64 bg-white border-r border-gray-100 flex flex-col h-screen flex-shrink-0 z-20 hidden md:flex shadow-sm">
+        <div class="px-6 py-8">
+            <div class="flex items-center gap-3">
+                <img src="{{ url_for('static', filename='images/logo.jpeg') }}" alt="Foundify Logo" class="h-8 w-auto rounded-md object-contain">
+                <h1 class="text-xl font-bold text-gray-900 tracking-tight">Foundify</h1>
+            </div>
+            <p class="text-[10px] font-semibold uppercase tracking-widest text-secondary mt-1">Moderator Desk</p>
         </div>
 
-        <nav>
-            <a href="/admin/dashboard" class="sidebar-link active">
-                <span class="material-icons">inbox</span> Inbox / Matches
+        <nav class="flex-1 overflow-y-auto hide-scrollbar px-4 space-y-2">
+            <a href="/admin/dashboard" class="flex items-center gap-3 px-4 py-3 bg-secondaryLight text-secondary rounded-xl font-semibold text-sm transition-colors shadow-sm border border-secondary/10">
+                <span class="material-symbols-outlined icon-fill">inbox</span> Inbox / Matches
             </a>
-            <a href="/admin/users" class="sidebar-link">
-                <span class="material-icons">people</span> Users
+            <a href="/admin/users" class="flex items-center gap-3 px-4 py-3 text-textMuted hover:bg-gray-50 hover:text-textDark rounded-xl font-medium text-sm transition-colors">
+                <span class="material-symbols-outlined">people</span> Manage Users
             </a>
-            <a href="/admin/settings" class="sidebar-link">
-                <span class="material-icons">settings</span> Settings
+            <a href="/admin/settings" class="flex items-center gap-3 px-4 py-3 text-textMuted hover:bg-gray-50 hover:text-textDark rounded-xl font-medium text-sm transition-colors">
+                <span class="material-symbols-outlined">settings</span> Settings
             </a>
-            <a href="/logout" class="sidebar-link" style="color: var(--accent-rose);">
-                <span class="material-icons">logout</span> Leave Desk
+            <a href="/admin/profile" class="flex items-center gap-3 px-4 py-3 text-textMuted hover:bg-gray-50 hover:text-textDark rounded-xl font-medium text-sm transition-colors">
+                <span class="material-symbols-outlined">account_circle</span> My Profile
             </a>
         </nav>
+
+        <div class="p-4 mt-auto">
+            <a href="/logout" class="w-full flex items-center justify-center gap-2 px-4 py-3 text-red-500 hover:bg-red-50 rounded-xl font-bold text-sm transition-colors">
+                <span class="material-symbols-outlined">logout</span> Leave Desk
+            </a>
+        </div>
     </aside>
 
-    <main class="main-with-sidebar">
-        <header
-            style="margin-bottom: 1.5rem; flex-shrink: 0; display: flex; justify-content: space-between; align-items: flex-end;">
+    <!-- MAIN CONTENT -->
+    <main class="flex-1 flex flex-col h-screen overflow-hidden">
+        <header class="h-20 bg-white/80 backdrop-blur-md border-b border-gray-100 flex items-center justify-between px-8 z-10 shadow-sm">
             <div>
-                <h1 style="margin-bottom: 0.2rem; font-size: 1.8rem;">Match Verification</h1>
-                <p style="color: var(--text-pencil); font-size: 0.9rem;">Review the AI's suggestions and reunite items.
-                </p>
+                <h2 class="text-2xl font-bold text-textDark">Match Verification</h2>
             </div>
-            <a href="/admin/run-scan" class="btn-hope"
-                style="background: var(--bg-cream); border: 1px solid var(--text-ink); color: var(--text-ink); display: flex; align-items: center; gap: 0.5rem; padding: 0.6rem 1.2rem;">
-                <span class="material-icons" style="font-size: 1.2rem;">radar</span>
-                Run AI Scan
-            </a>
+            <div class="flex items-center gap-4">
+                <a href="/admin/run-scan" class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-full text-sm font-bold flex items-center gap-2 shadow-md transition-all">
+                    <span class="material-symbols-outlined text-[18px]">radar</span> Run AI Scan
+                </a>
+            </div>
         </header>
 
-        {% if matches %}
-        <div class="scroll-panel" style="flex: 1; padding-bottom: 2rem;">
-
-            <!-- Header for List -->
-            <div
-                style="display: grid; grid-template-columns: 1.5fr 3fr 2fr 1.5fr; gap: 1rem; padding: 0 1.5rem; margin-bottom: 0.5rem; color: var(--text-pencil); font-size: 0.85rem; font-weight: 600;">
-                <div>Lost & Found</div>
-                <div>Details & Confidence</div>
-                <div style="text-align: center;">AI Analysis</div>
-                <div style="text-align: right;">Action</div>
-            </div>
-
-            <div style="display: flex; flex-direction: column; gap: 1rem;">
-                {% for match in matches %}
-                <div class="match-row"
-                    style="background: white; border-radius: 16px; padding: 1rem 1.5rem; display: grid; grid-template-columns: 1.5fr 3fr 2fr 1.5fr; gap: 1rem; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.03); border: 1px solid #f0f0f0; transition: transform 0.2s ease;">
-
-                    <!-- IMAGES (Side by Side) -->
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <div style="position: relative; width: 50px; height: 50px;">
-                            <img src="/{{ match.lost.image_path }}"
-                                style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                            <div
-                                style="position: absolute; top: -5px; left: -5px; background: var(--accent-rose); color: white; font-size: 0.6rem; padding: 2px 4px; border-radius: 4px;">
-                                Lost</div>
+        <div class="flex-1 overflow-y-auto hide-scrollbar p-8">
+            <div class="max-w-6xl mx-auto space-y-8">
+                
+                <!-- STATS ROW -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-full bg-secondaryLight text-secondary flex items-center justify-center">
+                            <span class="material-symbols-outlined icon-fill">published_with_changes</span>
                         </div>
-                        <div style="width: 20px; height: 2px; background: #ddd;"></div>
-                        <div style="position: relative; width: 50px; height: 50px;">
-                            <img src="/{{ match.found.image_path }}"
-                                style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                            <div
-                                style="position: absolute; top: -5px; right: -5px; background: var(--accent-mint); color: white; font-size: 0.6rem; padding: 2px 4px; border-radius: 4px;">
-                                Found</div>
+                        <div>
+                            <h4 class="text-2xl font-black text-textDark leading-none">{{ pending_matches_count }}</h4>
+                            <p class="text-[11px] text-textMuted font-semibold mt-1">Pending Matches</p>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-full bg-orange-50 text-orange-500 flex items-center justify-center">
+                            <span class="material-symbols-outlined icon-fill">search_off</span>
+                        </div>
+                        <div>
+                            <h4 class="text-2xl font-black text-textDark leading-none">{{ active_lost }}</h4>
+                            <p class="text-[11px] text-textMuted font-semibold mt-1">Active Lost</p>
                         </div>
                     </div>
 
-                    <!-- TEXT INFO -->
-                    <div>
-                        <h3 style="font-size: 1.1rem; margin-bottom: 0.2rem; color: var(--text-ink);">{{
-                            match.lost.item_name }}</h3>
-                        <p style="font-size: 0.85rem; color: var(--text-pencil); margin: 0;">
-                            Match found in "{{ match.found.location }}"<br>
-                            <span style="font-size: 0.75rem; color: #bababa;">{{ match.lost.created_at.strftime('%b %d')
-                                if match.lost.created_at }} vs {{ match.found.created_at.strftime('%b %d') if
-                                match.found.created_at }}</span>
-                        </p>
-                    </div>
-
-                    <!-- SCORES (Circles) -->
-                    <div style="display: flex; align-items: center; justify-content: center; gap: 1.5rem;">
-                        <!-- Overall Score -->
-                        <div
-                            style="position: relative; width: 45px; height: 45px; border-radius: 50%; background: conic-gradient(var(--accent-gold) {{ match.score.final_score }}%, #eee 0%); display: flex; align-items: center; justify-content: center;">
-                            <div
-                                style="width: 35px; height: 35px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700; color: var(--accent-gold);">
-                                {{ match.score.final_score }}%
-                            </div>
+                    <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-full bg-teal-50 text-teal-600 flex items-center justify-center">
+                            <span class="material-symbols-outlined icon-fill">volunteer_activism</span>
                         </div>
-
-                        <!-- Visual Score (Mini) -->
-                        <div style="display: flex; flex-direction: column; gap: 2px;">
-                            <div class="mini-stat"
-                                style="display: flex; align-items: center; gap: 5px; font-size: 0.75rem; color: var(--text-pencil);">
-                                <span
-                                    style="width: 8px; height: 8px; border-radius: 50%; background: var(--accent-sky);"></span>
-                                Vis: {{ match.score.image_score }}%
-                            </div>
-                            <div class="mini-stat"
-                                style="display: flex; align-items: center; gap: 5px; font-size: 0.75rem; color: var(--text-pencil);">
-                                <span
-                                    style="width: 8px; height: 8px; border-radius: 50%; background: var(--accent-rose);"></span>
-                                Txt: {{ match.score.text_score }}%
-                            </div>
+                        <div>
+                            <h4 class="text-2xl font-black text-textDark leading-none">{{ active_found }}</h4>
+                            <p class="text-[11px] text-textMuted font-semibold mt-1">Active Found</p>
                         </div>
                     </div>
 
-                    <!-- ACTION BUTTON -->
-                    <div style="text-align: right;">
-                        <a href="/admin/approve-match/{{ match.lost.lost_id }}/{{ match.found.found_id }}"
-                            class="btn-approve"
-                            style="background: linear-gradient(135deg, #FF9966 0%, #FF5E62 100%); color: white; padding: 0.7rem 2rem; border-radius: 30px; font-weight: 600; text-decoration: none; box-shadow: 0 4px 10px rgba(255, 94, 98, 0.3); display: inline-block; transition: all 0.2s;">
-                            Approve
-                        </a>
+                    <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center">
+                            <span class="material-symbols-outlined icon-fill">group</span>
+                        </div>
+                        <div>
+                            <h4 class="text-2xl font-black text-textDark leading-none">{{ total_users }}</h4>
+                            <p class="text-[11px] text-textMuted font-semibold mt-1">Total Users</p>
+                        </div>
                     </div>
-
                 </div>
-                {% endfor %}
+
+                <!-- PENDING MATCHES SECTION -->
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
+                    <div class="p-6 border-b border-gray-100 flex justify-between items-center">
+                        <h3 class="text-lg font-bold text-textDark">Pending AI Verifications</h3>
+                        <span class="text-xs font-semibold text-textMuted">{{ matches|length }} matches found</span>
+                    </div>
+
+                    {% if matches %}
+                    <div class="overflow-x-auto p-4">
+                        <div class="space-y-4">
+                            {% for match in matches %}
+                            <div class="bg-white border border-gray-100 rounded-2xl p-4 flex flex-col md:flex-row items-center gap-6 shadow-sm hover:border-primary/30 transition-colors">
+                                
+                                <!-- Images -->
+                                <div class="flex items-center gap-2 shrink-0">
+                                    <div class="relative w-16 h-16 rounded-xl overflow-hidden border border-gray-200">
+                                        <img src="/{{ match.lost.image_path }}" class="w-full h-full object-cover">
+                                        <div class="absolute top-0 left-0 bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-br-lg">LOST</div>
+                                    </div>
+                                    <div class="w-4 h-[2px] bg-gray-200"></div>
+                                    <div class="relative w-16 h-16 rounded-xl overflow-hidden border border-gray-200">
+                                        <img src="/{{ match.found.image_path }}" class="w-full h-full object-cover">
+                                        <div class="absolute top-0 right-0 bg-secondary text-white text-[9px] font-bold px-1.5 py-0.5 rounded-bl-lg">FOUND</div>
+                                    </div>
+                                </div>
+
+                                <!-- Text -->
+                                <div class="flex-1 min-w-0 text-center md:text-left">
+                                    <h4 class="text-lg font-bold text-textDark truncate">{{ match.lost.item_name }}</h4>
+                                    <p class="text-sm text-textMuted mb-1 truncate">Match in {{ match.found.location }}</p>
+                                    <p class="text-[10px] text-gray-400 font-medium">Lost: {{ match.lost.created_at.strftime('%b %d') if match.lost.created_at }} &middot; Found: {{ match.found.created_at.strftime('%b %d') if match.found.created_at }}</p>
+                                </div>
+
+                                <!-- Scores -->
+                                <div class="flex items-center gap-4 shrink-0">
+                                    <div class="w-14 h-14 rounded-full border-4 {{ 'border-green-400 text-green-600' if match.score.final_score >= 70 else 'border-orange-400 text-orange-600' if match.score.final_score >= 40 else 'border-red-400 text-red-600' }} flex items-center justify-center font-bold text-sm bg-gray-50">
+                                        {{ match.score.final_score }}%
+                                    </div>
+                                    <div class="flex flex-col gap-1">
+                                        <span class="text-[10px] font-bold text-textMuted bg-gray-100 px-2 py-0.5 rounded text-center">IMG: {{ match.score.image_score }}%</span>
+                                        <span class="text-[10px] font-bold text-textMuted bg-gray-100 px-2 py-0.5 rounded text-center">TXT: {{ match.score.text_score }}%</span>
+                                    </div>
+                                </div>
+
+                                <!-- Action -->
+                                <div class="shrink-0 w-full md:w-auto mt-4 md:mt-0">
+                                    <a href="/admin/approve-match/{{ match.lost.lost_id }}/{{ match.found.found_id }}" class="w-full md:w-auto bg-primary hover:bg-indigo-700 text-white px-6 py-2.5 rounded-full font-bold text-sm shadow-md transition-colors text-center inline-block">
+                                        Approve
+                                    </a>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="p-12 text-center flex flex-col items-center">
+                        <div class="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-4">
+                            <span class="material-symbols-outlined text-4xl text-gray-300">done_all</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-textDark mb-1">All Caught Up</h3>
+                        <p class="text-sm text-textMuted">There are no pending verifications requiring your attention.</p>
+                    </div>
+                    {% endif %}
+                </div>
+
             </div>
         </div>
-        {% else %}
-        <div style="flex: 1; display: flex; align-items: center; justify-content: center;">
-            <div class="paper-card" style="text-align: center; padding: 3rem; max-width: 400px;">
-                <span class="material-icons" style="font-size: 4rem; color: #eee; margin-bottom: 1rem;">done_all</span>
-                <h2 style="color: #ccc; font-size: 1.5rem;">All Caught Up</h2>
-                <p style="color: #ccc;">No pending verifications on your desk.</p>
-            </div>
-        </div>
-        {% endif %}
-
-        <!-- Recent Reports Section Removed by Admin Request -->
-
     </main>
 
     <script src="{{ url_for('static', filename='js/memories_core.js') }}"></script>
 </body>
-
 </html>

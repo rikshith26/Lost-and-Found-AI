@@ -12,13 +12,13 @@
             theme: {
                 extend: {
                     colors: {
-                        primary: "#D45D1C",
-                        primaryLight: "#FFF0E8",
-                        secondary: "#006B56",
-                        secondaryLight: "#E8F5F2",
-                        textDark: "#191C1D",
-                        textMuted: "#889096",
-                        bgLight: "#F8F9FA",
+                        primary: "#4f46e5",
+                        primaryLight: "#e0e7ff",
+                        secondary: "#14b8a6",
+                        secondaryLight: "#ccfbf1",
+                        textDark: "#0f172a",
+                        textMuted: "#64748b",
+                        bgLight: "#f8fafc",
                     },
                     fontFamily: {
                         sans: ["Plus Jakarta Sans", "sans-serif"],
@@ -123,13 +123,13 @@
                     <span class="material-symbols-outlined">chat_bubble</span>
                     <span class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white">1</span>
                 </button>
-                <div class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm shadow-sm cursor-pointer border-2 border-white">
+                <a href="/user/profile" class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm shadow-sm cursor-pointer border-2 border-white block">
                     {% if user.profile_photo %}
                         <img src="/{{ user.profile_photo }}" class="w-full h-full rounded-full object-cover">
                     {% else %}
                         {{ user.name[0] | upper }}
                     {% endif %}
-                </div>
+                </a>
             </div>
         </header>
 
@@ -194,28 +194,28 @@
 
                 <!-- ACTION CARDS (2 COLUMNS) -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="bg-[#FFF4ED] p-8 rounded-[2rem] relative overflow-hidden group">
+                    <div class="bg-primaryLight p-8 rounded-[2rem] relative overflow-hidden group">
                         <div class="w-12 h-12 bg-white/60 rounded-full flex items-center justify-center text-primary mb-6 backdrop-blur-sm shadow-sm">
                             <span class="material-symbols-outlined icon-fill">search_off</span>
                         </div>
                         <h3 class="text-2xl font-bold text-textDark mb-2">Report Loss</h3>
                         <p class="text-sm text-textMuted mb-6 max-w-[60%]">Lost your valuables? Let our community help you find it.</p>
-                        <a href="/user/report-lost" class="inline-flex items-center gap-2 bg-[#B74C18] hover:bg-[#9B3E11] text-white px-6 py-3 rounded-full font-bold text-sm transition-colors shadow-lg shadow-orange-900/20">
+                        <a href="/user/report-lost" class="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded-full font-bold text-sm transition-colors shadow-lg shadow-primary/20">
                             Create Missing Report <span class="material-symbols-outlined text-sm">arrow_forward</span>
                         </a>
-                        <span class="material-symbols-outlined absolute -right-6 -bottom-6 text-[180px] text-orange-900/5 rotate-12 group-hover:rotate-6 transition-transform">wallet</span>
+                        <span class="material-symbols-outlined absolute -right-6 -bottom-6 text-[180px] text-primary/5 rotate-12 group-hover:rotate-6 transition-transform">wallet</span>
                     </div>
 
-                    <div class="bg-[#EAFBF6] p-8 rounded-[2rem] relative overflow-hidden group">
-                        <div class="w-12 h-12 bg-white/60 rounded-full flex items-center justify-center text-[#006B56] mb-6 backdrop-blur-sm shadow-sm">
+                    <div class="bg-secondaryLight p-8 rounded-[2rem] relative overflow-hidden group">
+                        <div class="w-12 h-12 bg-white/60 rounded-full flex items-center justify-center text-secondary mb-6 backdrop-blur-sm shadow-sm">
                             <span class="material-symbols-outlined icon-fill">volunteer_activism</span>
                         </div>
                         <h3 class="text-2xl font-bold text-textDark mb-2">Report Find</h3>
                         <p class="text-sm text-textMuted mb-6 max-w-[60%]">Found something? Be a hero and return it today.</p>
-                        <a href="/user/report-found" class="inline-flex items-center gap-2 bg-[#006B56] hover:bg-[#005242] text-white px-6 py-3 rounded-full font-bold text-sm transition-colors shadow-lg shadow-teal-900/20">
+                        <a href="/user/report-found" class="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/90 text-white px-6 py-3 rounded-full font-bold text-sm transition-colors shadow-lg shadow-secondary/20">
                             List Found Item <span class="material-symbols-outlined text-sm">arrow_forward</span>
                         </a>
-                        <span class="material-symbols-outlined absolute -right-6 -bottom-6 text-[180px] text-teal-900/5 -rotate-12 group-hover:-rotate-6 transition-transform">backpack</span>
+                        <span class="material-symbols-outlined absolute -right-6 -bottom-6 text-[180px] text-secondary/5 -rotate-12 group-hover:-rotate-6 transition-transform">backpack</span>
                     </div>
                 </div>
 
@@ -264,22 +264,22 @@
                         </div>
                         
                         <div class="flex gap-3 h-full">
-                            <div class="flex-1 bg-[#F2FAF7] rounded-xl p-4 flex flex-col justify-between">
+                            <div class="flex-1 bg-secondaryLight rounded-xl p-4 flex flex-col justify-between">
                                 <div class="flex items-center gap-2 mb-2">
-                                    <span class="material-symbols-outlined text-[#006B56] text-sm">sell</span>
+                                    <span class="material-symbols-outlined text-secondary text-sm">sell</span>
                                     <span class="text-xl font-bold text-textDark">{{ found_count + lost_count }}</span>
                                 </div>
                                 <p class="text-[10px] text-textMuted mb-2">Items Reported</p>
-                                <p class="text-[10px] font-bold text-[#006B56] flex items-center gap-1"><span class="material-symbols-outlined text-[12px]">arrow_upward</span> 20%</p>
+                                <p class="text-[10px] font-bold text-secondary flex items-center gap-1"><span class="material-symbols-outlined text-[12px]">arrow_upward</span> 20%</p>
                             </div>
 
-                            <div class="flex-1 bg-[#FFF6F0] rounded-xl p-4 flex flex-col justify-between">
+                            <div class="flex-1 bg-primaryLight rounded-xl p-4 flex flex-col justify-between">
                                 <div class="flex items-center gap-2 mb-2">
-                                    <span class="material-symbols-outlined text-[#D45D1C] text-sm">group</span>
+                                    <span class="material-symbols-outlined text-primary text-sm">group</span>
                                     <span class="text-xl font-bold text-textDark">{{ helped_count }}</span>
                                 </div>
                                 <p class="text-[10px] text-textMuted mb-2">Items Found</p>
-                                <p class="text-[10px] font-bold text-[#D45D1C] flex items-center gap-1"><span class="material-symbols-outlined text-[12px]">arrow_upward</span> 10%</p>
+                                <p class="text-[10px] font-bold text-primary flex items-center gap-1"><span class="material-symbols-outlined text-[12px]">arrow_upward</span> 10%</p>
                             </div>
 
                             <div class="flex-1 bg-[#F0F5FF] rounded-xl p-4 flex flex-col justify-between">
@@ -309,9 +309,9 @@
                             <div class="flex items-center gap-4 group">
                                 <div class="w-14 text-center shrink-0">
                                     {% if act.type == 'FOUND' %}
-                                        <span class="bg-[#EAFBF6] text-[#006B56] text-[10px] font-bold px-2 py-1 rounded">FOUND</span>
+                                        <span class="bg-secondaryLight text-secondary text-[10px] font-bold px-2 py-1 rounded">FOUND</span>
                                     {% else %}
-                                        <span class="bg-[#FFF4ED] text-[#D45D1C] text-[10px] font-bold px-2 py-1 rounded">LOST</span>
+                                        <span class="bg-primaryLight text-primary text-[10px] font-bold px-2 py-1 rounded">LOST</span>
                                     {% endif %}
                                 </div>
                                 <div class="flex-1 min-w-0">

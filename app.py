@@ -535,7 +535,34 @@ def google_callback():
 def superadmin_dashboard():
     if session.get("role") != "super_admin":
         abort(403)
-    return render_template("superadmin_dashboard.html")
+        
+    db = get_db()
+    
+    # Calculate System Stats
+    total_users = db.users.count_documents({"role": "user"})
+    total_admins = db.users.count_documents({"role": "admin"})
+    
+    total_lost = db.lost_items.count_documents({})
+    total_found = db.found_items.count_documents({})
+    
+    resolved_matches = db.chats.count_documents({})
+    
+    resolution_rate = 0
+    if total_lost > 0:
+        resolution_rate = int((resolved_matches / total_lost) * 100)
+        
+    pending_unblocks = db.unblock_requests.count_documents({"status": "pending"})
+    
+    recent_admins = list(db.users.find({"role": "admin"}).sort("created_at", -1).limit(5))
+    
+    return render_template("superadmin_dashboard.html", 
+                           total_users=total_users, 
+                           total_admins=total_admins, 
+                           total_lost=total_lost, 
+                           total_found=total_found, 
+                           resolution_rate=resolution_rate,
+                           pending_unblocks=pending_unblocks,
+                           recent_admins=recent_admins)
 
 # ---------- USER PROFILE ----------
 @app.route("/user/profile", methods=["GET", "POST"])
@@ -957,17 +984,21 @@ def admin_settings():
 
 # ---------- ADMIN DASHBOARD & MATCHING ----------
 @app.route("/admin/dashboard")
-
 def admin_dashboard():
     if session.get("role") not in ["admin", "super_admin"]:
         abort(403)
 
     db = get_db()
     
+    # Stats
+    total_users = db.users.count_documents({"role": "user"})
+    active_lost = db.lost_items.count_documents({"status": "lost"})
+    active_found = db.found_items.count_documents({"status": "found"})
+    
     # Fetch RAW items for the "Recent Reports" feed
     try:
-        lost_items = list(db.lost_items.find({"status": "lost"}).sort("created_at", -1))
-        found_items = list(db.found_items.find({"status": "found"}).sort("created_at", -1))
+        lost_items = list(db.lost_items.find({"status": "lost"}).sort("created_at", -1).limit(10))
+        found_items = list(db.found_items.find({"status": "found"}).sort("created_at", -1).limit(10))
     except Exception as e:
         lost_items = []
         found_items = []
@@ -993,11 +1024,17 @@ def admin_dashboard():
     except Exception as e:
         print(f"Suggestions Fetch Error: {e}")
 
+    pending_matches_count = len(matches)
+
     return render_template(
         "admin_dashboard.html",
         lost_items=lost_items,
         found_items=found_items,
-        matches=matches
+        matches=matches,
+        total_users=total_users,
+        active_lost=active_lost,
+        active_found=active_found,
+        pending_matches_count=pending_matches_count
     )
 
 # ---------- TRIGGER SCANS ----------

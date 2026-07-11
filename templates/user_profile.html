@@ -18,53 +18,52 @@
             theme: {
                 extend: {
                     colors: {
-                        "outline-variant": "#dbc1b5",
-                        "primary": "#984713",
+                        "primary": "#4f46e5",
                         "surface-container": "#edeeef",
-                        "primary-fixed": "#ffdbca",
+                        "primary-fixed": "#e0e7ff",
                         "surface-container-high": "#e7e8e9",
                         "surface-variant": "#e1e3e4",
                         "surface-container-lowest": "#ffffff",
                         "on-primary": "#ffffff",
                         "tertiary-fixed": "#dde3eb",
-                        "on-background": "#191c1d",
+                        "on-background": "#0f172a",
                         "on-secondary-fixed": "#002018",
                         "secondary-fixed-dim": "#49ddb8",
-                        "primary-container": "#ff985e",
+                        "primary-container": "#c7d2fe",
                         "on-secondary-fixed-variant": "#005140",
                         "on-tertiary-container": "#3f454c",
-                        "surface-tint": "#984713",
+                        "surface-tint": "#4f46e5",
                         "inverse-on-surface": "#f0f1f2",
                         "tertiary": "#595f65",
-                        "inverse-primary": "#ffb690",
+                        "inverse-primary": "#a5b4fc",
                         "tertiary-container": "#adb3ba",
                         "on-tertiary-fixed": "#161c22",
                         "inverse-surface": "#2e3132",
-                        "on-primary-fixed-variant": "#783200",
-                        "secondary-container": "#68f7d0",
-                        "secondary": "#006b56",
-                        "on-primary-container": "#743000",
+                        "on-primary-fixed-variant": "#3730a3",
+                        "secondary-container": "#ccfbf1",
+                        "secondary": "#14b8a6",
+                        "on-primary-container": "#312e81",
                         "on-tertiary-fixed-variant": "#41474e",
                         "on-tertiary": "#ffffff",
-                        "on-secondary-container": "#00705a",
+                        "on-secondary-container": "#0f766e",
                         "surface": "#f8f9fa",
-                        "primary-fixed-dim": "#ffb690",
-                        "on-surface-variant": "#55433a",
+                        "primary-fixed-dim": "#a5b4fc",
+                        "on-surface-variant": "#64748b",
                         "surface-container-highest": "#e1e3e4",
                         "tertiary-fixed-dim": "#c1c7ce",
                         "surface-bright": "#f8f9fa",
-                        "on-surface": "#191c1d",
+                        "on-surface": "#0f172a",
                         "error-container": "#ffdad6",
                         "error": "#ba1a1a",
-                        "outline": "#887368",
-                        "on-primary-fixed": "#331100",
+                        "outline": "#94a3b8",
+                        "on-primary-fixed": "#1e1b4b",
                         "surface-dim": "#d9dadb",
                         "on-secondary": "#ffffff",
                         "on-error": "#ffffff",
                         "background": "#f8f9fa",
                         "on-error-container": "#93000a",
                         "surface-container-low": "#f3f4f5",
-                        "secondary-fixed": "#6bfad3"
+                        "secondary-fixed": "#99f6e4"
                     },
                     fontFamily: {
                         "headline": ["Plus Jakarta Sans"],
@@ -213,7 +212,7 @@
                                 <p class="text-on-surface-variant mb-6 font-medium">Foundify Community Guardian • {{
                                     user.college if user.college else 'Location Not Set' }}</p>
                                 <div class="flex flex-wrap gap-4 justify-center md:justify-start">
-                                    <button onclick="document.getElementById('mobile-edit-btn').click()"
+                                    <button type="button" onclick="document.getElementById('desktop-profile-form').scrollIntoView({behavior: 'smooth', block: 'center'})"
                                         class="bg-primary text-on-primary px-6 py-2.5 rounded-full font-bold text-sm shadow-md flex items-center gap-2 active:scale-95 transition-transform">
                                         <span class="material-symbols-outlined text-base">edit</span> Update Info
                                     </button>
@@ -255,7 +254,7 @@
                     <!-- Account Details Update (Wizard Re-integrated) -->
                     <div class="bg-white p-8 rounded-[2rem] border border-gray-100 shadow-sm">
                         <h4 class="text-lg font-bold text-on-surface mb-6">Update Your Identity</h4>
-                        <form method="POST" enctype="multipart/form-data" class="space-y-6">
+                        <form id="desktop-profile-form" method="POST" enctype="multipart/form-data" class="space-y-6">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div class="space-y-2">
                                     <label
@@ -283,10 +282,9 @@
                                 </div>
                                 <div class="space-y-2">
                                     <label
-                                        class="block text-xs font-bold uppercase tracking-widest text-on-surface-variant">Email
-                                        (Read Only)</label>
-                                    <input type="text" value="{{ user.email }}" disabled
-                                        class="w-full bg-gray-100 border-none text-gray-400 rounded-2xl p-4 cursor-not-allowed">
+                                        class="block text-xs font-bold uppercase tracking-widest text-on-surface-variant">Profile Photo</label>
+                                    <input type="file" name="photo" accept="image/*"
+                                        class="w-full bg-gray-50 border-gray-100 rounded-2xl p-3 focus:ring-primary focus:border-primary file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20">
                                 </div>
                             </div>
                             <div class="pt-6 border-t border-gray-50 flex justify-end">
