@@ -324,6 +324,51 @@
                 </div>
             </div>
             {% endfor %}
+            
+            <!-- CLAIMS -->
+            {% if claims %}
+            <div style="margin-top: 2rem; margin-bottom: 1rem;">
+                <h3 style="font-size: 1.2rem; font-weight: 700; color: var(--text-ink);">My Claim Requests</h3>
+            </div>
+            {% for claim in claims %}
+            <div class="history-list-item">
+                <img src="/{{ claim.item_image }}" class="item-thumb">
+
+                <div class="list-info">
+                    <div style="font-weight: 600; color: var(--text-ink); font-size: 1rem;">Claim: {{ claim.item_name }}</div>
+                    {% if claim.status == 'approved' %}
+                    <div style="font-size: 0.85rem; color: #10B981; font-weight: bold;">
+                        Finder: {{ claim.finder_name }} ({{ claim.finder_phone }}) - {{ claim.finder_email }}
+                    </div>
+                    {% else %}
+                    <div style="font-size: 0.85rem; color: var(--text-pencil);">Waiting for admin approval...</div>
+                    {% endif %}
+                </div>
+
+                <div class="list-meta" style="font-size: 0.9rem; color: var(--text-ink);">
+                    <div>Location: {{ claim.location }}</div>
+                </div>
+
+                <div>
+                    {% if claim.status == 'pending' %}
+                    <span class="status-pill" style="background: #FFFBEB; color: #D97706;">Pending</span>
+                    {% elif claim.status == 'approved' %}
+                    <span class="status-pill status-found">Approved</span>
+                    {% else %}
+                    <span class="status-pill status-lost">Rejected</span>
+                    {% endif %}
+                </div>
+
+                <div class="list-action" style="text-align: right;">
+                    {% if claim.status == 'approved' %}
+                    <span class="material-icons" style="color: #10B981; font-size: 1.2rem;">verified</span>
+                    {% else %}
+                    <span class="material-icons" style="color: #ccc; font-size: 1.2rem;">hourglass_empty</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+            {% endif %}
 
             {% else %}
             <div style="text-align: center; padding: 4rem 1rem;">

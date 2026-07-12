@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Claims Verification - Admin</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    <style>
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .icon-fill { font-variation-settings: 'FILL' 1; }
+        body { background-color: #f8fafc; color: #0f172a; font-family: 'Plus Jakarta Sans', sans-serif; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body class="flex min-h-screen overflow-hidden">
+    {% include 'loader.html' %}
+
+    <!-- SIDEBAR -->
+    <aside class="w-64 bg-white border-r border-gray-100 flex flex-col h-screen flex-shrink-0 z-20 hidden md:flex shadow-sm">
+        <div class="px-6 py-8">
+            <div class="flex items-center gap-3">
+                <img src="{{ url_for('static', filename='images/logo.jpeg') }}" alt="Foundify Logo" class="h-8 w-auto rounded-md object-contain">
+                <h1 class="text-xl font-bold text-gray-900 tracking-tight">Foundify</h1>
+            </div>
+            <p class="text-[10px] font-semibold uppercase tracking-widest text-indigo-600 mt-1">Admin Panel</p>
+        </div>
+
+        <nav class="flex-1 overflow-y-auto hide-scrollbar px-4 space-y-2">
+            <a href="/admin/dashboard" class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:bg-gray-50 hover:text-slate-900 rounded-xl font-medium text-sm transition-colors">
+                <span class="material-symbols-outlined">dashboard</span> Dashboard
+            </a>
+            <a href="/admin/claims" class="flex items-center gap-3 px-4 py-3 bg-indigo-50 text-indigo-600 rounded-xl font-semibold text-sm transition-colors shadow-sm border border-indigo-100">
+                <span class="material-symbols-outlined icon-fill">gavel</span> Verify Claims
+            </a>
+        </nav>
+
+        <div class="p-4 mt-auto">
+            <a href="/logout" class="w-full flex items-center justify-center gap-2 px-4 py-3 text-red-500 hover:bg-red-50 rounded-xl font-bold text-sm transition-colors">
+                <span class="material-symbols-outlined">logout</span> Logout
+            </a>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-1 flex flex-col h-screen overflow-hidden">
+        <header class="h-20 bg-white/80 backdrop-blur-md border-b border-gray-100 flex items-center justify-between px-8 z-10 shadow-sm">
+            <div>
+                <h2 class="text-2xl font-bold text-slate-900">Claims Verification</h2>
+                <p class="text-xs text-slate-500 font-medium">Verify paid item claims before revealing finder details.</p>
+            </div>
+            <div class="flex items-center gap-4">
+                <button onclick="window.location.reload()" class="bg-white border border-gray-200 text-slate-900 px-4 py-2 rounded-full text-sm font-bold flex items-center gap-2 shadow-sm hover:bg-gray-50 transition-all">
+                    <span class="material-symbols-outlined text-[18px]">refresh</span> Refresh
+                </button>
+            </div>
+        </header>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="px-8 pt-6">
+            {% for category, message in messages %}
+            <div class="bg-emerald-50 text-emerald-700 px-6 py-4 rounded-xl font-medium text-sm border border-emerald-100 shadow-sm mb-2">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        <div class="flex-1 overflow-y-auto hide-scrollbar p-8">
+            <div class="max-w-6xl mx-auto">
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr class="bg-gray-50/50 text-xs uppercase text-slate-500 border-b border-gray-100">
+                                <th class="py-4 px-6 font-semibold">Date</th>
+                                <th class="py-4 px-6 font-semibold">Claimant</th>
+                                <th class="py-4 px-6 font-semibold">Item Claimed</th>
+                                <th class="py-4 px-6 font-semibold">Payment</th>
+                                <th class="py-4 px-6 font-semibold">Status</th>
+                                <th class="py-4 px-6 font-semibold text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if claims %}
+                            {% for claim in claims %}
+                            <tr class="border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors">
+                                <td class="py-4 px-6 text-sm text-slate-500 whitespace-nowrap">
+                                    {{ claim.created_at.strftime('%Y-%m-%d') if claim.created_at else 'Unknown' }}
+                                </td>
+                                <td class="py-4 px-6">
+                                    <div class="font-bold text-sm text-slate-900">{{ claim.claimant_name }}</div>
+                                </td>
+                                <td class="py-4 px-6">
+                                    <div class="flex items-center gap-3">
+                                        {% if claim.item_image %}
+                                        <img src="/{{ claim.item_image }}" class="w-10 h-10 rounded-lg object-cover">
+                                        {% endif %}
+                                        <div class="font-bold text-sm text-slate-900">{{ claim.item_name }}</div>
+                                    </div>
+                                </td>
+                                <td class="py-4 px-6">
+                                    <span class="bg-green-100 text-green-700 px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider">Paid ($5)</span>
+                                </td>
+                                <td class="py-4 px-6">
+                                    <span class="bg-orange-100 text-orange-600 px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider">Pending</span>
+                                </td>
+                                <td class="py-4 px-6 text-right whitespace-nowrap">
+                                    <div class="flex items-center justify-end gap-2">
+                                        <a href="/admin/claims/{{ claim.id }}/approve" class="bg-green-500 hover:bg-green-600 text-white px-4 py-1.5 rounded-lg text-xs font-bold transition-colors shadow-sm inline-block">
+                                            Approve
+                                        </a>
+                                        <a href="/admin/claims/{{ claim.id }}/reject" class="bg-white border border-red-500 text-red-500 hover:bg-red-50 px-4 py-1.5 rounded-lg text-xs font-bold transition-colors inline-block">
+                                            Reject
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            {% else %}
+                            <tr>
+                                <td colspan="6" class="py-16 text-center">
+                                    <span class="material-symbols-outlined text-5xl text-gray-200 mb-3 block">inbox</span>
+                                    <p class="text-slate-500 font-medium text-sm">No pending claims to verify.</p>
+                                </td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

@@ -730,6 +730,79 @@ def user_dashboard():
         nearby_items=nearby_items
     )
 
+# ---------- USER SEARCH AND CLAIM ----------
+@app.route("/user/search")
+def user_search():
+    if session.get("role") != "user":
+        abort(403)
+        
+    query = request.args.get("q", "").strip()
+    db = get_db()
+    
+    search_filter = {"status": "found"}
+    if query:
+        regex = re.compile(query, re.IGNORECASE)
+        search_filter["$or"] = [
+            {"item_name": regex},
+            {"description": regex},
+            {"location": regex}
+        ]
+        
+    results = list(db.found_items.find(search_filter).sort("created_at", -1))
+    
+    user = db.users.find_one({"_id": ObjectId(session["user_id"])})
+    if user:
+        user['id'] = str(user['_id'])
+        
+    for r in results:
+        r['id'] = str(r['_id'])
+        
+    return render_template("search_results.html", user=user, results=results, query=query)
+
+@app.route("/user/pay-claim/<item_id>")
+def pay_claim(item_id):
+    if session.get("role") != "user":
+        abort(403)
+        
+    db = get_db()
+    item = db.found_items.find_one({"_id": ObjectId(item_id)})
+    if not item:
+        flash("Item not found.", "error")
+        return redirect("/user/dashboard")
+        
+    item['id'] = str(item['_id'])
+    
+    user = db.users.find_one({"_id": ObjectId(session["user_id"])})
+    if user:
+        user['id'] = str(user['_id'])
+        
+    return render_template("pay_claim.html", user=user, item=item)
+
+@app.route("/user/process-claim/<item_id>", methods=["POST"])
+def process_claim(item_id):
+    if session.get("role") != "user":
+        abort(403)
+        
+    db = get_db()
+    item = db.found_items.find_one({"_id": ObjectId(item_id)})
+    if not item:
+        flash("Item not found.", "error")
+        return redirect("/user/dashboard")
+        
+    claim = {
+        "claimant_id": ObjectId(session["user_id"]),
+        "found_item_id": ObjectId(item_id),
+        "finder_id": item["user_id"],
+        "status": "pending",
+        "created_at": datetime.datetime.utcnow(),
+        "payment_status": "paid_simulation"
+    }
+    
+    db.claims.insert_one(claim)
+    
+    flash("Payment successful. Your claim is pending admin verification.", "success")
+    return redirect("/user/history")
+
 # ---------- USER HISTORY ----------
 @app.route("/user/history")
 def user_history():
@@ -755,8 +828,24 @@ def user_history():
     
     for item in found_items:
         item['id'] = str(item['_id'])
+        
+    # Fetch Claims
+    claims = list(db.claims.find({"claimant_id": ObjectId(session["user_id"])}).sort("created_at", -1))
+    for claim in claims:
+        claim['id'] = str(claim['_id'])
+        found_item = db.found_items.find_one({"_id": claim["found_item_id"]})
+        if found_item:
+            claim['item_name'] = found_item.get('item_name')
+            claim['item_image'] = found_item.get('image_path')
+            claim['location'] = found_item.get('location')
+        if claim['status'] == 'approved':
+            finder = db.users.find_one({"_id": claim["finder_id"]})
+            if finder:
+                claim['finder_name'] = finder.get('name')
+                claim['finder_phone'] = finder.get('phone', 'N/A')
+                claim['finder_email'] = finder.get('email', 'N/A')
 
-    return render_template("user_history.html", user=user, lost_items=lost_items, found_items=found_items)
+    return render_template("user_history.html", user=user, lost_items=lost_items, found_items=found_items, claims=claims)
 
 # ---------- ACTIONS: RESOLVE ----------
 @app.route("/user/item/resolve/<item_type>/<item_id>")
@@ -1688,6 +1777,41 @@ def on_send_message(data):
         "sender_id": sender_id,
         "timestamp": datetime.datetime.utcnow().strftime('%H:%M')
     }, room=room)
+
+# ---------- ADMIN CLAIMS VERIFICATION ----------
+@app.route("/admin/claims")
+def admin_claims():
+    if session.get("role") not in ["admin", "super_admin"]:
+        abort(403)
+        
+    db = get_db()
+    pending_claims = list(db.claims.find({"status": "pending"}).sort("created_at", -1))
+    for claim in pending_claims:
+        claim['id'] = str(claim['_id'])
+        # populate extra info
+        claimant = db.users.find_one({"_id": claim['claimant_id']})
+        if claimant:
+            claim['claimant_name'] = claimant.get('name')
+        item = db.found_items.find_one({"_id": claim['found_item_id']})
+        if item:
+            claim['item_name'] = item.get('item_name')
+            claim['item_image'] = item.get('image_path')
+            
+    return render_template("admin_claims.html", claims=pending_claims)
+
+@app.route("/admin/claims/<claim_id>/<action>")
+def admin_process_claim(claim_id, action):
+    if session.get("role") not in ["admin", "super_admin"]:
+        abort(403)
+        
+    if action not in ['approve', 'reject']:
+        abort(400)
+        
+    status = 'approved' if action == 'approve' else 'rejected'
+    db = get_db()
+    db.claims.update_one({"_id": ObjectId(claim_id)}, {"$set": {"status": status}})
+    flash(f"Claim {status} successfully.", "success")
+    return redirect("/admin/claims")
 
 if __name__ == "__main__":
     # Get port from environment for deployment (e.g., Render/Heroku)

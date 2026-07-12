@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Results // Foundify</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#4f46e5",
+                        primaryLight: "#e0e7ff",
+                        secondary: "#14b8a6",
+                        secondaryLight: "#ccfbf1",
+                        textDark: "#0f172a",
+                        textMuted: "#64748b",
+                        bgLight: "#f8fafc",
+                    },
+                    fontFamily: {
+                        sans: ["Plus Jakarta Sans", "sans-serif"],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .icon-fill { font-variation-settings: 'FILL' 1; }
+        body { background-color: #FAFAFA; color: #191C1D; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body class="flex min-h-screen overflow-hidden">
+    {% include 'loader.html' %}
+
+    <!-- SIDEBAR -->
+    <aside class="w-64 bg-white border-r border-gray-100 flex flex-col h-screen flex-shrink-0 z-20 hidden md:flex">
+        <!-- Logo -->
+        <div class="px-6 py-6">
+            <div class="flex items-center gap-3">
+                <img src="{{ url_for('static', filename='images/logo.jpeg') }}" alt="Foundify Logo" class="h-8 w-auto rounded-md object-contain">
+                <h1 class="text-2xl font-bold text-gray-900 tracking-tight">Foundify</h1>
+            </div>
+        </div>
+        
+        <!-- User Profile Card -->
+        <div class="px-6 mb-6 flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-primaryLight text-primary flex items-center justify-center font-bold text-lg border border-primary/20 shrink-0">
+                {% if user.profile_photo %}
+                    <img src="/{{ user.profile_photo }}" class="w-full h-full rounded-full object-cover">
+                {% else %}
+                    {{ user.name[0] | upper }}
+                {% endif %}
+            </div>
+            <div class="overflow-hidden">
+                <h3 class="text-sm font-bold text-textDark truncate">Hello, {{ user.name.split(' ')[0] }}</h3>
+                <p class="text-[10px] text-textMuted font-medium">Foundify Member</p>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="flex-1 overflow-y-auto hide-scrollbar px-4 space-y-1">
+            <a href="/user/dashboard" class="flex items-center gap-3 px-4 py-3 text-textMuted hover:bg-gray-50 hover:text-textDark rounded-xl font-medium text-sm transition-colors">
+                <span class="material-symbols-outlined">dashboard</span> Dashboard
+            </a>
+            <a href="/user/report-lost" class="flex items-center gap-3 px-4 py-3 text-textMuted hover:bg-gray-50 hover:text-textDark rounded-xl font-medium text-sm transition-colors">
+                <span class="material-symbols-outlined">search_off</span> I Lost Something
+            </a>
+            <a href="/user/report-found" class="flex items-center gap-3 px-4 py-3 text-textMuted hover:bg-gray-50 hover:text-textDark rounded-xl font-medium text-sm transition-colors">
+                <span class="material-symbols-outlined">volunteer_activism</span> I Found Something
+            </a>
+            <a href="/user/chats" class="flex items-center gap-3 px-4 py-3 text-textMuted hover:bg-gray-50 hover:text-textDark rounded-xl font-medium text-sm transition-colors">
+                <span class="material-symbols-outlined">mail</span> Messages
+            </a>
+            <a href="/user/history" class="flex items-center gap-3 px-4 py-3 text-textMuted hover:bg-gray-50 hover:text-textDark rounded-xl font-medium text-sm transition-colors">
+                <span class="material-symbols-outlined">history</span> History
+            </a>
+            <a href="/user/profile" class="flex items-center gap-3 px-4 py-3 text-textMuted hover:bg-gray-50 hover:text-textDark rounded-xl font-medium text-sm transition-colors">
+                <span class="material-symbols-outlined">person</span> My Activity
+            </a>
+        </nav>
+
+        <div class="p-4 mt-auto">
+            <a href="/user/report-lost" class="w-full bg-primary hover:bg-primary/90 text-white rounded-full py-3 px-4 flex items-center justify-center gap-2 font-bold text-sm shadow-md transition-all">
+                <span class="material-symbols-outlined text-xl">add_circle</span> Report New Item
+            </a>
+            <a href="/logout" class="mt-4 flex items-center gap-3 px-4 py-2 text-red-500 hover:bg-red-50 rounded-xl font-bold text-sm transition-colors w-max">
+                <span class="material-symbols-outlined">logout</span> Logout
+            </a>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-1 flex flex-col h-screen overflow-hidden bg-[#FAFAFA]">
+        
+        <!-- TOP APP BAR -->
+        <header class="h-20 bg-white/80 backdrop-blur-md border-b border-gray-100 flex items-center justify-between px-8 z-10">
+            <form action="/user/search" method="GET" class="relative w-96">
+                <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-primary">search</span>
+                <input type="text" name="q" value="{{ query }}" placeholder="Search for items, locations..." class="w-full bg-primaryLight/50 border border-primary/20 rounded-full py-3 pl-12 pr-4 text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none text-textDark placeholder-primary/60 font-medium transition-all" required>
+            </form>
+            
+            <div class="flex items-center gap-6">
+                <button class="relative text-textMuted hover:text-textDark transition-colors">
+                    <span class="material-symbols-outlined">notifications</span>
+                </button>
+                <a href="/user/profile" class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm shadow-sm cursor-pointer border-2 border-white block">
+                    {% if user.profile_photo %}
+                        <img src="/{{ user.profile_photo }}" class="w-full h-full rounded-full object-cover">
+                    {% else %}
+                        {{ user.name[0] | upper }}
+                    {% endif %}
+                </a>
+            </div>
+        </header>
+
+        <!-- DASHBOARD SCROLL AREA -->
+        <div class="flex-1 overflow-y-auto hide-scrollbar p-8">
+            <div class="max-w-6xl mx-auto space-y-8">
+                
+                <!-- HERO SECTION -->
+                <div class="flex justify-between items-end relative pb-4">
+                    <div>
+                        <h2 class="text-4xl font-extrabold tracking-tight text-textDark mb-2">Search Results</h2>
+                        <p class="text-textMuted font-medium text-sm">We found <span class="text-primary font-bold">{{ results | length }}</span> items matching "<span class="text-textDark font-bold">{{ query }}</span>"</p>
+                    </div>
+                </div>
+
+                <!-- RESULTS GRID -->
+                {% if results %}
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {% for item in results %}
+                    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col group hover:shadow-md transition-shadow">
+                        <div class="h-48 bg-gray-100 relative overflow-hidden">
+                            {% if item.image_path %}
+                                <img src="/{{ item.image_path }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                            {% else %}
+                                <div class="w-full h-full flex items-center justify-center text-gray-300">
+                                    <span class="material-symbols-outlined text-4xl">image</span>
+                                </div>
+                            {% endif %}
+                            <div class="absolute top-3 right-3 bg-white/90 backdrop-blur-sm text-textDark text-[10px] font-bold px-2.5 py-1 rounded-full shadow-sm">
+                                FOUND
+                            </div>
+                        </div>
+                        
+                        <div class="p-5 flex-1 flex flex-col">
+                            <h3 class="text-lg font-bold text-textDark mb-1">{{ item.item_name }}</h3>
+                            <p class="text-sm text-textMuted mb-4 line-clamp-2">{{ item.description }}</p>
+                            
+                            <div class="mt-auto space-y-2 mb-6">
+                                <div class="flex items-center gap-2 text-xs text-textMuted">
+                                    <span class="material-symbols-outlined text-[16px] text-gray-400">location_on</span>
+                                    <span class="truncate">{{ item.location }}</span>
+                                </div>
+                                <div class="flex items-center gap-2 text-xs text-textMuted">
+                                    <span class="material-symbols-outlined text-[16px] text-gray-400">calendar_today</span>
+                                    <span>{{ item.date }}</span>
+                                </div>
+                            </div>
+
+                            <a href="/user/pay-claim/{{ item.id }}" class="w-full bg-primaryLight hover:bg-primary text-primary hover:text-white rounded-xl py-3 px-4 flex items-center justify-center gap-2 font-bold text-sm transition-all shadow-sm">
+                                <span class="material-symbols-outlined text-[18px]">lock_open</span> Pay to Reveal Finder
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="bg-white rounded-3xl border border-gray-100 shadow-sm p-16 text-center flex flex-col items-center">
+                    <div class="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center text-gray-300 mb-6">
+                        <span class="material-symbols-outlined text-5xl">search_off</span>
+                    </div>
+                    <h3 class="text-2xl font-bold text-textDark mb-2">No Items Found</h3>
+                    <p class="text-textMuted text-sm max-w-md mx-auto mb-8">We couldn't find any reported items matching your search criteria. Try adjusting your keywords or report it as lost.</p>
+                    <a href="/user/report-lost" class="bg-primary hover:bg-primary/90 text-white rounded-full py-3 px-8 font-bold text-sm shadow-md transition-all">
+                        Report Lost Item
+                    </a>
+                </div>
+                {% endif %}
+
+            </div>
+        </div>
+    </main>
+
+    <!-- MOBILE BOTTOM NAV -->
+    <div class="md:hidden fixed bottom-0 left-0 w-full bg-white border-t border-gray-100 flex justify-around py-3 z-50">
+        <a href="/user/dashboard" class="flex flex-col items-center text-gray-400 hover:text-gray-600">
+            <span class="material-symbols-outlined text-xl">home</span>
+            <span class="text-[9px] font-bold mt-1">HOME</span>
+        </a>
+        <a href="/user/chats" class="flex flex-col items-center text-gray-400 hover:text-gray-600">
+            <span class="material-symbols-outlined text-xl">mail</span>
+            <span class="text-[9px] font-bold mt-1">MESSAGES</span>
+        </a>
+        <a href="/user/report-lost" class="flex flex-col items-center text-gray-400 hover:text-gray-600 -mt-5">
+            <div class="w-12 h-12 bg-primary text-white rounded-full flex items-center justify-center shadow-lg border-4 border-[#FAFAFA]">
+                <span class="material-symbols-outlined icon-fill">add</span>
+            </div>
+            <span class="text-[9px] font-bold mt-1">REPORT</span>
+        </a>
+        <a href="/user/history" class="flex flex-col items-center text-gray-400 hover:text-gray-600">
+            <span class="material-symbols-outlined text-xl">history</span>
+            <span class="text-[9px] font-bold mt-1">HISTORY</span>
+        </a>
+        <a href="/user/profile" class="flex flex-col items-center text-gray-400 hover:text-gray-600">
+            <span class="material-symbols-outlined text-xl">person</span>
+            <span class="text-[9px] font-bold mt-1">PROFILE</span>
+        </a>
+    </div>
+
+</body>
+</html>
