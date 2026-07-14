@@ -1,409 +1,298 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="en" class="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>History // Foundify</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/memories.css') }}">
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#4f46e5",
+                        primaryLight: "#e0e7ff",
+                        secondary: "#14b8a6",
+                        secondaryLight: "#ccfbf1",
+                        textDark: "#0f172a",
+                        textMuted: "#64748b",
+                        bgLight: "#f8fafc",
+                    },
+                    fontFamily: {
+                        sans: ["Plus Jakarta Sans", "sans-serif"],
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        /* STATIC LIST ITEM */
-        .history-list-item {
-            display: grid;
-            grid-template-columns: 80px 2fr 1.5fr 1.5fr 150px;
-            padding: 1.2rem 0;
-            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-            align-items: center;
-            gap: 1.5rem;
-        }
-
-        .history-list-item:last-child {
-            border-bottom: none;
-        }
-
-        .history-header {
-            display: grid;
-            grid-template-columns: 80px 2fr 1.5fr 1.5fr 150px;
-            padding: 1rem 0;
-            border-bottom: 2px solid rgba(0, 0, 0, 0.05);
-            font-weight: 700;
-            color: var(--text-pencil);
-            font-size: 0.85rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            gap: 1.5rem;
-        }
-
-        .item-thumb {
-            width: 60px;
-            height: 60px;
-            border-radius: 8px;
-            object-fit: cover;
-            border: 1px solid rgba(0, 0, 0, 0.1);
-        }
-
-        .status-pill {
-            display: inline-block;
-            padding: 0.25rem 0.75rem;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 700;
-            text-transform: uppercase;
-        }
-
-        .status-lost {
-            background: #FFF1F2;
-            color: #E11D48;
-        }
-
-        .status-found {
-            background: #ECFDF5;
-            color: #10B981;
-        }
-
-        .status-resolved {
-            background: #F3F4F6;
-            color: #6B7280;
-        }
-
-        @media (max-width: 768px) {
-            .history-header {
-                display: none;
-            }
-
-            .paper-card-static {
-                padding: 0 !important;
-                background: transparent !important;
-                box-shadow: none !important;
-                border: none !important;
-            }
-
-            .history-list-item {
-                display: grid;
-                grid-template-columns: 70px 1fr;
-                gap: 1rem;
-                background: white;
-                border-radius: 16px;
-                padding: 1rem;
-                margin-bottom: 1rem;
-                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
-                border: 1px solid rgba(0, 0, 0, 0.03);
-                align-items: start;
-            }
-
-            .item-thumb {
-                width: 70px;
-                height: 70px;
-                border-radius: 12px;
-            }
-
-            .list-info {
-                grid-column: 2;
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
-            }
-
-            .list-meta {
-                grid-column: 2;
-                font-size: 0.85rem;
-                color: var(--text-pencil);
-                margin-top: 0.2rem;
-                display: flex;
-                gap: 1rem;
-                align-items: center;
-            }
-
-            /* Status & Action Row */
-            .history-list-item>div:nth-child(4) {
-                /* Status Division */
-                grid-column: 1 / -1;
-                margin-top: 0.5rem;
-                padding-top: 0.8rem;
-                border-top: 1px dashed #f0f0f0;
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-            }
-
-            /* Force Status and Action to be on the same line at bottom */
-            .history-list-item>div:nth-child(4) {
-                grid-column: 1 / 3;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                width: 100%;
-            }
-
-            .list-action {
-                /* On mobile, we merge this visually with status line if possible, or hide if it's separate div */
-                display: none;
-                /* We will move action into the status div logic or just handle it via absolute positioning if needed. 
-                                  Actually, the HTML structure is fixed. Let's try to align them. */
-            }
-
-            /* RE-THINKING GRID FOR MOBILE HTML STRUCTURE PRESERVATION */
-            .history-list-item {
-                display: flex;
-                flex-direction: column;
-                gap: 0;
-            }
-
-            .history-list-item-top {
-                display: flex;
-                gap: 1rem;
-                width: 100%;
-                margin-bottom: 1rem;
-            }
-
-            /* HACK: Since we can't easily change HTML structure without a big replace, let's use Grid properly */
-            .history-list-item {
-                display: grid;
-                grid-template-areas:
-                    "img info"
-                    "img meta"
-                    "status action";
-                grid-template-columns: 60px 1fr;
-                gap: 0.5rem 1rem;
-                background: white;
-                border-radius: 16px;
-                padding: 1rem;
-                margin-bottom: 1rem;
-                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
-                border: 1px solid rgba(0, 0, 0, 0.03);
-            }
-
-            .item-thumb {
-                grid-area: img;
-                width: 60px;
-                height: 60px;
-                border-radius: 12px;
-            }
-
-            .list-info {
-                grid-area: info;
-                align-self: end;
-            }
-
-            .list-meta {
-                grid-area: meta;
-                align-self: start;
-            }
-
-            .history-list-item>div:nth-child(4) {
-                /* Status */
-                grid-area: status;
-                align-self: center;
-                margin-top: 0.5rem;
-            }
-
-            .list-action {
-                grid-area: action;
-                justify-self: end;
-                align-self: center;
-                margin-top: 0.5rem;
-            }
-        }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .icon-fill { font-variation-settings: 'FILL' 1; }
+        body { background-color: #FAFAFA; color: #191C1D; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
     </style>
 </head>
-
-<body class="layout-compact">
+<body class="flex min-h-screen overflow-hidden">
     {% include 'loader.html' %}
 
-    <aside class="sidebar" style="height: 100vh;">
-        <div style="margin-bottom: 2rem;">
-            <div style="display:flex; align-items:center; gap:8px;">
-                <img src="{{ url_for('static', filename='images/logo.jpeg') }}" alt="Foundify Logo" style="height: 28px; border-radius: 4px; object-fit: contain;">
-                <div style="font-weight: 700; color: #111827; font-size: 1.2rem;">Foundify</div>
+    <!-- SIDEBAR -->
+    <aside class="w-64 bg-white border-r border-gray-100 flex flex-col h-screen flex-shrink-0 z-20 hidden md:flex">
+        <!-- Logo -->
+        <div class="px-6 py-6">
+            <div class="flex items-center gap-3">
+                <img src="{{ url_for('static', filename='images/logo.jpeg') }}" alt="Foundify Logo" class="h-8 w-auto rounded-md object-contain">
+                <h1 class="text-2xl font-bold text-gray-900 tracking-tight">Foundify</h1>
+            </div>
+        </div>
+        
+        <!-- User Profile Card -->
+        <div class="px-6 mb-6 flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-primaryLight text-primary flex items-center justify-center font-bold text-lg border border-primary/20 shrink-0">
+                {% if user.profile_photo %}
+                    <img src="/{{ user.profile_photo }}" class="w-full h-full rounded-full object-cover">
+                {% else %}
+                    {{ user.name[0] | upper }}
+                {% endif %}
+            </div>
+            <div class="overflow-hidden">
+                <h3 class="text-sm font-bold text-textDark truncate">Hello, {{ user.name.split(' ')[0] }}</h3>
+                <p class="text-[10px] text-textMuted font-medium">Foundify Member</p>
             </div>
         </div>
 
-        <nav>
-            <a href="/user/dashboard" class="sidebar-link">
-                <span class="material-icons">dashboard</span> Dashboard
+        <!-- Navigation -->
+        <nav class="flex-1 overflow-y-auto hide-scrollbar px-4 space-y-1">
+            <a href="/user/dashboard" class="flex items-center gap-3 px-4 py-3 text-textMuted hover:bg-gray-50 hover:text-textDark rounded-xl font-medium text-sm transition-colors">
+                <span class="material-symbols-outlined">dashboard</span> Dashboard
             </a>
-            <a href="/user/history" class="sidebar-link active">
-                <span class="material-icons">history_edu</span> My History
+            <a href="/user/report-lost" class="flex items-center gap-3 px-4 py-3 text-textMuted hover:bg-gray-50 hover:text-textDark rounded-xl font-medium text-sm transition-colors">
+                <span class="material-symbols-outlined">search_off</span> I Lost Something
             </a>
-            <a href="/user/profile" class="sidebar-link">
-                <span class="material-icons">account_circle</span> Profile
+            <a href="/user/report-found" class="flex items-center gap-3 px-4 py-3 text-textMuted hover:bg-gray-50 hover:text-textDark rounded-xl font-medium text-sm transition-colors">
+                <span class="material-symbols-outlined">volunteer_activism</span> I Found Something
+            </a>
+            <a href="/user/chats" class="flex items-center gap-3 px-4 py-3 text-textMuted hover:bg-gray-50 hover:text-textDark rounded-xl font-medium text-sm transition-colors">
+                <span class="material-symbols-outlined">mail</span> Messages
+            </a>
+            <a href="/user/history" class="flex items-center gap-3 px-4 py-3 bg-primaryLight text-primary rounded-xl font-semibold text-sm transition-colors">
+                <span class="material-symbols-outlined icon-fill">history</span> History
+            </a>
+            <a href="/user/profile" class="flex items-center gap-3 px-4 py-3 text-textMuted hover:bg-gray-50 hover:text-textDark rounded-xl font-medium text-sm transition-colors">
+                <span class="material-symbols-outlined">person</span> My Activity
+            </a>
+            <a href="#" class="flex items-center gap-3 px-4 py-3 text-textMuted hover:bg-gray-50 hover:text-textDark rounded-xl font-medium text-sm transition-colors">
+                <span class="material-symbols-outlined">bookmark</span> Saved Items
+            </a>
+            <a href="#" class="flex items-center gap-3 px-4 py-3 text-textMuted hover:bg-gray-50 hover:text-textDark rounded-xl font-medium text-sm transition-colors">
+                <span class="material-symbols-outlined">groups</span> Community
+            </a>
+            <a href="#" class="flex items-center gap-3 px-4 py-3 text-textMuted hover:bg-gray-50 hover:text-textDark rounded-xl font-medium text-sm transition-colors">
+                <span class="material-symbols-outlined">settings</span> Settings
             </a>
         </nav>
 
-        <div style="margin-top: auto;">
-            <a href="/logout" class="sidebar-link" style="color: var(--accent-rose);">
-                <span class="material-icons">logout</span> Logout
+        <!-- Actions -->
+        <div class="p-4 mt-auto">
+            <a href="/user/report-lost" class="w-full bg-primary hover:bg-primary/90 text-white rounded-full py-3 px-4 flex items-center justify-center gap-2 font-bold text-sm shadow-md transition-all">
+                <span class="material-symbols-outlined text-xl">add_circle</span> Report New Item
+            </a>
+            <a href="/logout" class="mt-4 flex items-center gap-3 px-4 py-2 text-red-500 hover:bg-red-50 rounded-xl font-bold text-sm transition-colors w-max">
+                <span class="material-symbols-outlined">logout</span> Logout
             </a>
         </div>
     </aside>
 
-    <main class="main-with-sidebar">
-        <header style="margin-bottom: 2rem;">
-            <h1 style="font-size: 1.8rem; margin-bottom: 0.2rem;">History Log</h1>
-            <p style="color: var(--text-pencil); font-size: 0.9rem;">Track all your reported items.</p>
+    <!-- MAIN CONTENT -->
+    <main class="flex-1 flex flex-col h-screen overflow-hidden bg-[#FAFAFA]">
+        
+        <!-- TOP APP BAR -->
+        <header class="h-20 bg-white/80 backdrop-blur-md border-b border-gray-100 flex items-center justify-between px-8 z-10 shrink-0">
+            <form action="/user/search" method="GET" class="relative w-96">
+                <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">search</span>
+                <input type="text" name="q" placeholder="Search for items, locations..." class="w-full bg-gray-50 border-none rounded-full py-3 pl-12 pr-4 text-sm focus:ring-1 focus:ring-primary outline-none text-textDark placeholder-gray-400" required>
+            </form>
+            
+            <div class="flex items-center gap-6">
+                <button class="relative text-textMuted hover:text-textDark transition-colors">
+                    <span class="material-symbols-outlined">notifications</span>
+                    <span class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white">3</span>
+                </button>
+                <button class="relative text-textMuted hover:text-textDark transition-colors">
+                    <span class="material-symbols-outlined">chat_bubble</span>
+                    <span class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white">1</span>
+                </button>
+                <a href="/user/profile" class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm shadow-sm cursor-pointer border-2 border-white block">
+                    {% if user.profile_photo %}
+                        <img src="/{{ user.profile_photo }}" class="w-full h-full rounded-full object-cover">
+                    {% else %}
+                        {{ user.name[0] | upper }}
+                    {% endif %}
+                </a>
+            </div>
         </header>
 
-        <div class="paper-card-static">
-            {% if lost_items or found_items %}
+        <!-- SCROLL AREA -->
+        <div class="flex-1 overflow-y-auto hide-scrollbar p-8">
+            <div class="max-w-6xl mx-auto space-y-8 pb-10">
+                
+                <header class="mb-8">
+                    <h1 class="text-3xl font-extrabold text-textDark">History Log</h1>
+                    <p class="text-textMuted mt-1 text-sm">Track your reported items and claims.</p>
+                </header>
 
-            <div class="history-header">
-                <div>Image</div>
-                <div>Item Details</div>
-                <div>Date & Location</div>
-                <div>Status</div>
-                <div style="text-align: right;">Action</div>
-            </div>
+                {% if lost_items or found_items or claims %}
 
-            <!-- LOST ITEMS -->
-            {% for item in lost_items %}
-            <div class="history-list-item">
-                <img src="/{{ item.image_path }}" class="item-thumb">
-
-                <div class="list-info">
-                    <div style="font-weight: 600; color: var(--text-ink); font-size: 1rem;">{{ item.item_name }}</div>
-                    <div style="font-size: 0.85rem; color: var(--text-pencil);">{{ item.description[:30] }}...</div>
-                </div>
-
-                <div class="list-meta" style="font-size: 0.9rem; color: var(--text-ink);">
-                    <div>{{ item.date }}</div>
-                    <div style="font-size: 0.8rem; color: var(--text-pencil);">{{ item.location }}</div>
-                </div>
-
-                <div>
-                    {% if item.status == 'lost' %}
-                    <span class="status-pill status-lost">Lost</span>
-                    {% else %}
-                    <span class="status-pill status-resolved">Resolved</span>
-                    {% endif %}
-                </div>
-
-                <div class="list-action" style="text-align: right;">
-                    {% if item.status == 'lost' %}
-                    <a href="/user/item/resolve/lost/{{ item.id }}" class="btn-hope btn-soft"
-                        style="padding: 0.3rem 0.8rem; font-size: 0.8rem; color: var(--accent-mint); text-decoration: none;"
-                        onclick="return confirm('Found this item? Mark as resolved?')">
-                        Found It
-                    </a>
-                    {% else %}
-                    <span class="material-icons" style="color: #ccc; font-size: 1.2rem;">check_circle</span>
-                    {% endif %}
-                </div>
-            </div>
-            {% endfor %}
-
-            <!-- FOUND ITEMS -->
-            {% for item in found_items %}
-            <div class="history-list-item">
-                <img src="/{{ item.image_path }}" class="item-thumb">
-
-                <div class="list-info">
-                    <div style="font-weight: 600; color: var(--text-ink); font-size: 1rem;">{{ item.item_name }}</div>
-                    <div style="font-size: 0.85rem; color: var(--text-pencil);">{{ item.description[:30] }}...</div>
-                </div>
-
-                <div class="list-meta" style="font-size: 0.9rem; color: var(--text-ink);">
-                    <div>{{ item.date }}</div>
-                    <div style="font-size: 0.8rem; color: var(--text-pencil);">{{ item.location }}</div>
-                </div>
-
-                <div>
-                    {% if item.status == 'found' %}
-                    <span class="status-pill status-found">Found</span>
-                    {% else %}
-                    <span class="status-pill status-resolved">Resolved</span>
-                    {% endif %}
-                </div>
-
-                <div class="list-action" style="text-align: right;">
-                    {% if item.status == 'found' %}
-                    <span style="font-size: 0.85rem; color: var(--text-pencil);">Active</span>
-                    {% else %}
-                    <span class="material-icons" style="color: #ccc; font-size: 1.2rem;">check_circle</span>
-                    {% endif %}
-                </div>
-            </div>
-            {% endfor %}
-            
-            <!-- CLAIMS -->
-            {% if claims %}
-            <div style="margin-top: 2rem; margin-bottom: 1rem;">
-                <h3 style="font-size: 1.2rem; font-weight: 700; color: var(--text-ink);">My Claim Requests</h3>
-            </div>
-            {% for claim in claims %}
-            <div class="history-list-item">
-                <img src="/{{ claim.item_image }}" class="item-thumb">
-
-                <div class="list-info">
-                    <div style="font-weight: 600; color: var(--text-ink); font-size: 1rem;">Claim: {{ claim.item_name }}</div>
-                    {% if claim.status == 'approved' %}
-                    <div style="font-size: 0.85rem; color: #10B981; font-weight: bold;">
-                        Finder: {{ claim.finder_name }} ({{ claim.finder_phone }}) - {{ claim.finder_email }}
+                <!-- CLAIMS (Moved to top as requested) -->
+                {% if claims %}
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden mb-8">
+                    <div class="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+                        <h3 class="text-lg font-bold text-textDark flex items-center gap-2"><span class="material-symbols-outlined text-primary">receipt_long</span> My Claim Requests</h3>
                     </div>
-                    {% else %}
-                    <div style="font-size: 0.85rem; color: var(--text-pencil);">Waiting for admin approval...</div>
-                    {% endif %}
+                    <div class="divide-y divide-gray-100">
+                        {% for claim in claims %}
+                        <div class="p-6 flex items-center gap-6 hover:bg-gray-50/50 transition-colors">
+                            <img src="/{{ claim.item_image }}" class="w-16 h-16 rounded-xl object-cover border border-gray-100 shadow-sm shrink-0">
+                            
+                            <div class="flex-1 min-w-0">
+                                <h4 class="text-base font-bold text-textDark truncate">Claim: {{ claim.item_name }}</h4>
+                                {% if claim.status == 'approved' %}
+                                <p class="text-sm text-green-600 font-bold truncate mt-1">Finder: {{ claim.finder_name }} ({{ claim.finder_phone }}) - {{ claim.finder_email }}</p>
+                                {% else %}
+                                <p class="text-sm text-textMuted truncate mt-1">Waiting for admin approval...</p>
+                                {% endif %}
+                                <p class="text-xs text-textMuted mt-1 flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">location_on</span> {{ claim.location }}</p>
+                            </div>
+                            
+                            <div class="shrink-0 text-right w-32">
+                                {% if claim.status == 'pending' %}
+                                <span class="inline-flex items-center gap-1 bg-yellow-50 text-yellow-600 text-xs font-bold px-3 py-1.5 rounded-full">
+                                    <span class="material-symbols-outlined text-[14px]">hourglass_empty</span> Pending
+                                </span>
+                                {% elif claim.status == 'approved' %}
+                                <span class="inline-flex items-center gap-1 bg-green-50 text-green-600 text-xs font-bold px-3 py-1.5 rounded-full">
+                                    <span class="material-symbols-outlined text-[14px]">verified</span> Approved
+                                </span>
+                                {% else %}
+                                <span class="inline-flex items-center gap-1 bg-red-50 text-red-600 text-xs font-bold px-3 py-1.5 rounded-full">
+                                    <span class="material-symbols-outlined text-[14px]">cancel</span> Rejected
+                                </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
                 </div>
+                {% endif %}
 
-                <div class="list-meta" style="font-size: 0.9rem; color: var(--text-ink);">
-                    <div>Location: {{ claim.location }}</div>
+                <!-- LOST ITEMS -->
+                {% if lost_items %}
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden mb-8">
+                    <div class="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+                        <h3 class="text-lg font-bold text-textDark flex items-center gap-2"><span class="material-symbols-outlined text-primary">search_off</span> Lost Items</h3>
+                    </div>
+                    <div class="divide-y divide-gray-100">
+                        {% for item in lost_items %}
+                        <div class="p-6 flex items-center gap-6 hover:bg-gray-50/50 transition-colors">
+                            <img src="/{{ item.image_path }}" class="w-16 h-16 rounded-xl object-cover border border-gray-100 shadow-sm shrink-0">
+                            
+                            <div class="flex-1 min-w-0">
+                                <h4 class="text-base font-bold text-textDark truncate">{{ item.item_name }}</h4>
+                                <p class="text-sm text-textMuted truncate mt-1">{{ item.description[:60] }}...</p>
+                                <div class="flex items-center gap-4 mt-2 text-xs text-textMuted">
+                                    <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">calendar_today</span> {{ item.date }}</span>
+                                    <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">location_on</span> {{ item.location }}</span>
+                                </div>
+                            </div>
+                            
+                            <div class="shrink-0 text-center w-28">
+                                {% if item.status == 'lost' %}
+                                <span class="inline-block bg-red-50 text-red-600 text-xs font-bold px-3 py-1 rounded-full mb-2 w-full text-center border border-red-100">Lost</span>
+                                <a href="/user/item/resolve/lost/{{ item.id }}" class="text-xs font-bold text-primary hover:text-primary/80 block" onclick="return confirm('Found this item? Mark as resolved?')">Mark Resolved?</a>
+                                {% else %}
+                                <span class="inline-block bg-gray-100 text-gray-500 text-xs font-bold px-3 py-1 rounded-full w-full text-center">Resolved</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
                 </div>
+                {% endif %}
 
-                <div>
-                    {% if claim.status == 'pending' %}
-                    <span class="status-pill" style="background: #FFFBEB; color: #D97706;">Pending</span>
-                    {% elif claim.status == 'approved' %}
-                    <span class="status-pill status-found">Approved</span>
-                    {% else %}
-                    <span class="status-pill status-lost">Rejected</span>
-                    {% endif %}
+                <!-- FOUND ITEMS -->
+                {% if found_items %}
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden mb-8">
+                    <div class="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+                        <h3 class="text-lg font-bold text-textDark flex items-center gap-2"><span class="material-symbols-outlined text-secondary">volunteer_activism</span> Found Items</h3>
+                    </div>
+                    <div class="divide-y divide-gray-100">
+                        {% for item in found_items %}
+                        <div class="p-6 flex items-center gap-6 hover:bg-gray-50/50 transition-colors">
+                            <img src="/{{ item.image_path }}" class="w-16 h-16 rounded-xl object-cover border border-gray-100 shadow-sm shrink-0">
+                            
+                            <div class="flex-1 min-w-0">
+                                <h4 class="text-base font-bold text-textDark truncate">{{ item.item_name }}</h4>
+                                <p class="text-sm text-textMuted truncate mt-1">{{ item.description[:60] }}...</p>
+                                <div class="flex items-center gap-4 mt-2 text-xs text-textMuted">
+                                    <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">calendar_today</span> {{ item.date }}</span>
+                                    <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">location_on</span> {{ item.location }}</span>
+                                </div>
+                            </div>
+                            
+                            <div class="shrink-0 text-center w-28">
+                                {% if item.status == 'found' %}
+                                <span class="inline-block bg-green-50 text-green-600 text-xs font-bold px-3 py-1 rounded-full w-full text-center border border-green-100">Active</span>
+                                {% else %}
+                                <span class="inline-block bg-gray-100 text-gray-500 text-xs font-bold px-3 py-1 rounded-full w-full text-center">Resolved</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
                 </div>
+                {% endif %}
 
-                <div class="list-action" style="text-align: right;">
-                    {% if claim.status == 'approved' %}
-                    <span class="material-icons" style="color: #10B981; font-size: 1.2rem;">verified</span>
-                    {% else %}
-                    <span class="material-icons" style="color: #ccc; font-size: 1.2rem;">hourglass_empty</span>
-                    {% endif %}
+                {% else %}
+                <!-- EMPTY STATE -->
+                <div class="bg-white p-12 rounded-2xl border border-gray-100 shadow-sm text-center">
+                    <div class="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-gray-100">
+                        <span class="material-symbols-outlined text-4xl text-gray-300">history_toggle_off</span>
+                    </div>
+                    <h3 class="text-lg font-bold text-textDark mb-2">No history yet</h3>
+                    <p class="text-textMuted text-sm max-w-sm mx-auto">You haven't reported any items or made any claims yet.</p>
                 </div>
+                {% endif %}
             </div>
-            {% endfor %}
-            {% endif %}
-
-            {% else %}
-            <div style="text-align: center; padding: 4rem 1rem;">
-                <span class="material-icons"
-                    style="font-size: 3rem; color: #eee; margin-bottom: 1rem;">history_toggle_off</span>
-                <p style="color: var(--text-pencil);">No items reported yet.</p>
-            </div>
-            {% endif %}
         </div>
-
     </main>
 
     <!-- MOBILE BOTTOM NAV -->
-    <div class="mobile-nav">
-        <a href="/user/dashboard" class="mobile-nav-link">
-            <span class="material-icons">home</span>
-            HOME
+    <div class="md:hidden fixed bottom-0 left-0 w-full bg-white border-t border-gray-100 flex justify-around py-3 z-50">
+        <a href="/user/dashboard" class="flex flex-col items-center text-gray-400 hover:text-gray-600">
+            <span class="material-symbols-outlined text-xl">home</span>
+            <span class="text-[9px] font-bold mt-1">HOME</span>
         </a>
-        <a href="/user/chats" class="mobile-nav-link">
-            <span class="material-icons">mail</span>
-            MESSAGES
+        <a href="/user/chats" class="flex flex-col items-center text-gray-400 hover:text-gray-600">
+            <span class="material-symbols-outlined text-xl">mail</span>
+            <span class="text-[9px] font-bold mt-1">MESSAGES</span>
         </a>
-        <a href="/user/history" class="mobile-nav-link active">
-            <span class="material-icons">history</span>
-            HISTORY
+        <a href="/user/report-lost" class="flex flex-col items-center text-gray-400 hover:text-gray-600 -mt-5">
+            <div class="w-12 h-12 bg-primary text-white rounded-full flex items-center justify-center shadow-lg border-4 border-[#FAFAFA]">
+                <span class="material-symbols-outlined icon-fill">add</span>
+            </div>
+            <span class="text-[9px] font-bold mt-1">REPORT</span>
         </a>
-        <a href="/user/profile" class="mobile-nav-link">
-            <span class="material-icons">person</span>
-            PROFILE
+        <a href="/user/history" class="flex flex-col items-center text-primary">
+            <span class="material-symbols-outlined icon-fill text-xl">history</span>
+            <span class="text-[9px] font-bold mt-1">HISTORY</span>
+        </a>
+        <a href="/user/profile" class="flex flex-col items-center text-gray-400 hover:text-gray-600">
+            <span class="material-symbols-outlined text-xl">person</span>
+            <span class="text-[9px] font-bold mt-1">PROFILE</span>
         </a>
     </div>
 
-
-
     <script src="{{ url_for('static', filename='js/memories_core.js') }}"></script>
 </body>
-
 </html>

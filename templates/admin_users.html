@@ -116,6 +116,7 @@
                                 <th class="py-4 px-6 font-semibold">Email</th>
                                 <th class="py-4 px-6 font-semibold">Role</th>
                                 <th class="py-4 px-6 font-semibold">Status</th>
+                                <th class="py-4 px-6 font-semibold">T&C Accepted</th>
                                 <th class="py-4 px-6 font-semibold text-right">Actions</th>
                             </tr>
                         </thead>
@@ -148,6 +149,14 @@
                                     <span class="text-green-500 font-bold text-sm flex items-center gap-1"><span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span> Active</span>
                                     {% else %}
                                     <span class="text-red-500 font-bold text-sm flex items-center gap-1"><span class="w-1.5 h-1.5 bg-red-500 rounded-full"></span> Blocked</span>
+                                    {% endif %}
+                                </td>
+                                <td class="py-4 px-6 text-sm">
+                                    {% if u.terms_accepted_at %}
+                                        <div class="text-green-600 font-semibold flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">check_circle</span> Yes</div>
+                                        <div class="text-[10px] text-textMuted">{{ u.terms_accepted_at.strftime('%d %b %Y, %H:%M') }}</div>
+                                    {% else %}
+                                        <span class="text-gray-400 font-medium text-xs">Legacy Account</span>
                                     {% endif %}
                                 </td>
                                 <td class="py-4 px-6 text-right">

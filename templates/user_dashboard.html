@@ -143,10 +143,7 @@
                         <h2 class="text-4xl font-extrabold tracking-tight text-textDark mb-2">Hello, <span class="text-primary">{{ user.name.split(' ')[0] }}</span></h2>
                         <p class="text-textMuted font-medium text-sm">Welcome back! We've found <span class="text-secondary font-bold">community strength</span> in your activity today.</p>
                     </div>
-                    <!-- Decorative Hands (Using a generic illustration placeholder for now) -->
-                    <div class="absolute right-0 bottom-0 opacity-20 pointer-events-none md:block hidden">
-                        <span class="material-symbols-outlined" style="font-size: 120px; font-variation-settings: 'FILL' 1;">handshake</span>
-                    </div>
+
                 </div>
 
                 <!-- STATS CARDS (4 COLUMNS) -->
@@ -203,7 +200,7 @@
                         <a href="/user/report-lost" class="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded-full font-bold text-sm transition-colors shadow-lg shadow-primary/20">
                             Create Missing Report <span class="material-symbols-outlined text-sm">arrow_forward</span>
                         </a>
-                        <span class="material-symbols-outlined absolute -right-6 -bottom-6 text-[180px] text-primary/5 rotate-12 group-hover:rotate-6 transition-transform">wallet</span>
+
                     </div>
 
                     <div class="bg-secondaryLight p-8 rounded-[2rem] relative overflow-hidden group">
@@ -215,7 +212,7 @@
                         <a href="/user/report-found" class="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/90 text-white px-6 py-3 rounded-full font-bold text-sm transition-colors shadow-lg shadow-secondary/20">
                             List Found Item <span class="material-symbols-outlined text-sm">arrow_forward</span>
                         </a>
-                        <span class="material-symbols-outlined absolute -right-6 -bottom-6 text-[180px] text-secondary/5 -rotate-12 group-hover:-rotate-6 transition-transform">backpack</span>
+
                     </div>
                 </div>
 
@@ -415,5 +412,47 @@
     </div>
 
     <script src="{{ url_for('static', filename='js/memories_core.js') }}"></script>
+
+    {% if not user.terms_accepted_at %}
+    <style>
+        body > *:not(#tnc-overlay) {
+            filter: blur(12px) grayscale(30%);
+            pointer-events: none;
+            user-select: none;
+        }
+        body {
+            overflow: hidden !important;
+        }
+    </style>
+    
+    <div id="tnc-overlay" class="fixed inset-0 z-[99999] bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white max-w-2xl w-full p-10 md:p-14 text-center shadow-2xl relative" style="border-radius: 2px;">
+            <div class="absolute top-0 left-0 w-full h-1 bg-red-600"></div>
+            
+            <h2 class="text-3xl font-bold text-slate-900 mb-4 tracking-tight">System Notice: Account Blocked</h2>
+            
+            <p class="text-slate-600 text-lg mb-8 leading-relaxed max-w-lg mx-auto">
+                Your account access has been temporarily suspended. To restore access to your dashboard, please review and accept our updated mandatory policies.
+            </p>
+            
+            <form action="/user/accept-terms-post" method="POST" class="max-w-lg mx-auto text-left">
+                <div class="bg-slate-50 p-6 mb-8 border border-slate-200">
+                    <label class="flex items-start gap-4 cursor-pointer group">
+                        <input type="checkbox" required class="mt-1 w-5 h-5 text-indigo-600 border-slate-300 focus:ring-indigo-600 transition-colors cursor-pointer rounded-sm">
+                        <span class="text-sm font-medium text-slate-700 leading-snug">
+                            I acknowledge that I have read and agree to be bound by the 
+                            <a href="/terms" target="_blank" class="text-indigo-600 font-bold hover:text-indigo-800 transition-colors underline underline-offset-2">Terms and Conditions & Privacy Policy</a>.
+                        </span>
+                    </label>
+                </div>
+                
+                <div class="flex items-center gap-4">
+                    <a href="/logout" class="flex-1 py-4 text-center font-bold text-sm bg-transparent text-slate-500 border border-slate-300 hover:bg-slate-50 transition-colors">Decline & Logout</a>
+                    <button type="submit" class="flex-1 py-4 text-center font-bold text-sm bg-slate-900 text-white hover:bg-black transition-colors shadow-lg">Restore Account Access</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    {% endif %}
 </body>
 </html>

@@ -24,7 +24,7 @@ from ai_matcher import final_match
 import re
 import requests
 import json
-from flask import Response, make_response
+from flask import Response, make_response, g
 from fpdf import FPDF
 import io
 
@@ -98,6 +98,20 @@ def check_user_status():
              print(f"Session Version Mismatch: DB={db_version} vs Session={session_ver} - Logging Out")
              session.clear()
              return redirect("/login")
+             
+        g.user = user
+
+        # Check Admin T&C Acceptance
+        if user.get("role") == "admin" and not user.get("admin_terms_accepted"):
+            allowed = ["/admin/dashboard", "/admin/accept-terms-post", "/logout", "/admin-terms-content"]
+            if request.path not in allowed and not request.path.startswith("/static"):
+                return redirect("/admin/dashboard")
+                
+        # Check User T&C Acceptance
+        if user.get("role") == "user" and not user.get("terms_accepted_at"):
+            allowed = ["/user/dashboard", "/user/accept-terms-post", "/logout", "/terms"]
+            if request.path not in allowed and not request.path.startswith("/static"):
+                return redirect("/user/dashboard")
 
 # ---------- STATUS POLLER ----------
 @app.route("/auth/check-status")
@@ -288,6 +302,10 @@ def index():
                     return redirect("/user/dashboard")
     return render_template("index.html")
 
+@app.route("/terms")
+def terms():
+    return render_template("terms.html")
+
 @app.route("/prompt-login")
 def prompt_login():
     flash("Please register or login to our website to access these features!", "info")
@@ -423,7 +441,8 @@ def signup():
                 "role": "user",
                 "is_active": True,
                 "profile_completed": False,
-                "created_at": datetime.datetime.utcnow()
+                "created_at": datetime.datetime.utcnow(),
+                "terms_accepted_at": datetime.datetime.utcnow()
             })
         except Exception as e:
             return f"Signup error: {e}"
@@ -511,7 +530,8 @@ def google_callback():
                 "is_active": True,
                 "profile_completed": False,
                 "auth_provider": "google",
-                "created_at": datetime.datetime.utcnow()
+                "created_at": datetime.datetime.utcnow(),
+                "terms_accepted_at": datetime.datetime.utcnow()
             })
             user = db.users.find_one({"email": users_email})
             
@@ -529,6 +549,41 @@ def google_callback():
             return redirect("/user/dashboard")
         
     return "User email not available or not verified by Google.", 400
+
+# ---------- ADMIN T&C ----------
+@app.route("/admin/accept-terms-post", methods=["POST"])
+def admin_accept_terms_post():
+    if session.get("role") != "admin":
+        return redirect("/")
+        
+    db = get_db()
+    db.users.update_one(
+        {"_id": ObjectId(session["user_id"])},
+        {"$set": {
+            "admin_terms_accepted": True,
+            "admin_terms_accepted_at": datetime.datetime.utcnow()
+        }}
+    )
+    return redirect("/admin/dashboard")
+
+@app.route("/admin-terms-content")
+def admin_terms_content():
+    return render_template("admin_terms_content.html")
+
+# ---------- USER T&C ----------
+@app.route("/user/accept-terms-post", methods=["POST"])
+def user_accept_terms_post():
+    if session.get("role") != "user":
+        return redirect("/")
+        
+    db = get_db()
+    db.users.update_one(
+        {"_id": ObjectId(session["user_id"])},
+        {"$set": {
+            "terms_accepted_at": datetime.datetime.utcnow()
+        }}
+    )
+    return redirect("/user/dashboard")
 
 # ---------- SUPER ADMIN DASHBOARD ----------
 @app.route("/superadmin/dashboard")
@@ -1092,24 +1147,45 @@ def admin_dashboard():
         lost_items = []
         found_items = []
 
-    # Fetch PRE-COMPUTED Matches from DB
+    # Fetch PRE-COMPUTED Matches from DB (Optimized with $lookup)
     matches = []
     try:
-        suggestions = list(db.ai_suggestions.find({}).sort("score.final_score", -1))
+        pipeline = [
+            {"$lookup": {
+                "from": "lost_items",
+                "localField": "lost_id",
+                "foreignField": "_id",
+                "as": "lost_item"
+            }},
+            {"$lookup": {
+                "from": "found_items",
+                "localField": "found_id",
+                "foreignField": "_id",
+                "as": "found_item"
+            }},
+            {"$unwind": "$lost_item"},
+            {"$unwind": "$found_item"},
+            {"$match": {
+                "lost_item.status": "lost",
+                "found_item.status": "found"
+            }},
+            {"$sort": {"score.final_score": -1}},
+            {"$limit": 50}
+        ]
+        
+        suggestions = list(db.ai_suggestions.aggregate(pipeline))
         
         for sugg in suggestions:
-            # Reconstruct the full objects for the template
-            lost = db.lost_items.find_one({"_id": sugg["lost_id"]})
-            found = db.found_items.find_one({"_id": sugg["found_id"]})
+            lost = sugg["lost_item"]
+            found = sugg["found_item"]
             
-            if lost and found and lost["status"] == "lost" and found["status"] == "found":
-                lost['lost_id'] = str(lost['_id'])
-                found['found_id'] = str(found['_id'])
-                matches.append({
-                    "lost": lost,
-                    "found": found,
-                    "score": sugg["score"]
-                })
+            lost['lost_id'] = str(lost['_id'])
+            found['found_id'] = str(found['_id'])
+            matches.append({
+                "lost": lost,
+                "found": found,
+                "score": sugg["score"]
+            })
     except Exception as e:
         print(f"Suggestions Fetch Error: {e}")
 
@@ -1126,56 +1202,63 @@ def admin_dashboard():
         pending_matches_count=pending_matches_count
     )
 
+import threading
+
+def background_scan(force_rescan):
+    try:
+        db = get_db()
+        if force_rescan:
+            db.ai_suggestions.delete_many({})
+        
+        lost_items = list(db.lost_items.find({"status": "lost"}))
+        found_items = list(db.found_items.find({"status": "found"}))
+        
+        count = 0
+        skips = 0
+        
+        for lost in lost_items:
+            for found in found_items:
+                if not lost.get("image_path") or not found.get("image_path"):
+                    continue
+
+                # SMART SKIP RE-ENABLED
+                if not force_rescan:
+                    existing = db.ai_suggestions.find_one({
+                        "lost_id": lost["_id"],
+                        "found_id": found["_id"]
+                    })
+                    if existing:
+                        skips += 1
+                        continue
+                    
+                try:
+                    score = final_match(lost, found)
+                    if score["final_score"] >= 0.2:
+                        db.ai_suggestions.update_one(
+                            {"lost_id": lost["_id"], "found_id": found["_id"]},
+                            {"$set": {"score": score, "created_at": datetime.datetime.utcnow()}},
+                            upsert=True
+                        )
+                        count += 1
+                except Exception as e:
+                    pass
+        print(f"Background Scan Complete. Found {count} new matches. Skipped {skips} existing.")
+    except Exception as e:
+        print(f"Background Scan Failed: {e}")
+
 # ---------- TRIGGER SCANS ----------
 @app.route("/admin/run-scan")
 def run_ai_scan():
     if session.get("role") not in ["admin", "super_admin"]:
         abort(403)
         
-    db = get_db()
     force_rescan = request.args.get('force') == 'true'
-
-    if force_rescan:
-        db.ai_suggestions.delete_many({})
     
-    # Fetch active items
-    lost_items = list(db.lost_items.find({"status": "lost"}))
-    found_items = list(db.found_items.find({"status": "found"}))
-    
-    count = 0
-    skips = 0
-    
-    # Run Comparisons
-    for lost in lost_items:
-        for found in found_items:
-            # Skip if no images
-            if not lost.get("image_path") or not found.get("image_path"):
-                continue
-
-            # SMART SKIP (DISABLED FOR DEBUGGING)
-            # if not force_rescan:
-            #     existing = db.ai_suggestions.find_one({
-            #         "lost_id": lost["_id"],
-            #         "found_id": found["_id"]
-            #     })
-            #     if existing:
-            #         skips += 1
-            #         continue
+    thread = threading.Thread(target=background_scan, args=(force_rescan,))
+    thread.daemon = True
+    thread.start()
                 
-            try:
-                score = final_match(lost, found)
-                # Keep threshold reasonably low/inclusive for the suggestions DB
-                if score["final_score"] >= 0.2:  # Lowered Threshold
-                    db.ai_suggestions.update_one(
-                        {"lost_id": lost["_id"], "found_id": found["_id"]},
-                        {"$set": {"score": score, "created_at": datetime.datetime.utcnow()}},
-                        upsert=True
-                    )
-                    count += 1
-            except Exception as e:
-                print(f"Match Error: {e}")
-                
-    flash(f"Scan complete. Found {count} new matches. (Skipped {skips} existing comparisons)", "success")
+    flash("AI Scan started in the background. Please refresh the dashboard in a few moments to see new matches.", "success")
     return redirect("/admin/dashboard")
 
 # ---------- ADMIN: APPROVE MATCH ----------
@@ -1788,7 +1871,6 @@ def admin_claims():
     pending_claims = list(db.claims.find({"status": "pending"}).sort("created_at", -1))
     for claim in pending_claims:
         claim['id'] = str(claim['_id'])
-        # populate extra info
         claimant = db.users.find_one({"_id": claim['claimant_id']})
         if claimant:
             claim['claimant_name'] = claimant.get('name')
@@ -1799,6 +1881,34 @@ def admin_claims():
             
     return render_template("admin_claims.html", claims=pending_claims)
 
+@app.route("/admin/claims/<claim_id>")
+def admin_claim_details(claim_id):
+    if session.get("role") not in ["admin", "super_admin"]:
+        abort(403)
+        
+    db = get_db()
+    claim = db.claims.find_one({"_id": ObjectId(claim_id)})
+    if not claim:
+        flash("Claim not found", "error")
+        return redirect("/admin/claims")
+        
+    claim['id'] = str(claim['_id'])
+    
+    claimant = db.users.find_one({"_id": claim["claimant_id"]})
+    finder = db.users.find_one({"_id": claim["finder_id"]})
+    found_item = db.found_items.find_one({"_id": claim["found_item_id"]})
+    
+    if claimant: claimant['id'] = str(claimant['_id'])
+    if finder: finder['id'] = str(finder['_id'])
+    if found_item: found_item['id'] = str(found_item['_id'])
+    
+    # Fetch claimant's lost items to serve as "lost photos" for comparison
+    claimant_lost_items = list(db.lost_items.find({"user_id": claim["claimant_id"]}).sort("created_at", -1))
+    for item in claimant_lost_items:
+        item['id'] = str(item['_id'])
+        
+    return render_template("admin_claim_details.html", claim=claim, claimant=claimant, finder=finder, found_item=found_item, claimant_lost_items=claimant_lost_items)
+
 @app.route("/admin/claims/<claim_id>/<action>")
 def admin_process_claim(claim_id, action):
     if session.get("role") not in ["admin", "super_admin"]:
@@ -1807,10 +1917,67 @@ def admin_process_claim(claim_id, action):
     if action not in ['approve', 'reject']:
         abort(400)
         
-    status = 'approved' if action == 'approve' else 'rejected'
     db = get_db()
-    db.claims.update_one({"_id": ObjectId(claim_id)}, {"$set": {"status": status}})
-    flash(f"Claim {status} successfully.", "success")
+    claim = db.claims.find_one({"_id": ObjectId(claim_id)})
+    if not claim:
+        flash("Claim not found.", "error")
+        return redirect("/admin/claims")
+        
+    claimant = db.users.find_one({"_id": claim.get("claimant_id")})
+    finder = db.users.find_one({"_id": claim.get("finder_id")})
+    found_item = db.found_items.find_one({"_id": claim.get("found_item_id")})
+    
+    if not claimant or not found_item:
+        flash("Missing user or item data.", "error")
+        return redirect("/admin/claims")
+
+    claimant_name = claimant.get('name', 'User')
+    claimant_email = claimant.get('email', 'unknown@example.com')
+    item_name = found_item.get('item_name', 'your item')
+    
+    if action == 'approve':
+        status = 'approved'
+        db.claims.update_one({"_id": ObjectId(claim_id)}, {"$set": {"status": status}})
+        
+        finder_name = finder.get('name', 'Unknown') if finder else 'Unknown'
+        finder_phone = finder.get('phone', 'Not provided') if finder else 'Not provided'
+        finder_email = finder.get('email', 'Not provided') if finder else 'Not provided'
+        
+        # Automated Email Simulation for Approval
+        print("\n" + "="*60)
+        print("                SYSTEM EMAIL TRIGGERED (APPROVAL)           ")
+        print("="*60)
+        print(f"To: {claimant_email} ({claimant_name})")
+        print(f"Subject: Claim Approved - We found your item!")
+        print(f"\nBody:\nGreat news {claimant_name}! We verified your claim for '{item_name}'.\n")
+        print(f"You can now contact the finder to retrieve your item:")
+        print(f"Finder Name: {finder_name}")
+        print(f"Finder Phone: {finder_phone}")
+        print(f"Finder Email: {finder_email}")
+        print("="*60 + "\n")
+        
+        flash(f"Claim approved! Automated approval email sent to {claimant_email}.", "success")
+        
+    else:
+        status = 'rejected'
+        db.claims.update_one(
+            {"_id": ObjectId(claim_id)}, 
+            {"$set": {"status": status, "payment_status": "refunded"}}
+        )
+        
+        # Automated Email Simulation for Rejection and Refund
+        print("\n" + "="*60)
+        print("                SYSTEM EMAIL TRIGGERED (REJECTION)          ")
+        print("="*60)
+        print(f"To: {claimant_email} ({claimant_name})")
+        print(f"Subject: Claim Verification Failed - Refund Processed")
+        print(f"\nBody:\nDear {claimant_name},\n\nWe are sorry, but after reviewing your claim for '{item_name}', we determined it is not a true match.")
+        print(f"Your payment has been fully refunded and will be returned to your original payment method shortly.\n")
+        print(f"We apologize for the inconvenience.")
+        print("="*60 + "\n")
+        
+        flash(f"Claim rejected. Payment refunded and notification email sent to {claimant_email}.", "success")
+        
     return redirect("/admin/claims")
 
 if __name__ == "__main__":
@@ -1819,4 +1986,5 @@ if __name__ == "__main__":
     debug_mode = os.environ.get("FLASK_DEBUG", "True").lower() == "true"
     
     print(f"Starting Foundify with SocketIO on port {port} (Debug: {debug_mode})...")
+    print(f"➜ Local URL: http://127.0.0.1:{port}")
     socketio.run(app, host="0.0.0.0", port=port, debug=debug_mode, allow_unsafe_werkzeug=True)
