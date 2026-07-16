@@ -652,7 +652,7 @@ def generate_qrcode():
 @app.route("/verify-admin/<user_id>")
 def verify_admin(user_id):
     db = get_db()
-    if not db:
+    if db is None:
         return "System unavailable", 500
         
     try:
