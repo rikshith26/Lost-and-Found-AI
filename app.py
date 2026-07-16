@@ -663,7 +663,37 @@ def verify_admin(user_id):
     if not user or user.get("role") not in ["super_admin", "admin"]:
         return render_template("verify_admin.html", error="This user is not a verified administrator.")
         
-    return render_template("verify_admin.html", user=user)
+    # Hardcoded Super Admin Data
+    SUPER_ADMIN_PROFILES = {
+        "burrarikshith@gmail.com": {
+            "title": "Founder and CEO",
+            "employee_id": "FDY-CEO-0001",
+            "age": "21"
+        },
+        "yaseenashu18@gmail.com": {
+            "title": "Founder and CTO",
+            "employee_id": "FDY-CTO-0002",
+            "age": "21"
+        },
+        "yadavmahendhar65@gmail.com": {
+            "title": "Founder and Head of Product Design",
+            "employee_id": "FDY-HPD-0003",
+            "age": "21"
+        },
+        "krishnapatel000813@gmail.com": {
+            "title": "Founder and Lead AI Engineer",
+            "employee_id": "FDY-LAI-0004",
+            "age": "21"
+        }
+    }
+    
+    profile_data = SUPER_ADMIN_PROFILES.get(user.get("email"), {
+        "title": "Administrator",
+        "employee_id": f"FDY-ADM-{str(user['_id'])[-4:].upper()}",
+        "age": "N/A"
+    })
+        
+    return render_template("verify_admin.html", user=user, profile_data=profile_data)
 
 # ---------- USER PROFILE ----------
 @app.route("/user/profile", methods=["GET", "POST"])

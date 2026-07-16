@@ -1,113 +1,188 @@
 <!DOCTYPE html>
-<html lang="en" class="light">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Verify Administrator // Foundify</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
     <style>
-        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
-        .icon-fill { font-variation-settings: 'FILL' 1; }
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 1, 'wght' 400; font-size: 18px; }
         
-        .pulse-ring {
-            animation: pulse 2s infinite cubic-bezier(0.4, 0, 0.6, 1);
+        .id-card {
+            width: 100%;
+            max-width: 440px;
+            background: #ffffff;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 20px 40px -10px rgba(0,0,0,0.15);
+        }
+
+        .top-shape {
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 24px;
+            background: #113c75; /* Dark blue */
+        }
+        .top-shape::after {
+            content: '';
+            position: absolute;
+            top: 0; right: 0;
+            width: 50%; height: 100%;
+            background: #ff7f00; /* Orange */
+            clip-path: polygon(15% 0, 100% 0, 100% 100%, 0% 100%);
+        }
+
+        .bottom-shape {
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            height: 36px;
+            background: #ff7f00; /* Orange */
+        }
+        .bottom-shape::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 0;
+            width: 75%; height: 100%;
+            background: #113c75; /* Dark blue */
+            clip-path: polygon(0 0, 95% 0, 100% 100%, 0 100%);
+        }
+
+        .photo-container {
+            border: 4px solid #113c75;
+            border-radius: 1.5rem;
+            overflow: hidden;
+            width: 170px;
+            height: 220px;
+        }
+
+        .signature-font {
+            font-family: 'Brush Script MT', 'Cedarville Cursive', cursive;
+            font-size: 2.25rem;
+            color: #111;
         }
         
-        @keyframes pulse {
-            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.7); }
-            70% { transform: scale(1); box-shadow: 0 0 0 20px rgba(79, 70, 229, 0); }
-            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(79, 70, 229, 0); }
+        .barcode {
+            font-family: 'Libre Barcode 39', cursive, monospace;
+            font-size: 5rem;
+            line-height: 0.8;
+            color: #000;
+            transform: scaleY(0.75);
         }
     </style>
+    <link href="https://fonts.googleapis.com/css2?family=Libre+Barcode+39&family=Outfit:wght@800&family=Cedarville+Cursive&display=swap" rel="stylesheet">
 </head>
-<body class="flex items-center justify-center min-h-screen p-4 relative overflow-hidden">
-    <!-- Background Decor -->
-    <div class="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] rounded-full bg-emerald-500/10 blur-[120px] pointer-events-none"></div>
+<body class="flex items-center justify-center min-h-screen py-8 px-4">
 
-    <div class="w-full max-w-md bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100 z-10 relative">
-        
-        {% if error %}
-        <div class="p-8 text-center">
-            <div class="w-20 h-20 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6">
-                <span class="material-symbols-outlined text-4xl">error</span>
-            </div>
-            <h1 class="text-2xl font-black text-gray-900 mb-2">Verification Failed</h1>
-            <p class="text-gray-500">{{ error }}</p>
+    {% if error %}
+    <div class="w-full max-w-md bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100 p-8 text-center">
+        <div class="w-20 h-20 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6">
+            <span class="material-symbols-outlined !text-4xl">error</span>
         </div>
-        {% else %}
-        
-        <!-- Success Header -->
-        <div class="bg-emerald-500 p-8 text-center text-white relative overflow-hidden">
-            <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10"></div>
-            <div class="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto mb-4 pulse-ring relative z-10">
-                <span class="material-symbols-outlined text-4xl icon-fill text-white">verified</span>
+        <h1 class="text-2xl font-black text-gray-900 mb-2">Verification Failed</h1>
+        <p class="text-gray-500">{{ error }}</p>
+    </div>
+    {% else %}
+
+    <div class="id-card rounded-3xl mx-auto pb-14 pt-10 border border-gray-200">
+        <div class="top-shape"></div>
+
+        <!-- Header -->
+        <div class="px-8 pt-2 flex items-center gap-4">
+            <img src="{{ url_for('static', filename='images/logo.jpeg') }}" class="h-16 w-16 object-cover rounded-xl shadow-sm" alt="Foundify">
+            <div class="-mt-1">
+                <h1 class="text-[34px] font-black tracking-tight leading-none text-[#113c75]" style="font-family: 'Outfit', sans-serif;">Foundify</h1>
+                <p class="text-[11px] font-bold text-gray-700 tracking-wide">Find. Connect. Reunite.</p>
             </div>
-            <h2 class="text-2xl font-bold tracking-tight relative z-10">Identity Verified</h2>
-            <p class="text-emerald-100 text-sm relative z-10 mt-1">This is an official Foundify administrator.</p>
         </div>
 
-        <!-- Profile Details -->
-        <div class="p-8 relative">
+        <div class="px-8 mt-8 flex justify-between gap-6">
+            <!-- Left Column -->
+            <div class="flex-1 flex flex-col pt-1">
+                {% set name_parts = user.name.split(' ') %}
+                <h2 class="text-[28px] font-black text-[#112a46] leading-[1.1] mb-2 break-words">
+                    {{ name_parts[0] }}<br>
+                    {% if name_parts|length > 1 %}{{ name_parts[1:]|join(' ') }}{% endif %}
+                </h2>
+                
+                <div class="mb-6">
+                    <p class="text-[#113c75] font-bold text-[15px] leading-snug pr-2">{{ profile_data.title }}</p>
+                    <div class="h-[3px] w-12 bg-[#113c75] mt-2 rounded-full"></div>
+                </div>
+
+                <div class="mb-5">
+                    <p class="text-[11px] text-gray-500 font-medium mb-0.5">Employee ID (Primary Key)</p>
+                    <p class="text-[17px] font-black text-[#112a46]">{{ profile_data.employee_id }}</p>
+                </div>
+
+                <div class="mb-2">
+                    <p class="text-[11px] text-gray-500 font-medium mb-0.5">Age</p>
+                    <p class="text-[22px] font-black text-[#112a46] leading-none">{{ profile_data.age }}</p>
+                </div>
+            </div>
+
+            <!-- Right Column -->
             <div class="flex flex-col items-center">
-                <!-- Photo -->
-                <div class="w-24 h-24 rounded-full bg-gray-100 border-4 border-white shadow-lg overflow-hidden -mt-16 mb-4 relative z-10 flex items-center justify-center">
+                <div class="photo-container bg-gray-50 flex items-center justify-center shadow-md">
                     {% if user.profile_photo %}
                         <img src="{{ url_for('uploaded_files', filename=user.profile_photo.split('/')[-1]) if '/' in user.profile_photo else '/db_uploads/' + user.profile_photo }}" class="w-full h-full object-cover">
                     {% else %}
-                        <span class="text-3xl font-black text-emerald-200">{{ user.name[0] | upper }}</span>
+                        <span class="text-6xl font-black text-[#113c75] opacity-20">{{ user.name[0] | upper }}</span>
                     {% endif %}
-                </div>
-
-                <h1 class="text-2xl font-black text-gray-900">{{ user.name }}</h1>
-                <p class="text-emerald-600 font-bold text-sm mb-6">{{ 'Super Administrator' if user.role == 'super_admin' else 'Administrator' }}</p>
-
-                <div class="w-full space-y-4">
-                    <div class="bg-gray-50 rounded-xl p-4 border border-gray-100 flex items-center gap-4">
-                        <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm text-gray-400">
-                            <span class="material-symbols-outlined">email</span>
-                        </div>
-                        <div class="overflow-hidden">
-                            <p class="text-xs text-gray-400 font-semibold">Contact Email</p>
-                            <p class="text-sm font-bold text-gray-900 truncate">{{ user.email }}</p>
-                        </div>
-                    </div>
-                    
-                    {% if user.college %}
-                    <div class="bg-gray-50 rounded-xl p-4 border border-gray-100 flex items-center gap-4">
-                        <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm text-gray-400">
-                            <span class="material-symbols-outlined">school</span>
-                        </div>
-                        <div class="overflow-hidden">
-                            <p class="text-xs text-gray-400 font-semibold">Institution / Department</p>
-                            <p class="text-sm font-bold text-gray-900 truncate">{{ user.college }}</p>
-                        </div>
-                    </div>
-                    {% endif %}
-                    
-                    <div class="bg-gray-50 rounded-xl p-4 border border-gray-100 flex items-center gap-4">
-                        <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm text-gray-400">
-                            <span class="material-symbols-outlined">security</span>
-                        </div>
-                        <div class="overflow-hidden">
-                            <p class="text-xs text-gray-400 font-semibold">Security Clearance</p>
-                            <p class="text-sm font-bold text-gray-900 truncate">{{ 'Level 5 (Root Access)' if user.role == 'super_admin' else 'Level 3 (Standard Admin)' }}</p>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
-        
-        <!-- Footer -->
-        <div class="bg-gray-900 p-4 text-center">
-            <div class="flex items-center justify-center gap-2">
-                <img src="{{ url_for('static', filename='images/logo.jpeg') }}" alt="Logo" class="w-5 h-5 rounded object-cover grayscale opacity-50">
-                <span class="text-gray-500 text-xs font-bold tracking-widest">FOUNDIFY SECURITY SYSTEM</span>
+
+        <!-- Details Footer -->
+        <div class="px-8 mt-8 border-t border-gray-200 pt-6 flex justify-between items-end">
+            <!-- Left Contact Info -->
+            <div class="space-y-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-7 h-7 rounded-full bg-[#113c75] text-white flex items-center justify-center shadow-sm">
+                        <span class="material-symbols-outlined !text-[14px]">mail</span>
+                    </div>
+                    <p class="text-[11px] font-semibold text-[#112a46]">{{ user.email }}</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div class="w-7 h-7 rounded-full bg-[#113c75] text-white flex items-center justify-center shadow-sm">
+                        <span class="material-symbols-outlined !text-[14px]">language</span>
+                    </div>
+                    <p class="text-[11px] font-semibold text-[#112a46]">foundify.onrender.com</p>
+                </div>
+                <div class="flex gap-3">
+                    <div class="w-7 h-7 rounded-full bg-[#113c75] text-white flex items-center justify-center shadow-sm flex-shrink-0">
+                        <span class="material-symbols-outlined !text-[14px]">location_on</span>
+                    </div>
+                    <div class="pt-0.5">
+                        <p class="text-[11px] font-bold text-[#113c75] leading-none mb-0.5">Registered Office</p>
+                        <p class="text-[10px] font-semibold text-gray-500 leading-none">India</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Signature -->
+            {% set first_name = name_parts[-1].capitalize() if name_parts|length > 1 else user.name.capitalize() %}
+            <div class="flex flex-col items-center w-[160px]">
+                <div class="signature-font mb-2 text-center border-b-2 border-gray-200 pb-1 w-full text-gray-800" style="transform: rotate(-3deg);">
+                    {{ first_name }}
+                </div>
+                <p class="text-[10px] font-bold text-[#113c75] mb-0.5">Authorised Signature</p>
+                <p class="text-[13px] font-black text-[#112a46] tracking-wide">{{ first_name }}</p>
             </div>
         </div>
-        {% endif %}
+
+        <!-- Barcode -->
+        <div class="mt-8 text-center flex flex-col items-center pb-2">
+            <div class="barcode -mb-3 opacity-90">
+                *{{ profile_data.employee_id }}*
+            </div>
+            <p class="text-[15px] font-black tracking-widest text-[#112a46]">{{ profile_data.employee_id }}</p>
+        </div>
+
+        <div class="bottom-shape"></div>
     </div>
+    {% endif %}
 </body>
 </html>
