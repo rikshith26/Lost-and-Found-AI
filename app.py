@@ -1,6 +1,6 @@
 from flask import (
     Flask, render_template, request, redirect,
-    session, abort, url_for, send_from_directory, flash
+    session, abort, url_for, send_from_directory, flash, send_file
 )
 import pillow_heif
 from PIL import Image
@@ -27,6 +27,7 @@ import json
 from flask import Response, make_response, g
 from fpdf import FPDF
 import io
+import qrcode
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "super-secret-key-fallback")
@@ -61,7 +62,7 @@ def get_google_provider_cfg():
 @app.before_request
 def check_user_status():
     # Define exempt paths that don't need status checks
-    exempt_paths = ['/login', '/logout', '/account-blocked', '/request-unblock', '/static', '/auth/check-status']
+    exempt_paths = ['/login', '/logout', '/account-blocked', '/request-unblock', '/static', '/auth/check-status', '/verify-admin', '/api/qrcode']
     
     # Skip if path starts with exempt prefix (simple string check)
     for path in exempt_paths:
@@ -618,6 +619,51 @@ def superadmin_dashboard():
                            resolution_rate=resolution_rate,
                            pending_unblocks=pending_unblocks,
                            recent_admins=recent_admins)
+
+# ---------- DIGITAL ID CARD ----------
+@app.route("/superadmin/id_card")
+def superadmin_id_card():
+    if session.get("role") != "super_admin":
+        abort(403)
+        
+    db = get_db()
+    user = db.users.find_one({"_id": ObjectId(session["user_id"])})
+    if not user:
+        return redirect("/login")
+        
+    verify_url = url_for("verify_admin", user_id=str(user["_id"]), _external=True)
+    return render_template("id_card.html", user=user, verify_url=verify_url)
+
+@app.route("/api/qrcode")
+def generate_qrcode():
+    data = request.args.get("data")
+    if not data:
+        return "Missing data", 400
+    qr = qrcode.QRCode(version=1, box_size=10, border=4)
+    qr.add_data(data)
+    qr.make(fit=True)
+    img = qr.make_image(fill_color="black", back_color="white")
+    
+    img_io = io.BytesIO()
+    img.save(img_io, 'PNG')
+    img_io.seek(0)
+    return send_file(img_io, mimetype='image/png')
+
+@app.route("/verify-admin/<user_id>")
+def verify_admin(user_id):
+    db = get_db()
+    if not db:
+        return "System unavailable", 500
+        
+    try:
+        user = db.users.find_one({"_id": ObjectId(user_id)})
+    except:
+        return "Invalid ID", 400
+        
+    if not user or user.get("role") not in ["super_admin", "admin"]:
+        return render_template("verify_admin.html", error="This user is not a verified administrator.")
+        
+    return render_template("verify_admin.html", user=user)
 
 # ---------- USER PROFILE ----------
 @app.route("/user/profile", methods=["GET", "POST"])
