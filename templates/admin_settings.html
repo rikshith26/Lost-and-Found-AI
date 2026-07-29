@@ -13,12 +13,6 @@
                 extend: {
                     colors: {
                         primary: "#4f46e5",
-                        primaryLight: "#e0e7ff",
-                        secondary: "#14b8a6",
-                        secondaryLight: "#ccfbf1",
-                        textDark: "#0f172a",
-                        textMuted: "#64748b",
-                        bgLight: "#f8fafc",
                     },
                     fontFamily: {
                         sans: ["Plus Jakarta Sans", "sans-serif"],
@@ -29,84 +23,82 @@
     </script>
     <style>
         .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
-        .icon-fill { font-variation-settings: 'FILL' 1; }
-        body { background-color: #f8fafc; color: #0f172a; }
+        body { background-color: #f9fafb; color: #111827; }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         
         /* Toggle Switch Tailwind Alternative */
         .toggle-checkbox:checked {
             right: 0;
-            border-color: #14b8a6;
+            border-color: #1f2937;
         }
         .toggle-checkbox:checked + .toggle-label {
-            background-color: #14b8a6;
+            background-color: #1f2937;
         }
         .toggle-checkbox {
             right: 0;
             z-index: 1;
-            border-color: #e2e8f0;
+            border-color: #e5e7eb;
             transition: all 0.3s;
         }
         .toggle-label {
             width: 3rem;
             height: 1.5rem;
-            background-color: #e2e8f0;
+            background-color: #e5e7eb;
             border-radius: 9999px;
             transition: all 0.3s;
         }
     </style>
 </head>
-<body class="flex min-h-screen overflow-hidden bg-bgLight">
+<body class="flex min-h-screen overflow-hidden font-sans">
     {% include 'loader.html' %}
 
     <!-- SIDEBAR -->
-    <aside class="w-64 bg-white border-r border-gray-100 flex flex-col h-screen flex-shrink-0 z-20 hidden md:flex shadow-sm">
-        <div class="px-6 py-8">
+    <aside class="w-64 bg-white border-r border-gray-200 flex flex-col h-screen flex-shrink-0 z-20 hidden md:flex">
+        <div class="px-6 py-6 border-b border-gray-100">
             <div class="flex items-center gap-3">
-                <img src="{{ url_for('static', filename='images/logo.jpeg') }}" alt="Foundify Logo" class="h-8 w-auto rounded-md object-contain">
+                <img src="{{ url_for('static', filename='images/logo.jpeg') }}" alt="Foundify Logo" class="h-8 w-auto rounded object-contain">
                 <h1 class="text-xl font-bold text-gray-900 tracking-tight">Foundify</h1>
             </div>
-            <p class="text-[10px] font-semibold uppercase tracking-widest {{ 'text-primary' if session.get('role') == 'super_admin' else 'text-secondary' }} mt-1">
+            <p class="text-[10px] font-bold uppercase tracking-widest text-gray-500 mt-2">
                 {{ 'Super Admin' if session.get('role') == 'super_admin' else 'Moderator Desk' }}
             </p>
         </div>
 
-        <nav class="flex-1 overflow-y-auto hide-scrollbar px-4 space-y-2">
-            <a href="{{ '/superadmin/dashboard' if session.get('role') == 'super_admin' else '/admin/dashboard' }}" class="flex items-center gap-3 px-4 py-3 text-textMuted hover:bg-gray-50 hover:text-textDark rounded-xl font-medium text-sm transition-colors">
+        <nav class="flex-1 overflow-y-auto hide-scrollbar px-4 py-4 space-y-1">
+            <a href="{{ '/superadmin/dashboard' if session.get('role') == 'super_admin' else '/admin/dashboard' }}" class="flex items-center gap-3 px-4 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded font-medium text-sm transition-colors">
                 <span class="material-symbols-outlined">dashboard</span> Dashboard
             </a>
-            <a href="/admin/users" class="flex items-center gap-3 px-4 py-3 text-textMuted hover:bg-gray-50 hover:text-textDark rounded-xl font-medium text-sm transition-colors">
+            <a href="/admin/users" class="flex items-center gap-3 px-4 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded font-medium text-sm transition-colors">
                 <span class="material-symbols-outlined">people</span> All Users
             </a>
             {% if session.get('role') == 'super_admin' %}
-            <a href="/superadmin/unblock-requests" class="flex items-center gap-3 px-4 py-3 text-textMuted hover:bg-gray-50 hover:text-textDark rounded-xl font-medium text-sm transition-colors">
+            <a href="/superadmin/unblock-requests" class="flex items-center gap-3 px-4 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded font-medium text-sm transition-colors">
                 <span class="material-symbols-outlined">lock_open</span> Unblock Requests
             </a>
-            <a href="/superadmin/create-admin" class="flex items-center gap-3 px-4 py-3 text-textMuted hover:bg-gray-50 hover:text-textDark rounded-xl font-medium text-sm transition-colors">
+            <a href="/superadmin/create-admin" class="flex items-center gap-3 px-4 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded font-medium text-sm transition-colors">
                 <span class="material-symbols-outlined">person_add</span> Create Admin
             </a>
             {% endif %}
-            <a href="/admin/settings" class="flex items-center gap-3 px-4 py-3 bg-{{ 'primary' if session.get('role') == 'super_admin' else 'secondary' }}Light text-{{ 'primary' if session.get('role') == 'super_admin' else 'secondary' }} rounded-xl font-semibold text-sm transition-colors shadow-sm border border-{{ 'primary' if session.get('role') == 'super_admin' else 'secondary' }}/10">
-                <span class="material-symbols-outlined icon-fill">settings</span> System Settings
+            <a href="/admin/settings" class="flex items-center gap-3 px-4 py-2 bg-gray-100 text-gray-900 rounded font-medium text-sm transition-colors border border-gray-200">
+                <span class="material-symbols-outlined">settings</span> System Settings
             </a>
-            <a href="{{ '/superadmin/profile' if session.get('role') == 'super_admin' else '/admin/profile' }}" class="flex items-center gap-3 px-4 py-3 text-textMuted hover:bg-gray-50 hover:text-textDark rounded-xl font-medium text-sm transition-colors">
+            <a href="{{ '/superadmin/profile' if session.get('role') == 'super_admin' else '/admin/profile' }}" class="flex items-center gap-3 px-4 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded font-medium text-sm transition-colors">
                 <span class="material-symbols-outlined">account_circle</span> My Profile
             </a>
         </nav>
 
-        <div class="p-4 mt-auto">
-            <a href="/logout" class="w-full flex items-center justify-center gap-2 px-4 py-3 text-red-500 hover:bg-red-50 rounded-xl font-bold text-sm transition-colors">
-                <span class="material-symbols-outlined">logout</span> Logout
+        <div class="p-4 mt-auto border-t border-gray-100">
+            <a href="/logout" class="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded font-medium text-sm transition-colors w-full justify-center">
+                <span class="material-symbols-outlined text-lg">logout</span> Logout
             </a>
         </div>
     </aside>
 
     <!-- MAIN CONTENT -->
-    <main class="flex-1 flex flex-col h-screen overflow-hidden">
-        <header class="h-20 bg-white/80 backdrop-blur-md border-b border-gray-100 flex items-center justify-between px-8 z-10 shadow-sm">
+    <main class="flex-1 flex flex-col h-screen overflow-hidden bg-gray-50">
+        <header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-8 z-10 shrink-0">
             <div>
-                <h2 class="text-2xl font-bold text-textDark">System Settings</h2>
-                <p class="text-xs text-textMuted font-medium">Manage preferences and security.</p>
+                <h2 class="text-xl font-bold text-gray-900">System Settings</h2>
             </div>
         </header>
 
@@ -114,25 +106,25 @@
             <div class="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
                 
                 <!-- Account Security -->
-                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
+                <div class="bg-white rounded border border-gray-200 shadow-sm p-8">
                     <div class="flex items-center gap-4 mb-6">
-                        <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center">
-                            <span class="material-symbols-outlined icon-fill text-2xl">security</span>
+                        <div class="w-12 h-12 bg-gray-50 border border-gray-200 text-gray-600 rounded flex items-center justify-center">
+                            <span class="material-symbols-outlined text-2xl">security</span>
                         </div>
-                        <h3 class="text-lg font-bold text-textDark">Account Security</h3>
+                        <h3 class="text-lg font-bold text-gray-900">Account Security</h3>
                     </div>
                     
                     <form onsubmit="event.preventDefault(); alert('Password updated! (Simulated)');">
                         <div class="space-y-4">
                             <div>
-                                <label class="block text-sm font-bold text-textDark mb-1">Current Password</label>
-                                <input type="password" placeholder="••••••••" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-primary focus:border-primary transition-colors">
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">Current Password</label>
+                                <input type="password" placeholder="••••••••" class="w-full bg-white border border-gray-300 rounded px-4 py-3 text-sm focus:ring-primary focus:border-primary transition-colors">
                             </div>
                             <div>
-                                <label class="block text-sm font-bold text-textDark mb-1">New Password</label>
-                                <input type="password" placeholder="••••••••" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-primary focus:border-primary transition-colors">
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">New Password</label>
+                                <input type="password" placeholder="••••••••" class="w-full bg-white border border-gray-300 rounded px-4 py-3 text-sm focus:ring-primary focus:border-primary transition-colors">
                             </div>
-                            <button type="submit" class="w-full mt-2 bg-textDark hover:bg-black text-white py-3 rounded-xl font-bold text-sm transition-colors shadow-md">
+                            <button type="submit" class="w-full mt-2 bg-gray-900 hover:bg-black text-white py-3 rounded font-medium text-sm transition-colors shadow-sm">
                                 Update Password
                             </button>
                         </div>
@@ -140,49 +132,49 @@
                 </div>
 
                 <!-- System Preferences -->
-                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
+                <div class="bg-white rounded border border-gray-200 shadow-sm p-8">
                     <div class="flex items-center gap-4 mb-6">
-                        <div class="w-12 h-12 bg-orange-50 text-orange-500 rounded-xl flex items-center justify-center">
-                            <span class="material-symbols-outlined icon-fill text-2xl">tune</span>
+                        <div class="w-12 h-12 bg-gray-50 border border-gray-200 text-gray-600 rounded flex items-center justify-center">
+                            <span class="material-symbols-outlined text-2xl">tune</span>
                         </div>
-                        <h3 class="text-lg font-bold text-textDark">System Preferences</h3>
+                        <h3 class="text-lg font-bold text-gray-900">System Preferences</h3>
                     </div>
                     
                     <div class="space-y-6">
                         <div class="flex items-center justify-between">
                             <div>
-                                <h4 class="text-sm font-bold text-textDark">Maintenance Mode</h4>
-                                <p class="text-xs text-textMuted mt-0.5">Temporarily disable user access.</p>
+                                <h4 class="text-sm font-semibold text-gray-900">Maintenance Mode</h4>
+                                <p class="text-xs text-gray-500 mt-0.5">Temporarily disable user access.</p>
                             </div>
                             <div class="relative inline-block w-12 align-middle select-none transition duration-200 ease-in">
                                 <input type="checkbox" name="toggle" id="toggle1" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"/>
-                                <label for="toggle1" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"></label>
+                                <label for="toggle1" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-200 cursor-pointer"></label>
                             </div>
                         </div>
 
                         <div class="flex items-center justify-between">
                             <div>
-                                <h4 class="text-sm font-bold text-textDark">Auto-Approve Matches</h4>
-                                <p class="text-xs text-textMuted mt-0.5">Skip verification for >95% confidence.</p>
+                                <h4 class="text-sm font-semibold text-gray-900">Auto-Approve Matches</h4>
+                                <p class="text-xs text-gray-500 mt-0.5">Skip verification for >95% confidence.</p>
                             </div>
                             <div class="relative inline-block w-12 align-middle select-none transition duration-200 ease-in">
                                 <input type="checkbox" name="toggle" id="toggle2" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"/>
-                                <label for="toggle2" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"></label>
+                                <label for="toggle2" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-200 cursor-pointer"></label>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Data Management -->
-                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 md:col-span-2">
+                <div class="bg-white rounded border border-gray-200 shadow-sm p-8 md:col-span-2">
                     <div class="flex items-center gap-4 mb-4">
-                        <div class="w-12 h-12 bg-gray-100 text-gray-600 rounded-xl flex items-center justify-center">
-                            <span class="material-symbols-outlined icon-fill text-2xl">database</span>
+                        <div class="w-12 h-12 bg-gray-50 border border-gray-200 text-gray-600 rounded flex items-center justify-center">
+                            <span class="material-symbols-outlined text-2xl">database</span>
                         </div>
-                        <h3 class="text-lg font-bold text-textDark">Data Management</h3>
+                        <h3 class="text-lg font-bold text-gray-900">Data Management</h3>
                     </div>
-                    <p class="text-sm text-textMuted mb-6">Generate and download a complete system report containing user statistics, resolved cases, and active reports for backup or auditing purposes.</p>
-                    <a href="/admin/export-data" class="inline-flex items-center gap-2 bg-textDark hover:bg-black text-white px-6 py-3 rounded-xl font-bold text-sm transition-colors shadow-md">
+                    <p class="text-sm text-gray-600 mb-6">Generate and download a complete system report containing user statistics, resolved cases, and active reports for backup or auditing purposes.</p>
+                    <a href="/admin/export-data" class="inline-flex items-center gap-2 bg-gray-900 hover:bg-black text-white px-6 py-3 rounded font-medium text-sm transition-colors shadow-sm">
                         <span class="material-symbols-outlined text-[18px]">download</span> Export System Data PDF
                     </a>
                 </div>

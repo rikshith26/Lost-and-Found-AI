@@ -13,12 +13,6 @@
                 extend: {
                     colors: {
                         primary: "#4f46e5",
-                        primaryLight: "#e0e7ff",
-                        secondary: "#14b8a6",
-                        secondaryLight: "#ccfbf1",
-                        textDark: "#0f172a",
-                        textMuted: "#64748b",
-                        bgLight: "#f8fafc",
                     },
                     fontFamily: {
                         sans: ["Plus Jakarta Sans", "sans-serif"],
@@ -29,65 +23,64 @@
     </script>
     <style>
         .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
-        .icon-fill { font-variation-settings: 'FILL' 1; }
-        body { background-color: #f8fafc; color: #0f172a; }
+        body { background-color: #f9fafb; color: #111827; }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
     </style>
 </head>
-<body class="flex min-h-screen overflow-hidden bg-bgLight">
+<body class="flex min-h-screen overflow-hidden font-sans">
     {% include 'loader.html' %}
 
     <!-- SIDEBAR -->
-    <aside class="w-64 bg-white border-r border-gray-100 flex flex-col h-screen flex-shrink-0 z-20 hidden md:flex shadow-sm">
-        <div class="px-6 py-8">
+    <aside class="w-64 bg-white border-r border-gray-200 flex flex-col h-screen flex-shrink-0 z-20 hidden md:flex">
+        <div class="px-6 py-6 border-b border-gray-100">
             <div class="flex items-center gap-3">
-                <img src="{{ url_for('static', filename='images/logo.jpeg') }}" alt="Foundify Logo" class="h-8 w-auto rounded-md object-contain">
+                <img src="{{ url_for('static', filename='images/logo.jpeg') }}" alt="Foundify Logo" class="h-8 w-auto rounded object-contain">
                 <h1 class="text-xl font-bold text-gray-900 tracking-tight">Foundify</h1>
             </div>
-            <p class="text-[10px] font-semibold uppercase tracking-widest {{ 'text-primary' if session.get('role') == 'super_admin' else 'text-secondary' }} mt-1">
+            <p class="text-[10px] font-bold uppercase tracking-widest text-gray-500 mt-2">
                 {{ 'Super Admin' if session.get('role') == 'super_admin' else 'Moderator Desk' }}
             </p>
         </div>
 
-        <nav class="flex-1 overflow-y-auto hide-scrollbar px-4 space-y-2">
-            <a href="{{ '/superadmin/dashboard' if session.get('role') == 'super_admin' else '/admin/dashboard' }}" class="flex items-center gap-3 px-4 py-3 text-textMuted hover:bg-gray-50 hover:text-textDark rounded-xl font-medium text-sm transition-colors">
+        <nav class="flex-1 overflow-y-auto hide-scrollbar px-4 py-4 space-y-1">
+            <a href="{{ '/superadmin/dashboard' if session.get('role') == 'super_admin' else '/admin/dashboard' }}" class="flex items-center gap-3 px-4 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded font-medium text-sm transition-colors">
                 <span class="material-symbols-outlined">dashboard</span> Dashboard
             </a>
-            <a href="/admin/users" class="flex items-center gap-3 px-4 py-3 bg-{{ 'primary' if session.get('role') == 'super_admin' else 'secondary' }}Light text-{{ 'primary' if session.get('role') == 'super_admin' else 'secondary' }} rounded-xl font-semibold text-sm transition-colors shadow-sm border border-{{ 'primary' if session.get('role') == 'super_admin' else 'secondary' }}/10">
-                <span class="material-symbols-outlined icon-fill">people</span> All Users
+            <a href="/admin/users" class="flex items-center gap-3 px-4 py-2 bg-gray-100 text-gray-900 rounded font-medium text-sm transition-colors border border-gray-200">
+                <span class="material-symbols-outlined">people</span> All Users
             </a>
             {% if session.get('role') == 'super_admin' %}
-            <a href="/superadmin/unblock-requests" class="flex items-center gap-3 px-4 py-3 text-textMuted hover:bg-gray-50 hover:text-textDark rounded-xl font-medium text-sm transition-colors">
+            <a href="/superadmin/unblock-requests" class="flex items-center gap-3 px-4 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded font-medium text-sm transition-colors">
                 <span class="material-symbols-outlined">lock_open</span> Unblock Requests
             </a>
-            <a href="/superadmin/create-admin" class="flex items-center gap-3 px-4 py-3 text-textMuted hover:bg-gray-50 hover:text-textDark rounded-xl font-medium text-sm transition-colors">
+            <a href="/superadmin/create-admin" class="flex items-center gap-3 px-4 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded font-medium text-sm transition-colors">
                 <span class="material-symbols-outlined">person_add</span> Create Admin
             </a>
             {% endif %}
-            <a href="/admin/settings" class="flex items-center gap-3 px-4 py-3 text-textMuted hover:bg-gray-50 hover:text-textDark rounded-xl font-medium text-sm transition-colors">
+            <a href="/admin/settings" class="flex items-center gap-3 px-4 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded font-medium text-sm transition-colors">
                 <span class="material-symbols-outlined">settings</span> System Settings
             </a>
-            <a href="{{ '/superadmin/profile' if session.get('role') == 'super_admin' else '/admin/profile' }}" class="flex items-center gap-3 px-4 py-3 text-textMuted hover:bg-gray-50 hover:text-textDark rounded-xl font-medium text-sm transition-colors">
+            <a href="{{ '/superadmin/profile' if session.get('role') == 'super_admin' else '/admin/profile' }}" class="flex items-center gap-3 px-4 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded font-medium text-sm transition-colors">
                 <span class="material-symbols-outlined">account_circle</span> My Profile
             </a>
         </nav>
 
-        <div class="p-4 mt-auto">
-            <a href="/logout" class="w-full flex items-center justify-center gap-2 px-4 py-3 text-red-500 hover:bg-red-50 rounded-xl font-bold text-sm transition-colors">
-                <span class="material-symbols-outlined">logout</span> Logout
+        <div class="p-4 mt-auto border-t border-gray-100">
+            <a href="/logout" class="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded font-medium text-sm transition-colors w-full justify-center">
+                <span class="material-symbols-outlined text-lg">logout</span> Logout
             </a>
         </div>
     </aside>
 
     <!-- MAIN CONTENT -->
-    <main class="flex-1 flex flex-col h-screen overflow-hidden">
-        <header class="h-20 bg-white/80 backdrop-blur-md border-b border-gray-100 flex items-center justify-between px-8 z-10 shadow-sm">
+    <main class="flex-1 flex flex-col h-screen overflow-hidden bg-gray-50">
+        <header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-8 z-10 shrink-0">
             <div>
-                <h2 class="text-2xl font-bold text-textDark">User Database</h2>
-                <p class="text-xs text-textMuted font-medium">{{ users|length }} Registered Members</p>
+                <h2 class="text-xl font-bold text-gray-900">User Database</h2>
+                <p class="text-xs text-gray-500 font-medium">{{ users|length }} Registered Members</p>
             </div>
             <div class="flex items-center gap-4">
-                <button onclick="window.location.reload()" class="bg-white border border-gray-200 text-textDark px-4 py-2 rounded-full text-sm font-bold flex items-center gap-2 shadow-sm hover:bg-gray-50 transition-all">
+                <button onclick="window.location.reload()" class="bg-white border border-gray-300 text-gray-900 px-4 py-2 rounded text-sm font-medium flex items-center gap-2 shadow-sm hover:bg-gray-50 transition-colors">
                     <span class="material-symbols-outlined text-[18px]">refresh</span> Refresh
                 </button>
             </div>
@@ -98,7 +91,7 @@
         {% if messages %}
         <div class="px-8 pt-6">
             {% for message in messages %}
-            <div class="bg-indigo-50 text-indigo-700 px-6 py-4 rounded-xl font-medium text-sm border border-indigo-100 shadow-sm">
+            <div class="bg-green-50 text-green-700 px-4 py-3 rounded border border-green-200 shadow-sm mb-2 text-sm font-medium">
                 {{ message }}
             </div>
             {% endfor %}
@@ -108,53 +101,53 @@
 
         <div class="flex-1 overflow-y-auto hide-scrollbar p-8">
             <div class="max-w-6xl mx-auto">
-                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                <div class="bg-white rounded border border-gray-200 shadow-sm overflow-hidden">
                     <table class="w-full text-left">
                         <thead>
-                            <tr class="bg-gray-50/50 text-xs uppercase text-textMuted border-b border-gray-100">
-                                <th class="py-4 px-6 font-semibold">User</th>
-                                <th class="py-4 px-6 font-semibold">Email</th>
-                                <th class="py-4 px-6 font-semibold">Role</th>
-                                <th class="py-4 px-6 font-semibold">Status</th>
-                                <th class="py-4 px-6 font-semibold">T&C Accepted</th>
-                                <th class="py-4 px-6 font-semibold text-right">Actions</th>
+                            <tr class="bg-gray-50 text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-200">
+                                <th class="py-3 px-6">User</th>
+                                <th class="py-3 px-6">Email</th>
+                                <th class="py-3 px-6">Role</th>
+                                <th class="py-3 px-6">Status</th>
+                                <th class="py-3 px-6">T&C Accepted</th>
+                                <th class="py-3 px-6 text-right">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for u in users %}
-                            <tr class="border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors">
+                            <tr class="border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors">
                                 <td class="py-4 px-6">
                                     <div class="flex items-center gap-4">
-                                        <div class="w-10 h-10 rounded-full bg-{{ 'primary' if u.role == 'super_admin' else 'secondary' if u.role == 'admin' else 'gray' }}-100 text-{{ 'primary' if u.role == 'super_admin' else 'secondary' if u.role == 'admin' else 'gray' }}-600 flex items-center justify-center font-bold text-sm">
+                                        <div class="w-10 h-10 rounded bg-gray-100 border border-gray-200 text-gray-500 flex items-center justify-center font-bold text-sm">
                                             {{ u.name[0] | upper }}
                                         </div>
                                         <div>
-                                            <div class="font-bold text-sm text-textDark">{{ u.name }}</div>
-                                            <div class="text-[10px] text-textMuted font-mono">#{{ u.user_id[-6:] }}</div>
+                                            <div class="font-bold text-sm text-gray-900">{{ u.name }}</div>
+                                            <div class="text-[10px] text-gray-500 font-mono">#{{ u.user_id[-6:] }}</div>
                                         </div>
                                     </div>
                                 </td>
-                                <td class="py-4 px-6 text-sm text-textMuted">{{ u.email }}</td>
+                                <td class="py-4 px-6 text-sm text-gray-600">{{ u.email }}</td>
                                 <td class="py-4 px-6">
                                     {% if u.role == 'super_admin' %}
-                                        <span class="bg-primaryLight text-primary px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider">Root</span>
+                                        <span class="bg-gray-100 border border-gray-200 text-gray-800 px-2.5 py-1 rounded-sm text-[10px] font-bold uppercase tracking-wider">Root</span>
                                     {% elif u.role == 'admin' %}
-                                        <span class="bg-secondaryLight text-secondary px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider">Admin</span>
+                                        <span class="bg-gray-100 border border-gray-200 text-gray-800 px-2.5 py-1 rounded-sm text-[10px] font-bold uppercase tracking-wider">Admin</span>
                                     {% else %}
-                                        <span class="bg-gray-100 text-gray-600 px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider">User</span>
+                                        <span class="bg-white border border-gray-200 text-gray-600 px-2.5 py-1 rounded-sm text-[10px] font-bold uppercase tracking-wider">User</span>
                                     {% endif %}
                                 </td>
                                 <td class="py-4 px-6">
                                     {% if u.is_active %}
-                                    <span class="text-green-500 font-bold text-sm flex items-center gap-1"><span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span> Active</span>
+                                    <span class="text-green-600 font-medium text-sm flex items-center gap-1"><span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span> Active</span>
                                     {% else %}
-                                    <span class="text-red-500 font-bold text-sm flex items-center gap-1"><span class="w-1.5 h-1.5 bg-red-500 rounded-full"></span> Blocked</span>
+                                    <span class="text-red-600 font-medium text-sm flex items-center gap-1"><span class="w-1.5 h-1.5 bg-red-500 rounded-full"></span> Blocked</span>
                                     {% endif %}
                                 </td>
                                 <td class="py-4 px-6 text-sm">
                                     {% if u.terms_accepted_at %}
-                                        <div class="text-green-600 font-semibold flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">check_circle</span> Yes</div>
-                                        <div class="text-[10px] text-textMuted">{{ u.terms_accepted_at.strftime('%d %b %Y, %H:%M') }}</div>
+                                        <div class="text-green-600 font-medium flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">check_circle</span> Yes</div>
+                                        <div class="text-[10px] text-gray-500">{{ u.terms_accepted_at.strftime('%d %b %Y, %H:%M') }}</div>
                                     {% else %}
                                         <span class="text-gray-400 font-medium text-xs">Legacy Account</span>
                                     {% endif %}
@@ -163,13 +156,13 @@
                                     {% if session['role'] == 'super_admin' or (session['role'] == 'admin' and u.role != 'super_admin') %}
                                         {% if u.is_active %}
                                         <form action="/admin/user/deactivate/{{ u.user_id }}" method="POST" class="inline">
-                                            <button type="submit" class="text-red-400 hover:text-red-600 transition-colors p-2 rounded-full hover:bg-red-50" title="Block User">
+                                            <button type="submit" class="text-gray-400 hover:text-red-600 transition-colors p-2 rounded hover:bg-red-50" title="Block User">
                                                 <span class="material-symbols-outlined text-[20px]">block</span>
                                             </button>
                                         </form>
                                         {% else %}
                                         <form action="/admin/user/activate/{{ u.user_id }}" method="POST" class="inline">
-                                            <button type="submit" class="text-green-400 hover:text-green-600 transition-colors p-2 rounded-full hover:bg-green-50" title="Activate User">
+                                            <button type="submit" class="text-gray-400 hover:text-green-600 transition-colors p-2 rounded hover:bg-green-50" title="Activate User">
                                                 <span class="material-symbols-outlined text-[20px]">check_circle</span>
                                             </button>
                                         </form>

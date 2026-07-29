@@ -1,236 +1,182 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Messages // Foundify</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/memories.css') }}">
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#4f46e5",
+                    },
+                    fontFamily: {
+                        sans: ["Plus Jakarta Sans", "sans-serif"],
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        /* STATIC LIST ITEM */
-        .chat-list-item {
-            display: grid;
-            grid-template-columns: 60px 1fr 150px;
-            padding: 1.2rem 0;
-            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-            align-items: center;
-            gap: 1.5rem;
-            text-decoration: none;
-            color: inherit;
-        }
-
-        .chat-list-item:hover {
-            background-color: rgba(0, 0, 0, 0.01);
-        }
-
-        .chat-list-item:last-child {
-            border-bottom: none;
-        }
-
-        .chat-header {
-            display: grid;
-            grid-template-columns: 60px 1fr 150px;
-            padding: 1rem 0;
-            border-bottom: 2px solid rgba(0, 0, 0, 0.05);
-            font-weight: 700;
-            color: var(--text-pencil);
-            font-size: 0.85rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            gap: 1.5rem;
-        }
-
-        .chat-icon {
-            width: 50px;
-            height: 50px;
-            background: var(--bg-cream);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--accent-sky);
-        }
-
-        .latest-msg-preview {
-            font-size: 0.9rem;
-            color: var(--text-pencil);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            max-width: 400px;
-        }
-
-        @media (max-width: 768px) {
-            .chat-header {
-                display: none;
-            }
-
-            .paper-card-static {
-                padding: 0 !important;
-                background: transparent !important;
-                box-shadow: none !important;
-                border: none !important;
-            }
-
-            .chat-list-item {
-                display: grid;
-                grid-template-columns: 50px 1fr auto;
-                gap: 1rem;
-                background: white;
-                padding: 1rem;
-                margin-bottom: 0.5rem;
-                border-radius: 12px;
-                border: 1px solid rgba(0, 0, 0, 0.03);
-                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
-                align-items: center;
-            }
-
-            .chat-icon {
-                width: 50px;
-                height: 50px;
-                border-radius: 50%;
-            }
-
-            .chat-info {
-                overflow: hidden;
-            }
-
-            .latest-msg-preview {
-                max-width: 100%;
-            }
-
-            .chat-date {
-                display: block;
-                /* Show date on mobile too */
-                font-size: 0.7rem;
-                color: var(--text-pencil);
-                white-space: nowrap;
-            }
-        }
-
-        /* STATIC CONTAINER */
-        .paper-card-static {
-            background: white;
-            border-radius: var(--radius-soft);
-            padding: 2rem;
-            box-shadow: var(--shadow-soft);
-            border: 1px solid rgba(0, 0, 0, 0.02);
-            position: relative;
-            overflow: hidden;
-            transition: none !important;
-            transform: none !important;
-        }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .icon-fill { font-variation-settings: 'FILL' 1; }
+        body { background-color: #FAFAFA; color: #191C1D; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
     </style>
 </head>
-
-<body class="layout-compact">
+<body class="flex min-h-screen overflow-hidden font-sans bg-gray-50">
     {% include 'loader.html' %}
 
-    <aside class="sidebar" style="height: 100vh;">
-        <div style="margin-bottom: 2rem;">
-            <div style="display:flex; align-items:center; gap:8px;">
-                <img src="{{ url_for('static', filename='images/logo.jpeg') }}" alt="Foundify Logo" style="height: 28px; border-radius: 4px; object-fit: contain;">
-                <div style="font-weight: 700; color: #111827; font-size: 1.2rem;">Foundify</div>
+    <!-- 💻 LAPTOP SIDE NAV (Hidden on Mobile) -->
+    <aside class="w-64 bg-white border-r border-gray-100 flex flex-col h-screen flex-shrink-0 z-20 hidden md:flex sticky top-0">
+        <!-- Logo -->
+        <div class="px-6 py-6">
+            <div class="flex items-center gap-3">
+                <img src="{{ url_for('static', filename='images/logo.jpeg') }}" alt="Foundify Logo" class="h-8 w-auto rounded-md object-contain">
+                <h1 class="text-2xl font-bold text-gray-900 tracking-tight">Foundify</h1>
             </div>
         </div>
 
-        <nav>
-            <a href="/user/dashboard" class="sidebar-link">
-                <span class="material-icons">dashboard</span> Dashboard
+        <!-- Navigation -->
+        <nav class="flex-1 overflow-y-auto hide-scrollbar px-4 space-y-1">
+            <a href="/user/dashboard" class="flex items-center gap-3 px-4 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded font-medium text-sm transition-colors">
+                <span class="material-symbols-outlined">dashboard</span> Dashboard
             </a>
-            <a href="/user/report-lost" class="sidebar-link">
-                <span class="material-icons">search_off</span> I Lost Something
+            <a href="/user/report-lost" class="flex items-center gap-3 px-4 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded font-medium text-sm transition-colors">
+                <span class="material-symbols-outlined">search_off</span> I Lost Something
             </a>
-            <a href="/user/report-found" class="sidebar-link">
-                <span class="material-icons">volunteer_activism</span> I Found Something
+            <a href="/user/report-found" class="flex items-center gap-3 px-4 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded font-medium text-sm transition-colors">
+                <span class="material-symbols-outlined">volunteer_activism</span> I Found Something
             </a>
-            <a href="/user/chats" class="sidebar-link active">
-                <span class="material-icons">mark_email_unread</span> Messages
+            <a href="/user/chats" class="flex items-center gap-3 px-4 py-2 bg-gray-100 text-gray-900 rounded font-medium text-sm transition-colors border border-gray-200">
+                <span class="material-symbols-outlined">mail</span> Messages
             </a>
-            <a href="/user/history" class="sidebar-link">
-                <span class="material-icons">history_edu</span> History
+            <a href="/user/history" class="flex items-center gap-3 px-4 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded font-medium text-sm transition-colors">
+                <span class="material-symbols-outlined">history</span> History
             </a>
-            <a href="/user/profile" class="sidebar-link">
-                <span class="material-icons">person</span> Profile
+            <a href="/user/profile" class="flex items-center gap-3 px-4 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded font-medium text-sm transition-colors">
+                <span class="material-symbols-outlined">person</span> My Activity
             </a>
         </nav>
 
-        <div style="margin-top: auto;">
-            <a href="/logout" class="sidebar-link" style="color: var(--accent-rose);">
-                <span class="material-icons">logout</span> Logout
+        <!-- Actions -->
+        <div class="p-4 mt-auto border-t border-gray-100">
+            <a href="/user/report-lost" class="w-full bg-primary hover:bg-primary/90 text-white rounded py-2 px-4 flex items-center justify-center gap-2 font-medium text-sm shadow-sm transition-colors">
+                <span class="material-symbols-outlined text-lg">add</span> Report New Item
+            </a>
+            <a href="/logout" class="mt-4 flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded font-medium text-sm transition-colors w-max border border-transparent hover:border-gray-200">
+                <span class="material-symbols-outlined text-lg">logout</span> Logout
             </a>
         </div>
     </aside>
 
-    <main class="main-with-sidebar">
-        <header style="margin-bottom: 2rem;">
-            <h1 style="font-size: 1.8rem; margin-bottom: 0.2rem;">Messages</h1>
-            <p style="color: var(--text-pencil); font-size: 0.9rem;">Conversations about lost and found items.</p>
+    <!-- MAIN CONTENT -->
+    <main class="flex-1 flex flex-col h-screen overflow-hidden bg-gray-50">
+        
+        <!-- TOP APP BAR -->
+        <header class="h-20 bg-white/80 backdrop-blur-md border-b border-gray-100 flex items-center justify-between px-8 z-10 shrink-0">
+            <form action="/user/search" method="GET" class="relative w-96">
+                <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">search</span>
+                <input type="text" name="q" placeholder="Search for items, locations..." class="w-full bg-gray-50 border-none rounded-full py-3 pl-12 pr-4 text-sm focus:ring-1 focus:ring-primary outline-none text-gray-900 placeholder-gray-400" required>
+            </form>
+            
+            <div class="flex items-center gap-6">
+                <button class="relative text-gray-400 hover:text-gray-600 transition-colors">
+                    <span class="material-symbols-outlined">notifications</span>
+                </button>
+                <a href="/user/profile" class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm shadow-sm cursor-pointer border-2 border-white block">
+                    {% if user.profile_photo %}
+                        <img src="/{{ user.profile_photo }}" class="w-full h-full rounded-full object-cover">
+                    {% else %}
+                        {{ user.name[0] | upper }}
+                    {% endif %}
+                </a>
+            </div>
         </header>
 
-        {% if chats %}
-        <div class="paper-card-static">
-            <div class="chat-header">
-                <div></div>
-                <div>Conversation</div>
-                <div style="text-align: right;">Started</div>
-            </div>
+        <!-- SCROLL AREA -->
+        <div class="flex-1 overflow-y-auto hide-scrollbar p-8">
+            <div class="max-w-5xl mx-auto space-y-8 pb-10">
+                
+                <header class="mb-8">
+                    <h1 class="text-3xl font-extrabold text-gray-900">Messages</h1>
+                    <p class="text-gray-500 mt-1 text-sm">Conversations about lost and found items.</p>
+                </header>
 
-            {% for chat in chats %}
-            <a href="/user/chat/{{ chat.id }}" class="chat-list-item">
-                <div class="chat-icon">
-                    <span class="material-icons">mail_outline</span>
-                </div>
+                {% if chats %}
+                <div class="bg-white rounded border border-gray-200 shadow-sm overflow-hidden mb-8">
+                    <div class="px-6 py-4 border-b border-gray-200 bg-gray-50 grid grid-cols-[60px_1fr_150px] gap-6 text-xs font-bold uppercase tracking-wider text-gray-500">
+                        <div></div>
+                        <div>Conversation</div>
+                        <div class="text-right">Started</div>
+                    </div>
+                    <div class="divide-y divide-gray-100">
+                        {% for chat in chats %}
+                        <a href="/user/chat/{{ chat.id }}" class="p-4 grid grid-cols-[50px_1fr_auto] md:grid-cols-[60px_1fr_150px] gap-4 md:gap-6 items-center hover:bg-gray-50 transition-colors group">
+                            
+                            <div class="w-12 h-12 rounded bg-gray-50 border border-gray-200 flex items-center justify-center text-gray-400 group-hover:text-primary transition-colors">
+                                <span class="material-symbols-outlined">mail</span>
+                            </div>
+                            
+                            <div class="min-w-0 overflow-hidden">
+                                <h4 class="text-base font-bold text-gray-900 truncate mb-1">{{ chat.item_name }}</h4>
+                                <p class="text-sm text-gray-500 truncate">
+                                    <span class="font-semibold text-gray-700">Latest:</span> {{ chat.messages[-1].text }}
+                                </p>
+                            </div>
+                            
+                            <div class="text-right text-xs font-medium text-gray-400">
+                                {{ chat.created_at.strftime('%b %d') }}
+                            </div>
 
-                <div class="chat-info">
-                    <div style="font-weight: 600; color: var(--text-ink); font-size: 1rem; margin-bottom: 0.2rem;">{{
-                        chat.item_name }}</div>
-                    <div class="latest-msg-preview">
-                        <span style="color: var(--accent-peach); font-weight: 600;">Latest:</span> {{
-                        chat.messages[-1].text }}
+                        </a>
+                        {% endfor %}
                     </div>
                 </div>
-
-                <div class="chat-date" style="text-align: right; font-size: 0.85rem; color: var(--text-pencil);">
-                    {{ chat.created_at.strftime('%b %d') }}
+                {% else %}
+                <!-- EMPTY STATE -->
+                <div class="bg-white p-12 rounded border border-gray-200 shadow-sm text-center">
+                    <div class="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-gray-200">
+                        <span class="material-symbols-outlined text-4xl text-gray-400">mark_email_read</span>
+                    </div>
+                    <h3 class="text-lg font-bold text-gray-900 mb-2">No messages yet</h3>
+                    <p class="text-gray-500 text-sm max-w-sm mx-auto">You don't have any ongoing conversations about items.</p>
                 </div>
-            </a>
-            {% endfor %}
+                {% endif %}
+            </div>
         </div>
-        {% else %}
-        <div class="paper-card-static" style="text-align: center; padding: 4rem 1rem;">
-            <span class="material-icons"
-                style="font-size: 3rem; color: #eee; margin-bottom: 1rem;">mark_email_read</span>
-            <p style="color: var(--text-pencil);">No messages yet.</p>
-        </div>
-        {% endif %}
-
     </main>
 
     <!-- MOBILE BOTTOM NAV -->
-    <div class="mobile-nav">
-        <a href="/user/dashboard" class="mobile-nav-link">
-            <span class="material-icons">home</span>
-            HOME
+    <div class="md:hidden fixed bottom-0 left-0 w-full bg-white border-t border-gray-100 flex justify-around py-3 z-50">
+        <a href="/user/dashboard" class="flex flex-col items-center text-gray-400 hover:text-gray-600">
+            <span class="material-symbols-outlined text-xl">home</span>
+            <span class="text-[9px] font-bold mt-1">HOME</span>
         </a>
-        <a href="/user/chats" class="mobile-nav-link active">
-            <span class="material-icons">mail</span>
-            MESSAGES
+        <a href="/user/chats" class="flex flex-col items-center text-primary">
+            <span class="material-symbols-outlined icon-fill text-xl">mail</span>
+            <span class="text-[9px] font-bold mt-1">MESSAGES</span>
         </a>
-        <a href="/user/history" class="mobile-nav-link">
-            <span class="material-icons">history</span>
-            HISTORY
+        <a href="/user/report-lost" class="flex flex-col items-center text-gray-400 hover:text-gray-600 -mt-5">
+            <div class="w-12 h-12 bg-primary text-white rounded-full flex items-center justify-center shadow-lg border-4 border-[#FAFAFA]">
+                <span class="material-symbols-outlined icon-fill">add</span>
+            </div>
+            <span class="text-[9px] font-bold mt-1">REPORT</span>
         </a>
-        <a href="/user/profile" class="mobile-nav-link">
-            <span class="material-icons">person</span>
-            PROFILE
+        <a href="/user/history" class="flex flex-col items-center text-gray-400 hover:text-gray-600">
+            <span class="material-symbols-outlined text-xl">history</span>
+            <span class="text-[9px] font-bold mt-1">HISTORY</span>
+        </a>
+        <a href="/user/profile" class="flex flex-col items-center text-gray-400 hover:text-gray-600">
+            <span class="material-symbols-outlined text-xl">person</span>
+            <span class="text-[9px] font-bold mt-1">PROFILE</span>
         </a>
     </div>
 
-
-
     <script src="{{ url_for('static', filename='js/memories_core.js') }}"></script>
 </body>
-
 </html>

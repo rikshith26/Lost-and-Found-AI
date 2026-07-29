@@ -1,119 +1,128 @@
 <!DOCTYPE html>
 <html>
-
 <head>
+    <meta charset="utf-8">
     <style>
         body {
-            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            background-color: #fdfbf7;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f9fafb;
             margin: 0;
             padding: 0;
-            color: #2d3436;
+            color: #111827;
         }
 
         .container {
             width: 100%;
-            max-width: 600px;
-            margin: 0 auto;
+            max-width: 560px;
+            margin: 40px auto;
             background-color: #ffffff;
-            border-radius: 16px;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
             overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-            margin-top: 40px;
-            margin-bottom: 40px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
         }
 
         .header {
-            background: linear-gradient(135deg, #ff9f43, #ff6b6b);
-            padding: 40px 20px;
-            text-align: center;
+            padding: 24px 32px;
+            border-bottom: 1px solid #e5e7eb;
+            background-color: #ffffff;
+            text-align: left;
         }
 
         .header h1 {
-            color: white;
+            color: #111827;
             margin: 0;
-            font-family: 'Georgia', serif;
-            /* A bit closer to Caveat feel */
-            font-size: 32px;
-            letter-spacing: 1px;
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
         }
 
         .content {
-            padding: 40px;
-            text-align: center;
+            padding: 32px;
+            text-align: left;
         }
 
         .content h2 {
-            color: #2d3436;
+            color: #111827;
             margin-top: 0;
-            font-size: 24px;
+            font-size: 18px;
+            font-weight: 600;
         }
 
         .content p {
-            color: #636e72;
+            color: #4b5563;
             line-height: 1.6;
-            font-size: 16px;
-            margin-bottom: 30px;
+            font-size: 15px;
+            margin-bottom: 24px;
         }
 
         .btn {
             display: inline-block;
-            background: linear-gradient(135deg, #ff9f43, #ff6b6b);
-            color: white;
+            background-color: #4f46e5;
+            color: #ffffff !important;
             text-decoration: none;
-            padding: 15px 40px;
-            border-radius: 50px;
-            font-weight: bold;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-weight: 600;
             font-size: 14px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
-            transition: transform 0.2s;
+            margin-bottom: 24px;
+            text-align: center;
         }
 
-        .footer {
-            background-color: #fff9f0;
-            padding: 20px;
-            text-align: center;
-            font-size: 12px;
-            color: #b2bec3;
+        .btn:hover {
+            background-color: #4338ca;
         }
 
         .divider {
             height: 1px;
-            background-color: #eee;
-            margin: 30px 0;
+            background-color: #e5e7eb;
+            margin: 32px 0;
+        }
+
+        .content .meta-text {
+            font-size: 13px;
+            color: #6b7280;
+            margin-bottom: 0;
+        }
+
+        .footer {
+            background-color: #f9fafb;
+            padding: 24px 32px;
+            text-align: left;
+            border-top: 1px solid #e5e7eb;
+        }
+        
+        .footer p {
+            margin: 0 0 8px 0;
+            font-size: 12px;
+            color: #6b7280;
         }
     </style>
 </head>
-
 <body>
     <div class="container">
         <div class="header">
             <h1>Foundify</h1>
         </div>
         <div class="content">
-            <h2>Let's get you back in.</h2>
+            <h2>Password Reset Request</h2>
             <p>
-                Hello there, <br><br>
-                It looks like you forgot your password. Don't worry, it happens to everyone.<br><br>
-                We received a request to reset your password. If this was you, just click the button below to set a new
-                one and get back to your account.
+                We received a request to reset the password for your Foundify account. 
+                If you made this request, please click the button below to securely set a new password.
             </p>
 
-            <a href="{{ link }}" class="btn">Reset My Password</a>
+            <a href="{{ link }}" class="btn">Reset Password</a>
 
             <div class="divider"></div>
 
-            <p style="font-size: 12px; color: #999;">
-                This link is valid for 1 hour.<br>
-                If you didn't ask for this, you can simply ignore this email and nothing will change.
+            <p class="meta-text">
+                If you did not request a password reset, please ignore this email or contact support if you have concerns. This link will expire in 1 hour.
             </p>
         </div>
         <div class="footer">
-            &copy; 2026 Foundify
+            <p>This is a system generated message, please do not reply.</p>
+            <p>&copy; 2026 Foundify. All rights reserved.</p>
         </div>
     </div>
 </body>
-
 </html>

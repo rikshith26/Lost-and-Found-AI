@@ -13,12 +13,6 @@
                 extend: {
                     colors: {
                         primary: "#4f46e5",
-                        primaryLight: "#e0e7ff",
-                        secondary: "#14b8a6",
-                        secondaryLight: "#ccfbf1",
-                        textDark: "#0f172a",
-                        textMuted: "#64748b",
-                        bgLight: "#f8fafc",
                     },
                     fontFamily: {
                         sans: ["Plus Jakarta Sans", "sans-serif"],
@@ -29,52 +23,50 @@
     </script>
     <style>
         .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
-        .icon-fill { font-variation-settings: 'FILL' 1; }
-        body { background-color: #f8fafc; color: #0f172a; }
+        body { background-color: #f9fafb; color: #111827; }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
     </style>
 </head>
-<body class="flex min-h-screen overflow-hidden bg-bgLight">
+<body class="flex min-h-screen overflow-hidden font-sans">
     {% include 'loader.html' %}
 
     <!-- SIDEBAR -->
-    <aside class="w-64 bg-white border-r border-gray-100 flex flex-col h-screen flex-shrink-0 z-20 hidden md:flex shadow-sm">
-        <div class="px-6 py-8">
+    <aside class="w-64 bg-white border-r border-gray-200 flex flex-col h-screen flex-shrink-0 z-20 hidden md:flex">
+        <div class="px-6 py-6 border-b border-gray-100">
             <div class="flex items-center gap-3">
-                <img src="{{ url_for('static', filename='images/logo.jpeg') }}" alt="Foundify Logo" class="h-8 w-auto rounded-md object-contain">
+                <img src="{{ url_for('static', filename='images/logo.jpeg') }}" alt="Foundify Logo" class="h-8 w-auto rounded object-contain">
                 <h1 class="text-xl font-bold text-gray-900 tracking-tight">Foundify</h1>
             </div>
-            <p class="text-[10px] font-semibold uppercase tracking-widest text-secondary mt-1">Moderator Desk</p>
+            <p class="text-[10px] font-bold uppercase tracking-widest text-gray-500 mt-2">Moderator Desk</p>
         </div>
 
-        <nav class="flex-1 overflow-y-auto hide-scrollbar px-4 space-y-2">
-            <a href="/admin/dashboard" class="flex items-center gap-3 px-4 py-3 text-textMuted hover:bg-gray-50 hover:text-textDark rounded-xl font-medium text-sm transition-colors">
+        <nav class="flex-1 overflow-y-auto hide-scrollbar px-4 py-4 space-y-1">
+            <a href="/admin/dashboard" class="flex items-center gap-3 px-4 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded font-medium text-sm transition-colors">
                 <span class="material-symbols-outlined">inbox</span> Inbox / Matches
             </a>
-            <a href="/admin/users" class="flex items-center gap-3 px-4 py-3 text-textMuted hover:bg-gray-50 hover:text-textDark rounded-xl font-medium text-sm transition-colors">
+            <a href="/admin/users" class="flex items-center gap-3 px-4 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded font-medium text-sm transition-colors">
                 <span class="material-symbols-outlined">people</span> Manage Users
             </a>
-            <a href="/admin/settings" class="flex items-center gap-3 px-4 py-3 text-textMuted hover:bg-gray-50 hover:text-textDark rounded-xl font-medium text-sm transition-colors">
+            <a href="/admin/settings" class="flex items-center gap-3 px-4 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded font-medium text-sm transition-colors">
                 <span class="material-symbols-outlined">settings</span> Settings
             </a>
-            <a href="/admin/profile" class="flex items-center gap-3 px-4 py-3 bg-secondaryLight text-secondary rounded-xl font-semibold text-sm transition-colors shadow-sm border border-secondary/10">
-                <span class="material-symbols-outlined icon-fill">account_circle</span> My Profile
+            <a href="/admin/profile" class="flex items-center gap-3 px-4 py-2 bg-gray-100 text-gray-900 rounded font-medium text-sm transition-colors border border-gray-200">
+                <span class="material-symbols-outlined">account_circle</span> My Profile
             </a>
         </nav>
 
-        <div class="p-4 mt-auto">
-            <a href="/logout" class="w-full flex items-center justify-center gap-2 px-4 py-3 text-red-500 hover:bg-red-50 rounded-xl font-bold text-sm transition-colors">
-                <span class="material-symbols-outlined">logout</span> Leave Desk
+        <div class="p-4 mt-auto border-t border-gray-100">
+            <a href="/logout" class="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded font-medium text-sm transition-colors w-full justify-center">
+                <span class="material-symbols-outlined text-lg">logout</span> Leave Desk
             </a>
         </div>
     </aside>
 
     <!-- MAIN CONTENT -->
-    <main class="flex-1 flex flex-col h-screen overflow-hidden">
-        <header class="h-20 bg-white/80 backdrop-blur-md border-b border-gray-100 flex items-center justify-between px-8 z-10 shadow-sm">
+    <main class="flex-1 flex flex-col h-screen overflow-hidden bg-gray-50">
+        <header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-8 z-10 shrink-0">
             <div>
-                <h2 class="text-2xl font-bold text-textDark">My Profile</h2>
-                <p class="text-xs text-textMuted font-medium">Manage your moderator identity.</p>
+                <h2 class="text-xl font-bold text-gray-900">My Profile</h2>
             </div>
         </header>
 
@@ -82,46 +74,46 @@
             <div class="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
                 
                 <!-- IDENTITY CARD -->
-                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
-                    <div class="bg-gradient-to-br from-teal-50 to-white p-8 flex flex-col items-center border-b border-gray-100 relative">
+                <div class="bg-white rounded border border-gray-200 shadow-sm overflow-hidden flex flex-col">
+                    <div class="bg-gray-50 p-8 flex flex-col items-center border-b border-gray-200 relative">
                         <div class="relative mb-4">
                             {% if user.profile_photo %}
-                            <img src="/{{ user.profile_photo }}" class="w-32 h-32 rounded-full object-cover border-4 border-white shadow-md">
+                            <img src="/{{ user.profile_photo }}" class="w-32 h-32 rounded-full object-cover border border-gray-300 shadow-sm">
                             {% else %}
-                            <div class="w-32 h-32 rounded-full bg-secondary text-white flex items-center justify-center text-4xl font-bold border-4 border-white shadow-md">
+                            <div class="w-32 h-32 rounded-full bg-gray-800 text-white flex items-center justify-center text-4xl font-bold border border-gray-300 shadow-sm">
                                 {{ user.name[0] | upper }}
                             </div>
                             {% endif %}
-                            <div onclick="document.getElementById('photoInput').click()" class="absolute bottom-0 right-0 bg-white w-8 h-8 rounded-full flex items-center justify-center shadow-md cursor-pointer border border-gray-100 text-textDark hover:text-secondary transition-colors">
+                            <div onclick="document.getElementById('photoInput').click()" class="absolute bottom-0 right-0 bg-white w-8 h-8 rounded flex items-center justify-center shadow-sm cursor-pointer border border-gray-200 text-gray-600 hover:text-gray-900 transition-colors">
                                 <span class="material-symbols-outlined text-[16px]">edit</span>
                             </div>
                         </div>
-                        <h2 class="text-xl font-bold text-textDark">{{ user.name }}</h2>
-                        <div class="bg-gradient-to-r from-gray-700 to-gray-900 text-white px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest mt-2 shadow-sm">
+                        <h2 class="text-lg font-bold text-gray-900">{{ user.name }}</h2>
+                        <div class="bg-gray-100 border border-gray-200 text-gray-700 px-3 py-1 rounded text-[10px] font-bold uppercase tracking-widest mt-2">
                             Moderator
                         </div>
                     </div>
                     <div class="p-6 space-y-4">
-                        <div class="flex justify-between items-center py-2 border-b border-gray-50">
-                            <span class="text-sm font-medium text-textMuted">Status</span>
-                            <span class="text-sm font-bold text-green-500">Active</span>
+                        <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                            <span class="text-sm font-medium text-gray-500">Status</span>
+                            <span class="text-sm font-bold text-green-600">Active</span>
                         </div>
-                        <div class="flex justify-between items-center py-2 border-b border-gray-50">
-                            <span class="text-sm font-medium text-textMuted">Member Since</span>
-                            <span class="text-sm font-bold text-textDark">{{ user.created_at.strftime('%b %Y') if user.created_at else 'Jan 2026' }}</span>
+                        <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                            <span class="text-sm font-medium text-gray-500">Member Since</span>
+                            <span class="text-sm font-bold text-gray-900">{{ user.created_at.strftime('%b %Y') if user.created_at else 'Jan 2026' }}</span>
                         </div>
                         <div class="flex justify-between items-center py-2">
-                            <span class="text-sm font-medium text-textMuted">Access Level</span>
-                            <span class="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs font-mono font-bold">Admin</span>
+                            <span class="text-sm font-medium text-gray-500">Access Level</span>
+                            <span class="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs font-mono font-bold border border-gray-200">Admin</span>
                         </div>
                     </div>
                 </div>
 
                 <!-- EDIT DETAILS FORM -->
-                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 lg:col-span-2">
+                <div class="bg-white rounded border border-gray-200 shadow-sm p-8 lg:col-span-2">
                     <div class="mb-6">
-                        <h3 class="text-lg font-bold text-textDark">Moderator Details</h3>
-                        <p class="text-sm text-textMuted">Update your official contact information.</p>
+                        <h3 class="text-lg font-bold text-gray-900">Moderator Details</h3>
+                        <p class="text-sm text-gray-500">Update your official contact information.</p>
                     </div>
 
                     <form method="POST" enctype="multipart/form-data" class="space-y-6">
@@ -129,25 +121,25 @@
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                                <label class="block text-sm font-bold text-textDark mb-1.5">Department</label>
-                                <input type="text" name="college" value="{{ user.college or '' }}" placeholder="Administration" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-secondary focus:border-secondary transition-colors">
+                                <label class="block text-sm font-semibold text-gray-700 mb-1.5">Department</label>
+                                <input type="text" name="college" value="{{ user.college or '' }}" placeholder="Administration" class="w-full bg-white border border-gray-300 rounded px-4 py-3 text-sm focus:ring-gray-900 focus:border-gray-900 transition-colors">
                             </div>
                             <div>
-                                <label class="block text-sm font-bold text-textDark mb-1.5">Designation</label>
-                                <input type="text" name="study" value="{{ user.study or '' }}" placeholder="Moderator" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-secondary focus:border-secondary transition-colors">
+                                <label class="block text-sm font-semibold text-gray-700 mb-1.5">Designation</label>
+                                <input type="text" name="study" value="{{ user.study or '' }}" placeholder="Moderator" class="w-full bg-white border border-gray-300 rounded px-4 py-3 text-sm focus:ring-gray-900 focus:border-gray-900 transition-colors">
                             </div>
                         </div>
 
                         <div>
-                            <label class="block text-sm font-bold text-textDark mb-1.5">Contact Phone</label>
-                            <input type="text" name="phone" value="{{ user.phone or '' }}" placeholder="+91 ..." class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-secondary focus:border-secondary transition-colors">
+                            <label class="block text-sm font-semibold text-gray-700 mb-1.5">Contact Phone</label>
+                            <input type="text" name="phone" value="{{ user.phone or '' }}" placeholder="+91 ..." class="w-full bg-white border border-gray-300 rounded px-4 py-3 text-sm focus:ring-gray-900 focus:border-gray-900 transition-colors">
                         </div>
 
                         <div class="pt-6 border-t border-gray-100 flex items-center justify-between">
-                            <div class="flex items-center gap-2 text-textMuted text-xs font-medium">
+                            <div class="flex items-center gap-2 text-gray-400 text-xs font-medium">
                                 <span class="material-symbols-outlined text-[16px]">lock</span> Secure Connection
                             </div>
-                            <button type="submit" class="bg-textDark hover:bg-black text-white px-8 py-3 rounded-xl font-bold text-sm transition-colors shadow-md">
+                            <button type="submit" class="bg-gray-900 hover:bg-black text-white px-8 py-3 rounded font-medium text-sm transition-colors shadow-sm">
                                 Save Changes
                             </button>
                         </div>

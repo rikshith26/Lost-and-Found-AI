@@ -13,12 +13,6 @@
                 extend: {
                     colors: {
                         primary: "#4f46e5",
-                        primaryLight: "#e0e7ff",
-                        secondary: "#14b8a6",
-                        secondaryLight: "#ccfbf1",
-                        textDark: "#0f172a",
-                        textMuted: "#64748b",
-                        bgLight: "#f8fafc",
                     },
                     fontFamily: {
                         sans: ["Plus Jakarta Sans", "sans-serif"],
@@ -29,57 +23,56 @@
     </script>
     <style>
         .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
-        .icon-fill { font-variation-settings: 'FILL' 1; }
-        body { background-color: #f8fafc; color: #0f172a; }
+        body { background-color: #f9fafb; color: #111827; }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
     </style>
 </head>
-<body class="flex min-h-screen overflow-hidden bg-bgLight">
+<body class="flex min-h-screen overflow-hidden font-sans">
     {% include 'loader.html' %}
 
     <!-- SIDEBAR -->
-    <aside class="w-64 bg-white border-r border-gray-100 flex flex-col h-screen flex-shrink-0 z-20 hidden md:flex shadow-sm">
-        <div class="px-6 py-8">
+    <aside class="w-64 bg-white border-r border-gray-200 flex flex-col h-screen flex-shrink-0 z-20 hidden md:flex">
+        <div class="px-6 py-6 border-b border-gray-100">
             <div class="flex items-center gap-3">
-                <img src="{{ url_for('static', filename='images/logo.jpeg') }}" alt="Foundify Logo" class="h-8 w-auto rounded-md object-contain">
+                <img src="{{ url_for('static', filename='images/logo.jpeg') }}" alt="Foundify Logo" class="h-8 w-auto rounded object-contain">
                 <h1 class="text-xl font-bold text-gray-900 tracking-tight">Foundify</h1>
             </div>
-            <p class="text-[10px] font-semibold uppercase tracking-widest text-secondary mt-1">Moderator Desk</p>
+            <p class="text-[10px] font-bold uppercase tracking-widest text-gray-500 mt-2">Moderator Desk</p>
         </div>
 
-        <nav class="flex-1 overflow-y-auto hide-scrollbar px-4 space-y-2">
-            <a href="/admin/dashboard" class="flex items-center gap-3 px-4 py-3 bg-secondaryLight text-secondary rounded-xl font-semibold text-sm transition-colors shadow-sm border border-secondary/10">
-                <span class="material-symbols-outlined icon-fill">inbox</span> Inbox / Matches
+        <nav class="flex-1 overflow-y-auto hide-scrollbar px-4 py-4 space-y-1">
+            <a href="/admin/dashboard" class="flex items-center gap-3 px-4 py-2 bg-gray-100 text-gray-900 rounded font-medium text-sm transition-colors border border-gray-200">
+                <span class="material-symbols-outlined">inbox</span> Inbox / Matches
             </a>
-            <a href="/admin/claims" class="flex items-center gap-3 px-4 py-3 text-textMuted hover:bg-gray-50 hover:text-textDark rounded-xl font-medium text-sm transition-colors">
+            <a href="/admin/claims" class="flex items-center gap-3 px-4 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded font-medium text-sm transition-colors">
                 <span class="material-symbols-outlined">gavel</span> Verify Claims
             </a>
-            <a href="/admin/users" class="flex items-center gap-3 px-4 py-3 text-textMuted hover:bg-gray-50 hover:text-textDark rounded-xl font-medium text-sm transition-colors">
+            <a href="/admin/users" class="flex items-center gap-3 px-4 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded font-medium text-sm transition-colors">
                 <span class="material-symbols-outlined">people</span> Manage Users
             </a>
-            <a href="/admin/settings" class="flex items-center gap-3 px-4 py-3 text-textMuted hover:bg-gray-50 hover:text-textDark rounded-xl font-medium text-sm transition-colors">
+            <a href="/admin/settings" class="flex items-center gap-3 px-4 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded font-medium text-sm transition-colors">
                 <span class="material-symbols-outlined">settings</span> Settings
             </a>
-            <a href="/admin/profile" class="flex items-center gap-3 px-4 py-3 text-textMuted hover:bg-gray-50 hover:text-textDark rounded-xl font-medium text-sm transition-colors">
+            <a href="/admin/profile" class="flex items-center gap-3 px-4 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded font-medium text-sm transition-colors">
                 <span class="material-symbols-outlined">account_circle</span> My Profile
             </a>
         </nav>
 
-        <div class="p-4 mt-auto">
-            <a href="/logout" class="w-full flex items-center justify-center gap-2 px-4 py-3 text-red-500 hover:bg-red-50 rounded-xl font-bold text-sm transition-colors">
-                <span class="material-symbols-outlined">logout</span> Leave Desk
+        <div class="p-4 mt-auto border-t border-gray-100">
+            <a href="/logout" class="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded font-medium text-sm transition-colors w-full justify-center">
+                <span class="material-symbols-outlined text-lg">logout</span> Leave Desk
             </a>
         </div>
     </aside>
 
     <!-- MAIN CONTENT -->
-    <main class="flex-1 flex flex-col h-screen overflow-hidden">
-        <header class="h-20 bg-white/80 backdrop-blur-md border-b border-gray-100 flex items-center justify-between px-8 z-10 shadow-sm">
+    <main class="flex-1 flex flex-col h-screen overflow-hidden bg-gray-50">
+        <header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-8 z-10 shrink-0">
             <div>
-                <h2 class="text-2xl font-bold text-textDark">Match Verification</h2>
+                <h2 class="text-xl font-bold text-gray-900">Match Verification</h2>
             </div>
             <div class="flex items-center gap-4">
-                <a href="/admin/run-scan" class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-full text-sm font-bold flex items-center gap-2 shadow-md transition-all">
+                <a href="/admin/run-scan" class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded text-sm font-medium flex items-center gap-2 shadow-sm transition-colors">
                     <span class="material-symbols-outlined text-[18px]">radar</span> Run AI Scan
                 </a>
             </div>
@@ -90,94 +83,94 @@
                 
                 <!-- STATS ROW -->
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
-                        <div class="w-12 h-12 rounded-full bg-secondaryLight text-secondary flex items-center justify-center">
-                            <span class="material-symbols-outlined icon-fill">published_with_changes</span>
+                    <div class="bg-white p-6 rounded border border-gray-200 shadow-sm flex items-center gap-4">
+                        <div class="w-12 h-12 rounded bg-gray-50 border border-gray-200 text-gray-500 flex items-center justify-center">
+                            <span class="material-symbols-outlined">published_with_changes</span>
                         </div>
                         <div>
-                            <h4 class="text-2xl font-black text-textDark leading-none">{{ pending_matches_count }}</h4>
-                            <p class="text-[11px] text-textMuted font-semibold mt-1">Pending Matches</p>
+                            <h4 class="text-2xl font-bold text-gray-900 leading-none">{{ pending_matches_count }}</h4>
+                            <p class="text-xs text-gray-500 font-semibold mt-1">Pending Matches</p>
                         </div>
                     </div>
                     
-                    <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
-                        <div class="w-12 h-12 rounded-full bg-orange-50 text-orange-500 flex items-center justify-center">
-                            <span class="material-symbols-outlined icon-fill">search_off</span>
+                    <div class="bg-white p-6 rounded border border-gray-200 shadow-sm flex items-center gap-4">
+                        <div class="w-12 h-12 rounded bg-gray-50 border border-gray-200 text-gray-500 flex items-center justify-center">
+                            <span class="material-symbols-outlined">search_off</span>
                         </div>
                         <div>
-                            <h4 class="text-2xl font-black text-textDark leading-none">{{ active_lost }}</h4>
-                            <p class="text-[11px] text-textMuted font-semibold mt-1">Active Lost</p>
+                            <h4 class="text-2xl font-bold text-gray-900 leading-none">{{ active_lost }}</h4>
+                            <p class="text-xs text-gray-500 font-semibold mt-1">Active Lost</p>
                         </div>
                     </div>
 
-                    <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
-                        <div class="w-12 h-12 rounded-full bg-teal-50 text-teal-600 flex items-center justify-center">
-                            <span class="material-symbols-outlined icon-fill">volunteer_activism</span>
+                    <div class="bg-white p-6 rounded border border-gray-200 shadow-sm flex items-center gap-4">
+                        <div class="w-12 h-12 rounded bg-gray-50 border border-gray-200 text-gray-500 flex items-center justify-center">
+                            <span class="material-symbols-outlined">volunteer_activism</span>
                         </div>
                         <div>
-                            <h4 class="text-2xl font-black text-textDark leading-none">{{ active_found }}</h4>
-                            <p class="text-[11px] text-textMuted font-semibold mt-1">Active Found</p>
+                            <h4 class="text-2xl font-bold text-gray-900 leading-none">{{ active_found }}</h4>
+                            <p class="text-xs text-gray-500 font-semibold mt-1">Active Found</p>
                         </div>
                     </div>
 
-                    <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
-                        <div class="w-12 h-12 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center">
-                            <span class="material-symbols-outlined icon-fill">group</span>
+                    <div class="bg-white p-6 rounded border border-gray-200 shadow-sm flex items-center gap-4">
+                        <div class="w-12 h-12 rounded bg-gray-50 border border-gray-200 text-gray-500 flex items-center justify-center">
+                            <span class="material-symbols-outlined">group</span>
                         </div>
                         <div>
-                            <h4 class="text-2xl font-black text-textDark leading-none">{{ total_users }}</h4>
-                            <p class="text-[11px] text-textMuted font-semibold mt-1">Total Users</p>
+                            <h4 class="text-2xl font-bold text-gray-900 leading-none">{{ total_users }}</h4>
+                            <p class="text-xs text-gray-500 font-semibold mt-1">Total Users</p>
                         </div>
                     </div>
                 </div>
 
                 <!-- PENDING MATCHES SECTION -->
-                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
-                    <div class="p-6 border-b border-gray-100 flex justify-between items-center">
-                        <h3 class="text-lg font-bold text-textDark">Pending AI Verifications</h3>
-                        <span class="text-xs font-semibold text-textMuted">{{ matches|length }} matches found</span>
+                <div class="bg-white rounded border border-gray-200 shadow-sm overflow-hidden flex flex-col">
+                    <div class="p-6 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
+                        <h3 class="text-lg font-bold text-gray-900">Pending AI Verifications</h3>
+                        <span class="text-xs font-semibold text-gray-500">{{ matches|length }} matches found</span>
                     </div>
 
                     {% if matches %}
                     <div class="overflow-x-auto p-4">
                         <div class="space-y-4">
                             {% for match in matches %}
-                            <div class="bg-white border border-gray-100 rounded-2xl p-4 flex flex-col md:flex-row items-center gap-6 shadow-sm hover:border-primary/30 transition-colors">
+                            <div class="bg-white border border-gray-200 rounded p-4 flex flex-col md:flex-row items-center gap-6 shadow-sm hover:bg-gray-50 transition-colors">
                                 
                                 <!-- Images -->
                                 <div class="flex items-center gap-2 shrink-0">
-                                    <div class="relative w-16 h-16 rounded-xl overflow-hidden border border-gray-200">
+                                    <div class="relative w-16 h-16 rounded overflow-hidden border border-gray-200">
                                         <img src="/{{ match.lost.image_path }}" class="w-full h-full object-cover">
-                                        <div class="absolute top-0 left-0 bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-br-lg">LOST</div>
+                                        <div class="absolute top-0 left-0 bg-gray-900 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-br">LOST</div>
                                     </div>
-                                    <div class="w-4 h-[2px] bg-gray-200"></div>
-                                    <div class="relative w-16 h-16 rounded-xl overflow-hidden border border-gray-200">
+                                    <div class="w-4 h-[2px] bg-gray-300"></div>
+                                    <div class="relative w-16 h-16 rounded overflow-hidden border border-gray-200">
                                         <img src="/{{ match.found.image_path }}" class="w-full h-full object-cover">
-                                        <div class="absolute top-0 right-0 bg-secondary text-white text-[9px] font-bold px-1.5 py-0.5 rounded-bl-lg">FOUND</div>
+                                        <div class="absolute top-0 right-0 bg-gray-900 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-bl">FOUND</div>
                                     </div>
                                 </div>
 
                                 <!-- Text -->
                                 <div class="flex-1 min-w-0 text-center md:text-left">
-                                    <h4 class="text-lg font-bold text-textDark truncate">{{ match.lost.item_name }}</h4>
-                                    <p class="text-sm text-textMuted mb-1 truncate">Match in {{ match.found.location }}</p>
-                                    <p class="text-[10px] text-gray-400 font-medium">Lost: {{ match.lost.created_at.strftime('%b %d') if match.lost.created_at }} &middot; Found: {{ match.found.created_at.strftime('%b %d') if match.found.created_at }}</p>
+                                    <h4 class="text-base font-bold text-gray-900 truncate">{{ match.lost.item_name }}</h4>
+                                    <p class="text-sm text-gray-600 mb-1 truncate">Match in {{ match.found.location }}</p>
+                                    <p class="text-xs text-gray-400 font-medium">Lost: {{ match.lost.created_at.strftime('%b %d') if match.lost.created_at }} &middot; Found: {{ match.found.created_at.strftime('%b %d') if match.found.created_at }}</p>
                                 </div>
 
                                 <!-- Scores -->
                                 <div class="flex items-center gap-4 shrink-0">
-                                    <div class="w-14 h-14 rounded-full border-4 {{ 'border-green-400 text-green-600' if match.score.final_score >= 70 else 'border-orange-400 text-orange-600' if match.score.final_score >= 40 else 'border-red-400 text-red-600' }} flex items-center justify-center font-bold text-sm bg-gray-50">
+                                    <div class="w-14 h-14 rounded border {{ 'border-gray-800 text-gray-900' if match.score.final_score >= 70 else 'border-gray-400 text-gray-600' if match.score.final_score >= 40 else 'border-gray-200 text-gray-400' }} flex items-center justify-center font-bold text-sm bg-white">
                                         {{ match.score.final_score }}%
                                     </div>
                                     <div class="flex flex-col gap-1">
-                                        <span class="text-[10px] font-bold text-textMuted bg-gray-100 px-2 py-0.5 rounded text-center">IMG: {{ match.score.image_score }}%</span>
-                                        <span class="text-[10px] font-bold text-textMuted bg-gray-100 px-2 py-0.5 rounded text-center">TXT: {{ match.score.text_score }}%</span>
+                                        <span class="text-[10px] font-bold text-gray-500 bg-gray-100 px-2 py-0.5 rounded text-center border border-gray-200">IMG: {{ match.score.image_score }}%</span>
+                                        <span class="text-[10px] font-bold text-gray-500 bg-gray-100 px-2 py-0.5 rounded text-center border border-gray-200">TXT: {{ match.score.text_score }}%</span>
                                     </div>
                                 </div>
 
                                 <!-- Action -->
-                                <div class="shrink-0 w-full md:w-auto mt-4 md:mt-0">
-                                    <a href="/admin/approve-match/{{ match.lost.lost_id }}/{{ match.found.found_id }}" class="w-full md:w-auto bg-primary hover:bg-indigo-700 text-white px-6 py-2.5 rounded-full font-bold text-sm shadow-md transition-colors text-center inline-block">
+                                <div class="shrink-0 w-full md:w-auto mt-4 md:mt-0 flex gap-2">
+                                    <a href="/admin/approve-match/{{ match.lost.lost_id }}/{{ match.found.found_id }}" class="w-full md:w-auto bg-primary hover:bg-primary/90 text-white px-6 py-2 rounded font-medium text-sm shadow-sm transition-colors text-center inline-block">
                                         Approve
                                     </a>
                                 </div>
@@ -187,11 +180,11 @@
                     </div>
                     {% else %}
                     <div class="p-12 text-center flex flex-col items-center">
-                        <div class="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-4">
-                            <span class="material-symbols-outlined text-4xl text-gray-300">done_all</span>
+                        <div class="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-4 border border-gray-200">
+                            <span class="material-symbols-outlined text-4xl text-gray-400">done_all</span>
                         </div>
-                        <h3 class="text-xl font-bold text-textDark mb-1">All Caught Up</h3>
-                        <p class="text-sm text-textMuted">There are no pending verifications requiring your attention.</p>
+                        <h3 class="text-lg font-bold text-gray-900 mb-1">All Caught Up</h3>
+                        <p class="text-sm text-gray-500">There are no pending verifications requiring your attention.</p>
                     </div>
                     {% endif %}
                 </div>
@@ -215,29 +208,29 @@
     </style>
     
     <div id="tnc-overlay" class="fixed inset-0 z-[99999] bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-white max-w-2xl w-full p-10 md:p-14 text-center shadow-2xl relative" style="border-radius: 2px;">
-            <div class="absolute top-0 left-0 w-full h-1 bg-red-600"></div>
+        <div class="bg-white max-w-2xl w-full p-10 md:p-14 text-center shadow-2xl relative border border-gray-200" style="border-radius: 4px;">
+            <div class="absolute top-0 left-0 w-full h-1 bg-gray-900"></div>
             
-            <h2 class="text-3xl font-bold text-slate-900 mb-4 tracking-tight">System Notice: Admin Blocked</h2>
+            <h2 class="text-2xl font-bold text-gray-900 mb-4 tracking-tight">System Notice: Admin Blocked</h2>
             
-            <p class="text-slate-600 text-lg mb-8 leading-relaxed max-w-lg mx-auto">
+            <p class="text-gray-600 text-sm mb-8 leading-relaxed max-w-lg mx-auto">
                 Your moderator access has been temporarily suspended. To restore access to the admin dashboard, you must review and accept the strict administrative responsibilities.
             </p>
             
             <form action="/admin/accept-terms-post" method="POST" class="max-w-lg mx-auto text-left">
-                <div class="bg-slate-50 p-6 mb-8 border border-slate-200">
+                <div class="bg-gray-50 p-6 mb-8 border border-gray-200 rounded">
                     <label class="flex items-start gap-4 cursor-pointer group">
-                        <input type="checkbox" required class="mt-1 w-5 h-5 text-indigo-600 border-slate-300 focus:ring-indigo-600 transition-colors cursor-pointer rounded-sm">
-                        <span class="text-sm font-medium text-slate-700 leading-snug">
+                        <input type="checkbox" required class="mt-1 w-5 h-5 text-gray-900 border-gray-300 focus:ring-gray-900 transition-colors cursor-pointer rounded-sm">
+                        <span class="text-sm font-medium text-gray-700 leading-snug">
                             I acknowledge that I have read and agree to be bound by the 
-                            <a href="/admin-terms-content" target="_blank" class="text-indigo-600 font-bold hover:text-indigo-800 transition-colors underline underline-offset-2">Admin Agreement & Privacy Policy</a>.
+                            <a href="/admin-terms-content" target="_blank" class="text-gray-900 font-bold hover:text-black transition-colors underline underline-offset-2">Admin Agreement & Privacy Policy</a>.
                         </span>
                     </label>
                 </div>
                 
                 <div class="flex items-center gap-4">
-                    <a href="/logout" class="flex-1 py-4 text-center font-bold text-sm bg-transparent text-slate-500 border border-slate-300 hover:bg-slate-50 transition-colors">Decline & Logout</a>
-                    <button type="submit" class="flex-1 py-4 text-center font-bold text-sm bg-slate-900 text-white hover:bg-black transition-colors shadow-lg">Restore Moderator Access</button>
+                    <a href="/logout" class="flex-1 py-3 rounded text-center font-medium text-sm bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 transition-colors">Decline & Logout</a>
+                    <button type="submit" class="flex-1 py-3 rounded text-center font-medium text-sm bg-gray-900 text-white hover:bg-black transition-colors shadow-sm">Restore Access</button>
                 </div>
             </form>
         </div>

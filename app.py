@@ -421,6 +421,15 @@ def signup():
     if request.method == "POST":
         name = request.form["name"]
         email = request.form["email"]
+        
+        # Domain Restriction Logic
+        allowed_domains = ['paruluniversity.ac.in']
+        domain = email.split('@')[-1] if '@' in email else ''
+        
+        if domain not in allowed_domains:
+            flash(f"Registration is restricted to authorized domains ({', '.join(allowed_domains)}).")
+            return redirect(request.url)
+
         if not is_valid_password(request.form["password"]):
             flash("Password must be at least 8 characters long and include a special character.")
             return redirect(request.url)
@@ -522,6 +531,14 @@ def google_callback():
         user = db.users.find_one({"email": users_email})
         
         if not user:
+            # Domain Restriction Logic
+            allowed_domains = ['paruluniversity.ac.in']
+            domain = users_email.split('@')[-1] if '@' in users_email else ''
+            
+            if domain not in allowed_domains:
+                flash(f"Registration is restricted to authorized domains ({', '.join(allowed_domains)}).", "error")
+                return redirect("/login")
+
             # Register
             db.users.insert_one({
                 "name": users_name,
@@ -2062,5 +2079,5 @@ if __name__ == "__main__":
     debug_mode = os.environ.get("FLASK_DEBUG", "True").lower() == "true"
     
     print(f"Starting Foundify with SocketIO on port {port} (Debug: {debug_mode})...")
-    print(f"➜ Local URL: http://127.0.0.1:{port}")
+    print(f"-> Local URL: http://127.0.0.1:{port}")
     socketio.run(app, host="0.0.0.0", port=port, debug=debug_mode, allow_unsafe_werkzeug=True)

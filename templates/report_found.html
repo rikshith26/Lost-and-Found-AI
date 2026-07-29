@@ -1,199 +1,211 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Report Found // Foundify</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/memories.css') }}">
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#4f46e5",
+                        textDark: "#0f172a",
+                        textMuted: "#64748b",
+                    },
+                    fontFamily: {
+                        sans: ["Plus Jakarta Sans", "sans-serif"],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        body { background-color: #FAFAFA; color: #191C1D; }
+        .icon-fill { font-variation-settings: 'FILL' 1; }
+    </style>
 </head>
-
-<body class="layout-compact">
+<body class="flex min-h-screen overflow-hidden font-sans bg-gray-50">
     {% include 'loader.html' %}
 
-    <aside class="sidebar" style="height: 100vh;">
-        <div style="margin-bottom: 2rem;">
-            <a href="/user/dashboard" class="sidebar-link active" style="padding-left: 0;">
-                <span class="material-icons">arrow_back</span> Back to Board
+    <!-- SIDEBAR -->
+    <aside class="w-80 bg-white border-r border-gray-100 flex flex-col h-screen flex-shrink-0 z-20 hidden md:flex">
+        <div class="p-6">
+            <a href="/user/dashboard" class="flex items-center gap-2 text-gray-600 hover:text-gray-900 font-medium transition-colors">
+                <span class="material-symbols-outlined">arrow_back</span> Back to Dashboard
             </a>
         </div>
-
-        <div style="padding: 2rem; background: var(--bg-cream); border-radius: 20px; text-align: center;">
-            <span class="material-icons" style="font-size: 3rem; color: var(--accent-mint);">volunteer_activism</span>
-            <h3 style="margin: 1rem 0;">You're a Hero</h3>
-            <p style="font-size: 0.9rem; color: var(--text-pencil);">Thanks for taking the time to return this item.
-                Good karma is coming your way!</p>
+        <div class="px-6 flex-1 flex flex-col justify-center pb-20">
+            <div class="bg-gray-50 p-8 rounded border border-gray-200 text-center">
+                <span class="material-symbols-outlined text-gray-800 text-5xl mb-4">volunteer_activism</span>
+                <h3 class="text-xl font-bold text-gray-900 mb-2">You're a Hero</h3>
+                <p class="text-sm text-gray-600">Thanks for taking the time to return this item. Good karma is coming your way!</p>
+            </div>
         </div>
     </aside>
 
-    <main class="main-with-sidebar" style="display: flex; flex-direction: column;">
-        <header style="margin-bottom: 1rem; flex-shrink: 0;">
-            <h1 style="margin-bottom: 0;">I Found Something!</h1>
+    <!-- MAIN CONTENT -->
+    <main class="flex-1 flex flex-col h-screen overflow-hidden relative">
+        <header class="p-8 pb-4 shrink-0 max-w-2xl">
+            <h1 class="text-3xl font-bold text-gray-900">I Found Something!</h1>
         </header>
 
-        <!-- Step Progress -->
-        <div style="padding: 0 2rem; margin-bottom: 1rem;">
-            <div
-                style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; color: var(--text-pencil); font-size: 0.85rem; font-weight: 600;">
+        <div class="px-8 mb-6 shrink-0 max-w-2xl">
+            <div class="flex justify-between items-center mb-2 text-sm font-semibold text-gray-600">
                 <span id="step-label">Step 1 of 3</span>
                 <span id="step-name">Details</span>
             </div>
-            <div style="height: 6px; background: rgba(0,0,0,0.05); border-radius: 10px; overflow: hidden;">
-                <div id="progress-bar"
-                    style="height: 100%; width: 33%; background: var(--accent-mint); transition: width 0.3s ease;">
-                </div>
+            <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
+                <div id="progress-bar" class="h-full w-1/3 bg-primary transition-all duration-300"></div>
             </div>
         </div>
 
-        <form method="POST" enctype="multipart/form-data" class="paper-card"
-            style="flex: 1; display: flex; flex-direction: column; padding: 2rem; overflow: hidden; border-top: 5px solid var(--accent-mint); position: relative;">
-
-            <!-- STEP 1: details -->
-            <div class="form-step" id="step-1">
-                <h2 style="margin-top: 0; color: var(--text-ink);">What did you find?</h2>
-                <div style="margin-top: 1.5rem;">
-                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Item Name</label>
-                    <input type="text" name="item_name" class="input-field" placeholder="e.g. Blue Umbrella" required
-                        style="font-size: 1.1rem; padding: 1rem;">
+        <div class="flex-1 overflow-y-auto px-8 pb-32 max-w-2xl w-full">
+            <form method="POST" enctype="multipart/form-data" class="bg-white p-8 rounded border border-gray-200 shadow-sm flex flex-col min-h-[400px]">
+                
+                <!-- STEP 1 -->
+                <div class="form-step flex-1" id="step-1">
+                    <h2 class="text-xl font-bold text-gray-900 mb-6">What did you find?</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">Item Name</label>
+                            <input type="text" name="item_name" class="w-full bg-white border border-gray-300 rounded p-3 focus:ring-primary focus:border-primary" placeholder="e.g. Blue Umbrella" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">Description</label>
+                            <textarea name="description" class="w-full bg-white border border-gray-300 rounded p-3 h-32 resize-none focus:ring-primary focus:border-primary" placeholder="Any details safely?"></textarea>
+                        </div>
+                    </div>
                 </div>
-                <div style="margin-top: 1.5rem;">
-                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Description</label>
-                    <textarea name="description" class="input-field" style="resize: none; height: 120px; padding: 1rem;"
-                        placeholder="Any details safely?"></textarea>
+
+                <!-- STEP 2 -->
+                <div class="form-step flex-1 hidden" id="step-2">
+                    <h2 class="text-xl font-bold text-gray-900 mb-6">Where & When?</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">Location</label>
+                            <input type="text" name="location" class="w-full bg-white border border-gray-300 rounded p-3 focus:ring-primary focus:border-primary" placeholder="e.g. Library">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">Date Found</label>
+                            <input type="date" name="date" class="w-full bg-white border border-gray-300 rounded p-3 focus:ring-primary focus:border-primary">
+                        </div>
+                    </div>
                 </div>
-            </div>
 
-            <!-- STEP 2: location -->
-            <div class="form-step" id="step-2" style="display: none;">
-                <h2 style="margin-top: 0; color: var(--text-ink);">Where & When?</h2>
-                <div style="margin-top: 1.5rem;">
-                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Location</label>
-                    <input type="text" name="location" class="input-field" placeholder="e.g. Library"
-                        id="input-location" style="font-size: 1.1rem; padding: 1rem;">
+                <!-- STEP 3 -->
+                <div class="form-step flex-1 hidden flex-col" id="step-3">
+                    <h2 class="text-xl font-bold text-gray-900 mb-2">Photo Evidence</h2>
+                    <p class="text-sm text-gray-600 mb-6">Optional, but helps the owner identify it.</p>
+                    
+                    <div class="flex-1 border-2 border-dashed border-gray-300 rounded bg-gray-50 flex flex-col items-center justify-center cursor-pointer hover:border-primary transition-colors min-h-[200px]"
+                        onclick="document.getElementById('file-input').click()">
+                        <span class="material-symbols-outlined text-4xl text-gray-400 mb-2">add_a_photo</span>
+                        <p class="text-sm font-medium text-gray-500" id="file-label">Tap to upload photo</p>
+                        <input type="file" name="image" id="file-input" class="hidden"
+                            onchange="document.getElementById('file-label').innerText = 'Photo Selected!'; document.getElementById('file-label').classList.add('text-primary'); this.parentElement.classList.add('border-primary');">
+                    </div>
                 </div>
-                <div style="margin-top: 1.5rem;">
-                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Date Found</label>
-                    <input type="date" name="date" class="input-field" id="input-date"
-                        style="font-size: 1.1rem; padding: 1rem;">
+
+                <!-- Navigation Buttons -->
+                <div class="mt-8 pt-6 border-t border-gray-100 flex gap-4">
+                    <button type="button" id="btn-back" class="flex-1 py-3 px-4 bg-gray-100 text-gray-700 rounded font-bold text-sm hidden hover:bg-gray-200 transition-colors"
+                        onclick="changeStep(-1)">Back</button>
+                    <button type="button" id="btn-next" class="flex-[2] py-3 px-4 bg-primary text-white rounded font-bold text-sm shadow-sm hover:bg-primary/90 transition-colors"
+                        onclick="changeStep(1)">Next Step</button>
+                    <button type="submit" id="btn-submit" class="flex-[2] py-3 px-4 bg-primary text-white rounded font-bold text-sm shadow-sm hover:bg-primary/90 transition-colors hidden">Submit Finding</button>
                 </div>
-            </div>
-
-            <!-- STEP 3: photo -->
-            <div class="form-step" id="step-3" style="display: none; flex: 1; flex-direction: column;">
-                <h2 style="margin-top: 0; color: var(--text-ink);">Photo Evidence</h2>
-                <p style="color: var(--text-pencil); margin-bottom: 1.5rem;">Optional, but helps the owner identify it.
-                </p>
-
-                <div style="flex: 1; border: 2px dashed #ddd; border-radius: 12px; position: relative; background: #fafafa; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: 0.3s; cursor: pointer; min-height: 200px;"
-                    onclick="document.getElementById('file-input').click()"
-                    onmouseover="this.style.borderColor='var(--accent-mint)'"
-                    onmouseout="this.style.borderColor='#ddd'">
-                    <span class="material-icons" style="font-size: 3rem; color: #ccc;">add_a_photo</span>
-                    <p style="font-size: 0.9rem; color: #aaa; margin-top: 0.5rem;" id="file-label">Tap to upload photo
-                    </p>
-                    <input type="file" name="image" id="file-input" style="display: none;"
-                        onchange="document.getElementById('file-label').innerText = 'Photo Selected!'; document.getElementById('file-label').style.color = 'var(--accent-mint)'; this.parentElement.style.borderColor = 'var(--accent-mint)';">
-                </div>
-            </div>
-
-            <!-- Navigation Buttons -->
-            <div style="margin-top: auto; padding-top: 2rem; display: flex; gap: 1rem;">
-                <button type="button" id="btn-back" class="btn-hope btn-soft" style="flex: 1; display: none;"
-                    onclick="changeStep(-1)">Back</button>
-                <button type="button" id="btn-next" class="btn-hope btn-primary"
-                    style="flex: 2; background: var(--accent-mint);" onclick="changeStep(1)">Next Step</button>
-                <button type="submit" id="btn-submit" class="btn-hope btn-primary"
-                    style="flex: 2; background: var(--accent-mint); display: none;">Submit Finding</button>
-            </div>
-
-        </form>
-
-        <script>
-            let currentStep = 1;
-            const totalSteps = 3;
-
-            function changeStep(direction) {
-                // Validation for Next
-                if (direction === 1) {
-                    if (currentStep === 1) {
-                        const name = document.querySelector('input[name="item_name"]').value;
-                        if (!name) { alert("Please enter an item name."); return; }
-                    } else if (currentStep === 2) {
-                        const loc = document.querySelector('input[name="location"]').value;
-                        const date = document.querySelector('input[name="date"]').value;
-                        if (!loc || !date) { alert("Please fill in location and date."); return; }
-                    }
-                }
-
-                // Hide current
-                document.getElementById(`step-${currentStep}`).style.display = 'none';
-
-                // Update step
-                currentStep += direction;
-
-                // Show new
-                const nextStepEl = document.getElementById(`step-${currentStep}`);
-                if (currentStep === 3) {
-                    nextStepEl.style.display = 'flex'; // Flex for layout
-                } else {
-                    nextStepEl.style.display = 'block';
-                }
-
-                // Update UI
-                updateUI();
-            }
-
-            function updateUI() {
-                // Progress Bar
-                const progress = (currentStep / totalSteps) * 100;
-                document.getElementById('progress-bar').style.width = `${progress}%`;
-                document.getElementById('step-label').innerText = `Step ${currentStep} of ${totalSteps}`;
-
-                const names = ["Details", "Where & When?", "Photo"];
-                document.getElementById('step-name').innerText = names[currentStep - 1];
-
-                // Buttons
-                const btnBack = document.getElementById('btn-back');
-                const btnNext = document.getElementById('btn-next');
-                const btnSubmit = document.getElementById('btn-submit');
-
-                btnBack.style.display = currentStep === 1 ? 'none' : 'block';
-
-                if (currentStep === totalSteps) {
-                    btnNext.style.display = 'none';
-                    btnSubmit.style.display = 'block';
-                } else {
-                    btnNext.style.display = 'block';
-                    btnSubmit.style.display = 'none';
-                }
-            }
-        </script>
-
-        <!-- MOBILE BOTTOM NAV -->
-        <!-- MOBILE BOTTOM NAV -->
-        <div class="mobile-nav">
-            <a href="/user/dashboard" class="mobile-nav-link">
-                <span class="material-icons">home</span>
-                HOME
-            </a>
-            <a href="/user/chats" class="mobile-nav-link">
-                <span class="material-icons">mail</span>
-                MESSAGES
-            </a>
-            <a href="/user/history" class="mobile-nav-link">
-                <span class="material-icons">history</span>
-                HISTORY
-            </a>
-            <a href="/user/profile" class="mobile-nav-link">
-                <span class="material-icons">person</span>
-                PROFILE
-            </a>
+            </form>
         </div>
+    </main>
 
+    <script>
+        let currentStep = 1;
+        const totalSteps = 3;
 
+        function changeStep(direction) {
+            if (direction === 1) {
+                if (currentStep === 1) {
+                    const name = document.querySelector('input[name="item_name"]').value;
+                    if (!name) { alert("Please enter an item name."); return; }
+                } else if (currentStep === 2) {
+                    const loc = document.querySelector('input[name="location"]').value;
+                    const date = document.querySelector('input[name="date"]').value;
+                    if (!loc || !date) { alert("Please fill in location and date."); return; }
+                }
+            }
 
-        <script src="{{ url_for('static', filename='js/memories_core.js') }}"></script>
+            document.getElementById(`step-${currentStep}`).classList.add('hidden');
+            document.getElementById(`step-${currentStep}`).classList.remove('flex');
+            
+            currentStep += direction;
+
+            const nextStepEl = document.getElementById(`step-${currentStep}`);
+            nextStepEl.classList.remove('hidden');
+            if (currentStep === 3) {
+                nextStepEl.classList.add('flex');
+            }
+
+            updateUI();
+        }
+
+        function updateUI() {
+            const progress = (currentStep / totalSteps) * 100;
+            document.getElementById('progress-bar').style.width = `${progress}%`;
+            document.getElementById('step-label').innerText = `Step ${currentStep} of ${totalSteps}`;
+
+            const names = ["Details", "Where & When?", "Photo"];
+            document.getElementById('step-name').innerText = names[currentStep - 1];
+
+            const btnBack = document.getElementById('btn-back');
+            const btnNext = document.getElementById('btn-next');
+            const btnSubmit = document.getElementById('btn-submit');
+
+            if (currentStep === 1) {
+                btnBack.classList.add('hidden');
+            } else {
+                btnBack.classList.remove('hidden');
+            }
+
+            if (currentStep === totalSteps) {
+                btnNext.classList.add('hidden');
+                btnSubmit.classList.remove('hidden');
+            } else {
+                btnNext.classList.remove('hidden');
+                btnSubmit.classList.add('hidden');
+            }
+        }
+    </script>
+
+    <!-- MOBILE BOTTOM NAV -->
+    <div class="md:hidden fixed bottom-0 left-0 w-full bg-white border-t border-gray-100 flex justify-around py-3 z-50">
+        <a href="/user/dashboard" class="flex flex-col items-center text-gray-400 hover:text-gray-600">
+            <span class="material-symbols-outlined text-xl">home</span>
+            <span class="text-[9px] font-bold mt-1">HOME</span>
+        </a>
+        <a href="/user/chats" class="flex flex-col items-center text-gray-400 hover:text-gray-600">
+            <span class="material-symbols-outlined text-xl">mail</span>
+            <span class="text-[9px] font-bold mt-1">MESSAGES</span>
+        </a>
+        <a href="/user/report-lost" class="flex flex-col items-center text-primary -mt-5">
+            <div class="w-12 h-12 bg-primary text-white rounded-full flex items-center justify-center shadow-lg border-4 border-[#FAFAFA]">
+                <span class="material-symbols-outlined icon-fill">add</span>
+            </div>
+            <span class="text-[9px] font-bold mt-1">REPORT</span>
+        </a>
+        <a href="/user/history" class="flex flex-col items-center text-gray-400 hover:text-gray-600">
+            <span class="material-symbols-outlined text-xl">history</span>
+            <span class="text-[9px] font-bold mt-1">HISTORY</span>
+        </a>
+        <a href="/user/profile" class="flex flex-col items-center text-gray-400 hover:text-gray-600">
+            <span class="material-symbols-outlined text-xl">person</span>
+            <span class="text-[9px] font-bold mt-1">PROFILE</span>
+        </a>
+    </div>
+
 </body>
-
 </html>
