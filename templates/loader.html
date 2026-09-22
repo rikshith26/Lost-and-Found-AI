@@ -2,19 +2,16 @@
 <script src="{{ url_for('static', filename='js/mobile_check.js') }}"></script>
 <div id="foundify-loader">
     <div class="loader-content">
-        <div class="logo-text">
-            <span>F</span>
-            <span>o</span>
-            <span>u</span>
-            <span>n</span>
-            <span>d</span>
-            <span>i</span>
-            <span>f</span>
-            <span>y</span>
+        <!-- The Big Blue Radar Spinner -->
+        <div class="radar-spinner">
+            <div class="radar-core"></div>
+            <div class="radar-ring"></div>
+            <div class="radar-ring ring-2"></div>
+            <div class="radar-sweep"></div>
         </div>
-        <div class="loading-bar">
-            <div class="progress"></div>
-        </div>
+        
+        <!-- Organic, Integrated Text -->
+        <div class="brand-text">FOUNDIFY</div>
     </div>
 </div>
 
@@ -22,147 +19,120 @@
     /* Loader Overlay */
     #foundify-loader {
         position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: #fffbf7;
-        /* Matches --bg-paper */
-        z-index: 9999;
+        inset: 0;
+        background: #f9fafb;
+        z-index: 999999;
         display: flex;
         align-items: center;
         justify-content: center;
         opacity: 1;
-        transition: opacity 0.8s ease-out, visibility 0.8s ease-out;
+        transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.8s;
     }
 
-    /* Hide Loader Class */
     #foundify-loader.hidden {
         opacity: 0;
         visibility: hidden;
         pointer-events: none;
     }
 
-    /* Content Wrapper */
     .loader-content {
-        text-align: center;
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 1.5rem;
+        justify-content: center;
+        gap: 2rem;
     }
 
-    /* Logo Text Animation */
-    .logo-text {
-        font-family: 'Outfit', sans-serif;
-        /* Setup font if not available */
-        font-size: 3rem;
-        font-weight: 700;
-        color: #2d3436;
-        /* --text-ink */
+    /* --- The Big Radar Spinner --- */
+    .radar-spinner {
+        position: relative;
+        width: 72px;
+        height: 72px;
         display: flex;
-        gap: 0.1rem;
-        overflow: hidden;
+        align-items: center;
+        justify-content: center;
     }
 
-    .logo-text span {
-        display: inline-block;
+    .radar-core {
+        width: 16px;
+        height: 16px;
+        background-color: #4f46e5;
+        border-radius: 50%;
+        box-shadow: 0 0 20px rgba(79, 70, 229, 0.6);
+        z-index: 10;
+        animation: pulseCore 2s ease-in-out infinite;
+    }
+
+    .radar-ring {
+        position: absolute;
+        inset: 0;
+        border: 2px solid rgba(79, 70, 229, 0.1);
+        border-radius: 50%;
+        z-index: 1;
+    }
+
+    .radar-ring.ring-2 {
+        inset: 16px;
+        border: 1px solid rgba(79, 70, 229, 0.15);
+    }
+
+    .radar-sweep {
+        position: absolute;
+        inset: -2px;
+        border-radius: 50%;
+        border: 2px solid transparent;
+        border-top-color: #4f46e5;
+        border-right-color: rgba(79, 70, 229, 0.2);
+        z-index: 5;
+        animation: sweep 1.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    }
+
+    @keyframes pulseCore {
+        0%, 100% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.4); opacity: 0.7; }
+    }
+
+    @keyframes sweep {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    /* --- Organic Ethereal Text --- */
+    .brand-text {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 1.1rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: #111827; /* Changed to black/dark gray */
         opacity: 0;
-        transform: translateY(20px);
-        animation: revealLetter 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        transform: translateY(10px);
+        margin-left: 0.3em; /* Compensate for wide tracking to keep it centered */
+        
+        /* Two animations: one for the reveal, one for continuous breathing */
+        animation: 
+            cinematicReveal 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards,
+            subtlePulse 2.5s ease-in-out infinite forwards;
+        animation-delay: 0.2s, 1.4s;
     }
 
-    /* Staggered Delay */
-    .logo-text span:nth-child(1) {
-        animation-delay: 0.1s;
-        color: #ff9f43;
-        /* --accent-peach */
-    }
-
-    .logo-text span:nth-child(2) {
-        animation-delay: 0.15s;
-    }
-
-    .logo-text span:nth-child(3) {
-        animation-delay: 0.2s;
-    }
-
-    .logo-text span:nth-child(4) {
-        animation-delay: 0.25s;
-    }
-
-    .logo-text span:nth-child(5) {
-        animation-delay: 0.3s;
-    }
-
-    .logo-text span:nth-child(6) {
-        animation-delay: 0.35s;
-        color: #54a0ff;
-        /* --accent-sky */
-    }
-
-    .logo-text span:nth-child(7) {
-        animation-delay: 0.4s;
-    }
-
-    .logo-text span:nth-child(8) {
-        animation-delay: 0.45s;
-    }
-
-    @keyframes revealLetter {
+    @keyframes cinematicReveal {
         0% {
             opacity: 0;
-            transform: translateY(20px);
+            transform: translateY(10px);
+            filter: blur(8px);
+            letter-spacing: 0.1em;
         }
-
         100% {
-            opacity: 1;
+            opacity: 0.85;
             transform: translateY(0);
+            filter: blur(0);
+            letter-spacing: 0.3em;
         }
     }
 
-    /* Loading Bar */
-    .loading-bar {
-        width: 120px;
-        height: 4px;
-        background: rgba(0, 0, 0, 0.05);
-        border-radius: 2px;
-        overflow: hidden;
-        position: relative;
-    }
-
-    .loading-bar .progress {
-        width: 50%;
-        height: 100%;
-        background: linear-gradient(90deg, #ff9f43, #ff6b6b, #54a0ff);
-        position: absolute;
-        left: -50%;
-        border-radius: 2px;
-        animation: loadProgress 1.5s infinite ease-in-out;
-    }
-
-    @keyframes loadProgress {
-        0% {
-            left: -50%;
-            width: 50%;
-        }
-
-        50% {
-            left: 25%;
-            width: 50%;
-        }
-
-        100% {
-            left: 100%;
-            width: 50%;
-        }
-    }
-
-    /* Mobile Adjustments */
-    @media (max-width: 768px) {
-        .logo-text {
-            font-size: 2.5rem;
-        }
+    @keyframes subtlePulse {
+        0%, 100% { opacity: 0.85; text-shadow: none; }
+        50% { opacity: 1; text-shadow: 0 4px 12px rgba(0,0,0,0.05); }
     }
 </style>
 
@@ -170,7 +140,7 @@
     document.addEventListener("DOMContentLoaded", function () {
         const loader = document.getElementById('foundify-loader');
 
-        // Ensure minimum display time for the brand moment (e.g. 1.2s)
+        // Minimum time to show the loader to ensure a smooth, professional feel (1.2s)
         const minDisplayTime = 1200;
         const startTime = Date.now();
 

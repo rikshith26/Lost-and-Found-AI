@@ -1154,7 +1154,11 @@ def report_lost():
         flash("Report submitted successfully!")
         return redirect("/user/dashboard")
 
-    return render_template("report_lost.html")
+    db = get_db()
+    user = db.users.find_one({"_id": ObjectId(session["user_id"])}) if db is not None else None
+    if user:
+        user['id'] = str(user['_id'])
+    return render_template("report_lost.html", user=user)
 
 # ---------- REPORT FOUND ----------
 @app.route("/user/report-found", methods=["GET", "POST"])
@@ -1204,7 +1208,11 @@ def report_found():
         flash("Found item reported! We'll notify you if there's a match.")
         return redirect("/user/dashboard")
 
-    return render_template("report_found.html")
+    db = get_db()
+    user = db.users.find_one({"_id": ObjectId(session["user_id"])}) if db is not None else None
+    if user:
+        user['id'] = str(user['_id'])
+    return render_template("report_found.html", user=user)
 
 # ---------- ADMIN SETTINGS ----------
 @app.route("/admin/settings")
@@ -1326,7 +1334,7 @@ def background_scan(force_rescan):
                     
                 try:
                     score = final_match(lost, found)
-                    if score["final_score"] >= 0.2:
+                    if score["final_score"] >= 20:
                         db.ai_suggestions.update_one(
                             {"lost_id": lost["_id"], "found_id": found["_id"]},
                             {"$set": {"score": score, "created_at": datetime.datetime.utcnow()}},
@@ -1342,7 +1350,8 @@ def background_scan(force_rescan):
 # ---------- TRIGGER SCANS ----------
 @app.route("/admin/run-scan")
 def run_ai_scan():
-    if session.get("role") not in ["admin", "super_admin"]:
+    role = session.get("role")
+    if role not in ["admin", "super_admin"]:
         abort(403)
         
     force_rescan = request.args.get('force') == 'true'
@@ -1444,7 +1453,10 @@ def my_chats():
         else:
             chat["role_desc"] = "Finder (Found)"
             
-    return render_template("user_chats.html", chats=chats)
+    user = db.users.find_one({"_id": current_user_id}) if db is not None else None
+    if user:
+        user['id'] = str(user['_id'])
+    return render_template("user_chats.html", chats=chats, user=user)
 
 @app.route("/user/chat/<chat_id>", methods=["GET", "POST"])
 def view_chat(chat_id):

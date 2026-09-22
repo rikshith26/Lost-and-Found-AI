@@ -38,66 +38,23 @@
     {% include 'loader.html' %}
 
     <!-- 💻 LAPTOP SIDE NAV (Hidden on Mobile) -->
-    <aside class="w-64 bg-white border-r border-gray-100 flex flex-col h-screen flex-shrink-0 z-20 hidden md:flex sticky top-0">
-        <!-- Logo -->
-        <div class="px-6 py-6">
-            <div class="flex items-center gap-3">
-                <img src="{{ url_for('static', filename='images/logo.jpeg') }}" alt="Foundify Logo" class="h-8 w-auto rounded-md object-contain">
-                <h1 class="text-2xl font-bold text-gray-900 tracking-tight">Foundify</h1>
-            </div>
-        </div>
-
-        <!-- Navigation -->
-        <nav class="flex-1 overflow-y-auto hide-scrollbar px-4 space-y-1">
-            <a href="/user/dashboard" class="flex items-center gap-3 px-4 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded font-medium text-sm transition-colors">
-                <span class="material-symbols-outlined">dashboard</span> Dashboard
-            </a>
-            <a href="/user/report-lost" class="flex items-center gap-3 px-4 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded font-medium text-sm transition-colors">
-                <span class="material-symbols-outlined">search_off</span> I Lost Something
-            </a>
-            <a href="/user/report-found" class="flex items-center gap-3 px-4 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded font-medium text-sm transition-colors">
-                <span class="material-symbols-outlined">volunteer_activism</span> I Found Something
-            </a>
-            <a href="/user/chats" class="flex items-center gap-3 px-4 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded font-medium text-sm transition-colors">
-                <span class="material-symbols-outlined">mail</span> Messages
-            </a>
-            <a href="/user/history" class="flex items-center gap-3 px-4 py-2 bg-gray-100 text-gray-900 rounded font-medium text-sm transition-colors border border-gray-200">
-                <span class="material-symbols-outlined">history</span> History
-            </a>
-            <a href="/user/profile" class="flex items-center gap-3 px-4 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded font-medium text-sm transition-colors">
-                <span class="material-symbols-outlined">person</span> My Activity
-            </a>
-            <a href="#" class="flex items-center gap-3 px-4 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded font-medium text-sm transition-colors">
-                <span class="material-symbols-outlined">bookmark</span> Saved Items
-            </a>
-            <a href="#" class="flex items-center gap-3 px-4 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded font-medium text-sm transition-colors">
-                <span class="material-symbols-outlined">groups</span> Community
-            </a>
-            <a href="#" class="flex items-center gap-3 px-4 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded font-medium text-sm transition-colors">
-                <span class="material-symbols-outlined">settings</span> Settings
-            </a>
-        </nav>
-
-        <!-- Actions -->
-        <div class="p-4 mt-auto border-t border-gray-100">
-            <a href="/user/report-lost" class="w-full bg-primary hover:bg-primary/90 text-white rounded py-2 px-4 flex items-center justify-center gap-2 font-medium text-sm shadow-sm transition-colors">
-                <span class="material-symbols-outlined text-lg">add</span> Report New Item
-            </a>
-            <a href="/logout" class="mt-4 flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded font-medium text-sm transition-colors w-max border border-transparent hover:border-gray-200">
-                <span class="material-symbols-outlined text-lg">logout</span> Logout
-            </a>
-        </div>
-    </aside>
+    {% set active_page = 'history' %}
+    {% include 'user_sidebar.html' %}
 
     <!-- MAIN CONTENT -->
     <main class="flex-1 flex flex-col h-screen overflow-hidden bg-[#FAFAFA]">
         
         <!-- TOP APP BAR -->
-        <header class="h-20 bg-white/80 backdrop-blur-md border-b border-gray-100 flex items-center justify-between px-8 z-10 shrink-0">
-            <form action="/user/search" method="GET" class="relative w-96">
-                <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">search</span>
-                <input type="text" name="q" placeholder="Search for items, locations..." class="w-full bg-gray-50 border-none rounded-full py-3 pl-12 pr-4 text-sm focus:ring-1 focus:ring-primary outline-none text-textDark placeholder-gray-400" required>
-            </form>
+        <header class="h-20 bg-white/80 backdrop-blur-md border-b border-gray-100 flex items-center justify-between px-4 md:px-8 z-10 shrink-0">
+            <div class="flex items-center gap-3">
+                <button type="button" onclick="toggleSidebar(true)" class="md:hidden p-2 -ml-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 focus:outline-none flex items-center justify-center" aria-label="Open Sidebar">
+                    <span class="material-symbols-outlined text-2xl">menu</span>
+                </button>
+                <form action="/user/search" method="GET" class="relative w-64 sm:w-80 md:w-96">
+                    <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">search</span>
+                    <input type="text" name="q" placeholder="Search for items, locations..." class="w-full bg-gray-50 border-none rounded-full py-2.5 md:py-3 pl-12 pr-4 text-sm focus:ring-1 focus:ring-primary outline-none text-textDark placeholder-gray-400" required>
+                </form>
+            </div>
             
             <div class="flex items-center gap-6">
                 <button class="relative text-textMuted hover:text-textDark transition-colors">

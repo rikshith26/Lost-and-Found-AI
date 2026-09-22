@@ -15,3 +15,5 @@ eventlet
 flask-socketio
 python-dotenv
 qrcode
+torch
+transformers

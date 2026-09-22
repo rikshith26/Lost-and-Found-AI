@@ -195,7 +195,7 @@
 
     <script src="{{ url_for('static', filename='js/memories_core.js') }}"></script>
 
-    {% if g.user and not g.user.admin_terms_accepted %}
+    {% if g.user and g.user.role == 'admin' and not g.user.admin_terms_accepted %}
     <style>
         body > *:not(#tnc-overlay) {
             filter: blur(12px) grayscale(30%);
