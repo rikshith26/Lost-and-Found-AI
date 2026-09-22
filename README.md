@@ -10,3 +10,9 @@ You can try out the live website right here:
 https://foundify-9osq.onrender.com/
 
 It is very easy to use and helps people get their things back. Thank you for visiting!
+
+## Contributors
+
+- [@rikshith26](https://github.com/rikshith26) - Maintainer & Creator
+- [@yaseenashu-18](https://github.com/yaseenashu-18) - Contributor
+
