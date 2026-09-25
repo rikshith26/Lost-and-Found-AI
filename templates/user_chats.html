@@ -12,7 +12,8 @@
             theme: {
                 extend: {
                     colors: {
-                        primary: "#4f46e5",
+                        primary: "#059669",
+                        primaryLight: "#ecfdf5"
                     },
                     fontFamily: {
                         sans: ["Plus Jakarta Sans", "sans-serif"],
@@ -44,17 +45,38 @@
                 <button type="button" onclick="toggleSidebar(true)" class="md:hidden p-2 -ml-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 focus:outline-none flex items-center justify-center" aria-label="Open Sidebar">
                     <span class="material-symbols-outlined text-2xl">menu</span>
                 </button>
-                <form action="/user/search" method="GET" class="relative w-64 sm:w-80 md:w-96">
-                    <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">search</span>
-                    <input type="text" name="q" placeholder="Search for items, locations..." class="w-full bg-gray-50 border-none rounded-full py-2.5 md:py-3 pl-12 pr-4 text-sm focus:ring-1 focus:ring-primary outline-none text-gray-900 placeholder-gray-400" required>
-                </form>
+                <h1 class="text-xl font-extrabold text-gray-900">Messages</h1>
             </div>
             
-            <div class="flex items-center gap-6">
-                <button class="relative text-gray-400 hover:text-gray-600 transition-colors">
-                    <span class="material-symbols-outlined">notifications</span>
-                </button>
-                <a href="/user/profile" class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm shadow-sm cursor-pointer border-2 border-white block">
+            <div class="flex items-center gap-4">
+                <!-- NOTIFICATION BELL & LIVE DROPDOWN -->
+                <div class="relative">
+                    <button id="notifBellBtn" onclick="toggleNotifDropdown(event)" class="relative p-2 text-gray-500 hover:text-gray-900 focus:outline-none transition-colors rounded-full hover:bg-gray-100 flex items-center justify-center">
+                        <span class="material-symbols-outlined text-2xl">notifications</span>
+                        <span id="notifBadge" class="hidden absolute top-0 right-0 w-4 h-4 bg-red-500 text-white text-[9px] font-extrabold rounded-full flex items-center justify-center border-2 border-white shadow-xs">0</span>
+                    </button>
+                    
+                    <!-- Notification Dropdown Panel -->
+                    <div id="notifDropdown" class="hidden absolute right-0 mt-3 w-80 sm:w-96 bg-white border border-gray-200/90 rounded-2xl shadow-2xl z-50 overflow-hidden divide-y divide-gray-100">
+                        <div class="px-4 py-3 bg-gray-50/80 flex items-center justify-between">
+                            <h4 class="text-xs font-bold text-gray-900 uppercase tracking-wider flex items-center gap-1.5">
+                                <span class="material-symbols-outlined text-base text-emerald-600">notifications</span> Live Notifications
+                            </h4>
+                            <span id="notifUnreadBadge" class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full">0 Unread</span>
+                        </div>
+                        
+                        <div id="notifList" class="max-h-80 overflow-y-auto divide-y divide-gray-50">
+                            <div class="p-6 text-center text-xs text-gray-400 italic">Loading updates...</div>
+                        </div>
+                        
+                        <div class="px-4 py-2.5 bg-gray-50/80 text-center">
+                            <a href="/user/history" class="text-xs font-bold text-emerald-600 hover:text-emerald-800 transition-colors">View All Activity & History &rarr;</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PROFILE AVATAR -->
+                <a href="/user/profile" class="w-10 h-10 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-sm shadow-sm cursor-pointer border-2 border-white block">
                     {% if user.profile_photo %}
                         <img src="/{{ user.profile_photo }}" class="w-full h-full rounded-full object-cover">
                     {% else %}
@@ -64,58 +86,152 @@
             </div>
         </header>
 
+        <script src="/static/js/notifications_live.js"></script>
+
         <!-- SCROLL AREA -->
-        <div class="flex-1 overflow-y-auto hide-scrollbar p-8">
-            <div class="max-w-5xl mx-auto space-y-8 pb-10">
+        <div class="flex-1 overflow-y-auto hide-scrollbar p-4 md:p-8">
+            <div class="max-w-3xl mx-auto space-y-6 pb-12">
                 
-                <header class="mb-8">
-                    <h1 class="text-3xl font-extrabold text-gray-900">Messages</h1>
-                    <p class="text-gray-500 mt-1 text-sm">Conversations about lost and found items.</p>
+                <header class="mb-4">
+                    <h2 class="text-2xl font-extrabold text-gray-900 tracking-tight">Recent Conversations</h2>
+                    <p class="text-gray-500 text-xs font-medium mt-1">Direct communication with finders, owners, and Foundify support.</p>
                 </header>
 
                 {% if chats %}
-                <div class="bg-white rounded border border-gray-200 shadow-sm overflow-hidden mb-8">
-                    <div class="px-6 py-4 border-b border-gray-200 bg-gray-50 grid grid-cols-[60px_1fr_150px] gap-6 text-xs font-bold uppercase tracking-wider text-gray-500">
-                        <div></div>
-                        <div>Conversation</div>
-                        <div class="text-right">Started</div>
-                    </div>
-                    <div class="divide-y divide-gray-100">
-                        {% for chat in chats %}
-                        <a href="/user/chat/{{ chat.id }}" class="p-4 grid grid-cols-[50px_1fr_auto] md:grid-cols-[60px_1fr_150px] gap-4 md:gap-6 items-center hover:bg-gray-50 transition-colors group">
-                            
-                            <div class="w-12 h-12 rounded bg-gray-50 border border-gray-200 flex items-center justify-center text-gray-400 group-hover:text-primary transition-colors">
-                                <span class="material-symbols-outlined">mail</span>
-                            </div>
-                            
-                            <div class="min-w-0 overflow-hidden">
-                                <h4 class="text-base font-bold text-gray-900 truncate mb-1">{{ chat.item_name }}</h4>
-                                <p class="text-sm text-gray-500 truncate">
-                                    <span class="font-semibold text-gray-700">Latest:</span> {{ chat.messages[-1].text }}
-                                </p>
-                            </div>
-                            
-                            <div class="text-right text-xs font-medium text-gray-400">
-                                {{ chat.created_at.strftime('%b %d') }}
+                <div id="chatListContainer" class="bg-white rounded-2xl border border-gray-200/80 shadow-xs overflow-hidden divide-y divide-gray-100">
+                    {% for chat in chats %}
+                    <a href="/user/chat/{{ chat.id }}" data-chat-id="{{ chat.id }}" class="p-4 hover:bg-gray-50/80 transition-colors flex items-center gap-4 group cursor-pointer border-b border-gray-100 last:border-0">
+                        
+                        <!-- AVATAR WITH ONLINE STATUS (SCREENSHOT 3) -->
+                        <div class="relative shrink-0">
+                            {% if chat.other_user_photo %}
+                                <img src="/{{ chat.other_user_photo }}" class="w-12 h-12 rounded-full object-cover shadow-xs border border-gray-100">
+                            {% else %}
+                                {% if chat.is_support %}
+                                    <div class="w-12 h-12 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold shadow-xs">
+                                        <span class="material-symbols-outlined text-2xl">headset_mic</span>
+                                    </div>
+                                {% else %}
+                                    <div class="w-12 h-12 rounded-full bg-emerald-700 text-white flex items-center justify-center font-extrabold text-base shadow-xs">
+                                        {{ (chat.other_user_name or 'F')[0] | upper }}
+                                    </div>
+                                {% endif %}
+                            {% endif %}
+                            <!-- Active Green Online Badge -->
+                            <span class="w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-white absolute bottom-0 right-0 shadow-xs"></span>
+                        </div>
+
+                        <!-- CONVERSATION DETAILS -->
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center justify-between gap-2">
+                                <h4 class="font-extrabold text-gray-900 text-base flex items-center gap-1 truncate">
+                                    {{ chat.other_user_name }}
+                                    {% if chat.is_support %}
+                                        <span class="material-symbols-outlined text-emerald-600 text-base icon-fill">verified</span>
+                                    {% endif %}
+                                </h4>
+                                <span class="latest-time-str text-xs text-gray-400 font-medium shrink-0">{{ chat.latest_time_str or 'Just now' }}</span>
                             </div>
 
-                        </a>
-                        {% endfor %}
-                    </div>
+                            <!-- CONTEXT TAG PILL (SCREENSHOT 3) -->
+                            <div class="mt-0.5 mb-1">
+                                {% if chat.is_support %}
+                                    <span class="bg-emerald-50 text-emerald-800 border border-emerald-200 font-bold text-[11px] px-2.5 py-0.5 rounded-full inline-flex items-center gap-1">
+                                        Support
+                                    </span>
+                                {% elif chat.tag_text == 'Matched Item' %}
+                                    <span class="bg-purple-50 text-purple-700 border border-purple-100 font-bold text-[11px] px-2.5 py-0.5 rounded-full inline-block">
+                                        Matched Item
+                                    </span>
+                                {% elif 'Headphones' in chat.tag_text %}
+                                    <span class="bg-amber-50 text-amber-700 border border-amber-100 font-bold text-[11px] px-2.5 py-0.5 rounded-full inline-block">
+                                        {{ chat.tag_text }}
+                                    </span>
+                                {% elif 'Backpack' in chat.tag_text %}
+                                    <span class="bg-blue-50 text-blue-700 border border-blue-100 font-bold text-[11px] px-2.5 py-0.5 rounded-full inline-block">
+                                        {{ chat.tag_text }}
+                                    </span>
+                                {% else %}
+                                    <span class="bg-emerald-50 text-emerald-700 border border-emerald-100 font-bold text-[11px] px-2.5 py-0.5 rounded-full inline-block">
+                                        {{ chat.tag_text }}
+                                    </span>
+                                {% endif %}
+                            </div>
+
+                            <!-- MESSAGE PREVIEW -->
+                            <p class="latest-text-preview text-xs text-gray-500 font-medium truncate max-w-lg">
+                                {{ chat.latest_text }}
+                            </p>
+                        </div>
+
+                        <!-- UNREAD BADGE -->
+                        <div class="unread-badge-container shrink-0 flex items-center justify-center pl-2">
+                            {% if chat.unread_count and chat.unread_count > 0 %}
+                            <span class="unread-badge w-5 h-5 bg-emerald-600 text-white rounded-full flex items-center justify-center font-extrabold text-[11px] shadow-xs">
+                                {{ chat.unread_count }}
+                            </span>
+                            {% endif %}
+                        </div>
+
+                    </a>
+                    {% endfor %}
                 </div>
                 {% else %}
                 <!-- EMPTY STATE -->
-                <div class="bg-white p-12 rounded border border-gray-200 shadow-sm text-center">
-                    <div class="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-gray-200">
-                        <span class="material-symbols-outlined text-4xl text-gray-400">mark_email_read</span>
+                <div class="bg-white p-12 rounded-3xl border border-gray-200/80 shadow-xs text-center">
+                    <div class="w-20 h-20 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="material-symbols-outlined text-4xl">mark_email_read</span>
                     </div>
-                    <h3 class="text-lg font-bold text-gray-900 mb-2">No messages yet</h3>
-                    <p class="text-gray-500 text-sm max-w-sm mx-auto">You don't have any ongoing conversations about items.</p>
+                    <h3 class="text-lg font-bold text-gray-900 mb-1">No Messages Yet</h3>
+                    <p class="text-gray-500 text-xs max-w-sm mx-auto">Conversations with finders and owners will appear here.</p>
                 </div>
                 {% endif %}
             </div>
         </div>
     </main>
+
+    <!-- REAL-TIME SOCKET.IO REALTIME MESSAGING SCRIPT (0 LATENCY) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <script>
+        const currentUserId = "{{ user.id }}";
+        const socket = io();
+
+        socket.on('chat_list_update', function(data) {
+            const chatRow = document.querySelector(`a[data-chat-id="${data.chat_id}"]`);
+            if (chatRow) {
+                // 1. Update text preview
+                const previewEl = chatRow.querySelector('.latest-text-preview');
+                if (previewEl) previewEl.innerText = data.latest_text;
+
+                // 2. Update time string
+                const timeEl = chatRow.querySelector('.latest-time-str');
+                if (timeEl) timeEl.innerText = data.latest_time_str;
+
+                // 3. Update unread count if recipient
+                if (data.sender_id !== currentUserId) {
+                    const badgeContainer = chatRow.querySelector('.unread-badge-container');
+                    if (badgeContainer) {
+                        let badge = badgeContainer.querySelector('.unread-badge');
+                        if (!badge) {
+                            badgeContainer.innerHTML = `<span class="unread-badge w-5 h-5 bg-emerald-600 text-white rounded-full flex items-center justify-center font-extrabold text-[11px] shadow-xs">1</span>`;
+                        } else {
+                            let count = parseInt(badge.innerText || '0') + 1;
+                            badge.innerText = count;
+                        }
+                    }
+                }
+
+                // 4. Move row to top of container instantly with 0 latency
+                const container = document.getElementById('chatListContainer');
+                if (container && chatRow.parentElement === container) {
+                    container.insertBefore(chatRow, container.firstChild);
+                }
+            } else {
+                // Refresh list if new conversation created
+                fetchLiveNotifications();
+            }
+        });
+    </script>
 
     <!-- MOBILE BOTTOM NAV -->
     <div class="md:hidden fixed bottom-0 left-0 w-full bg-white border-t border-gray-100 flex justify-around py-3 z-50">
@@ -123,12 +239,12 @@
             <span class="material-symbols-outlined text-xl">home</span>
             <span class="text-[9px] font-bold mt-1">HOME</span>
         </a>
-        <a href="/user/chats" class="flex flex-col items-center text-primary">
+        <a href="/user/chats" class="flex flex-col items-center text-emerald-600">
             <span class="material-symbols-outlined icon-fill text-xl">mail</span>
             <span class="text-[9px] font-bold mt-1">MESSAGES</span>
         </a>
         <a href="/user/report-lost" class="flex flex-col items-center text-gray-400 hover:text-gray-600 -mt-5">
-            <div class="w-12 h-12 bg-primary text-white rounded-full flex items-center justify-center shadow-lg border-4 border-[#FAFAFA]">
+            <div class="w-12 h-12 bg-emerald-600 text-white rounded-full flex items-center justify-center shadow-lg border-4 border-[#FAFAFA]">
                 <span class="material-symbols-outlined icon-fill">add</span>
             </div>
             <span class="text-[9px] font-bold mt-1">REPORT</span>
@@ -143,6 +259,5 @@
         </a>
     </div>
 
-    <script src="{{ url_for('static', filename='js/memories_core.js') }}"></script>
 </body>
-</html>
+</html>

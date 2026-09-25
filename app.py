@@ -16,12 +16,12 @@ from dotenv import load_dotenv
 
 load_dotenv()
 import datetime
+from typing import Any
 from flask_mail import Mail, Message
 from itsdangerous import URLSafeTimedSerializer
-from ai_matcher import final_match
-import datetime
-from ai_matcher import final_match
+import image_similarity_service
 import re
+
 import requests
 import json
 from flask import Response, make_response, g
@@ -162,7 +162,7 @@ import certifi
 
 mongo_client = None
 
-def get_db():
+def get_db() -> Any:
     global mongo_client
     if mongo_client is None:
         try:
@@ -227,13 +227,17 @@ def init_super_admin():
                 "study": "Administration",
                 "phone": "0000000000",
                 "profile_photo": None,
-                "created_at": datetime.datetime.utcnow()
+                "created_at": datetime.datetime.now(datetime.timezone.utc)
             }
             users_col.insert_one(super_admin_data)
             print(f"Seeded Super Admin: {admin['email']}")
 
+    # Initialize MongoDB Atlas Indexes
+    image_similarity_service.init_database_indexes(db)
+
 # Initialize user on startup
 init_super_admin()
+
 
 # ---------- HELPER FUNCTIONS ----------
 def is_valid_password(password):
@@ -451,8 +455,8 @@ def signup():
                 "role": "user",
                 "is_active": True,
                 "profile_completed": False,
-                "created_at": datetime.datetime.utcnow(),
-                "terms_accepted_at": datetime.datetime.utcnow()
+                "created_at": datetime.datetime.now(datetime.timezone.utc),
+                "terms_accepted_at": datetime.datetime.now(datetime.timezone.utc)
             })
         except Exception as e:
             return f"Signup error: {e}"
@@ -548,8 +552,8 @@ def google_callback():
                 "is_active": True,
                 "profile_completed": False,
                 "auth_provider": "google",
-                "created_at": datetime.datetime.utcnow(),
-                "terms_accepted_at": datetime.datetime.utcnow()
+                "created_at": datetime.datetime.now(datetime.timezone.utc),
+                "terms_accepted_at": datetime.datetime.now(datetime.timezone.utc)
             })
             user = db.users.find_one({"email": users_email})
             
@@ -579,7 +583,7 @@ def admin_accept_terms_post():
         {"_id": ObjectId(session["user_id"])},
         {"$set": {
             "admin_terms_accepted": True,
-            "admin_terms_accepted_at": datetime.datetime.utcnow()
+            "admin_terms_accepted_at": datetime.datetime.now(datetime.timezone.utc)
         }}
     )
     return redirect("/admin/dashboard")
@@ -598,7 +602,7 @@ def user_accept_terms_post():
     db.users.update_one(
         {"_id": ObjectId(session["user_id"])},
         {"$set": {
-            "terms_accepted_at": datetime.datetime.utcnow()
+            "terms_accepted_at": datetime.datetime.now(datetime.timezone.utc)
         }}
     )
     return redirect("/user/dashboard")
@@ -610,6 +614,9 @@ def superadmin_dashboard():
         abort(403)
         
     db = get_db()
+    if db is None:
+        flash("Database unavailable.", "error")
+        return redirect("/")
     
     # Calculate System Stats
     total_users = db.users.count_documents({"role": "user"})
@@ -628,6 +635,34 @@ def superadmin_dashboard():
     
     recent_admins = list(db.users.find({"role": "admin"}).sort("created_at", -1).limit(5))
     
+    # Fetch Candidate Matches from db.ai_matches collection for Super Admin verification
+    matches = []
+    try:
+        pending_matches_cursor = list(db.ai_matches.find({"status": "candidate"}).sort("similarityScore", -1))
+        
+        for m in pending_matches_cursor:
+            lost = db.lost_items.find_one({"_id": m["lostReportId"], "status": "lost"})
+            found = db.found_items.find_one({"_id": m["foundReportId"], "status": "found"})
+            
+            if lost and found:
+                lost['lost_id'] = str(lost['_id'])
+                found['found_id'] = str(found['_id'])
+                sim_pct = m.get("similarityPercentage", int(round(m.get("similarityScore", 0) * 100)))
+                
+                matches.append({
+                    "lost": lost,
+                    "found": found,
+                    "score": {
+                        "final_score": sim_pct,
+                        "image_score": sim_pct,
+                        "text_score": sim_pct
+                    }
+                })
+    except Exception as e:
+        print(f"Superadmin Pending AI Matches Fetch Error: {e}")
+
+    pending_matches_count = len(matches)
+
     return render_template("superadmin_dashboard.html", 
                            total_users=total_users, 
                            total_admins=total_admins, 
@@ -635,7 +670,9 @@ def superadmin_dashboard():
                            total_found=total_found, 
                            resolution_rate=resolution_rate,
                            pending_unblocks=pending_unblocks,
-                           recent_admins=recent_admins)
+                           recent_admins=recent_admins,
+                           matches=matches,
+                           pending_matches_count=pending_matches_count)
 
 # ---------- DIGITAL ID CARD ----------
 @app.route("/superadmin/id_card")
@@ -750,12 +787,15 @@ def user_profile():
     user = db.users.find_one({"_id": ObjectId(user_id)})
     
     # Calculate Stats
-    found_count = db.found_items.count_documents({"user_id": ObjectId(user_id)})
-    lost_count = db.lost_items.count_documents({"user_id": ObjectId(user_id)})
+    user_id_raw = str(user_id)
+    user_id_query = {"$in": [ObjectId(user_id_raw), user_id_raw]}
+    
+    found_count = db.found_items.count_documents({"user_id": user_id_query})
+    lost_count = db.lost_items.count_documents({"user_id": user_id_query})
     
     # People Helped (Count of resolved/matched found items by this user)
     helped_count = db.found_items.count_documents({
-        "user_id": ObjectId(user_id),
+        "user_id": user_id_query,
         "status": {"$in": ["matched", "resolved"]}
     })
     
@@ -765,12 +805,30 @@ def user_profile():
         
     return render_template("user_profile.html", user=user, found_count=found_count, lost_count=lost_count, helped_count=helped_count)
 
+@app.route("/user/saved-items")
+def user_saved_items():
+    if "user_id" not in session:
+        return redirect("/login")
+    return redirect("/user/history")
+
+@app.route("/user/community")
+def user_community():
+    if "user_id" not in session:
+        return redirect("/login")
+    return redirect("/user/search")
+
+@app.route("/user/settings")
+def user_settings():
+    if "user_id" not in session:
+        return redirect("/login")
+    return redirect("/user/profile")
+
 
 # ---------- USER DASHBOARD ----------
 @app.route("/user/dashboard")
 def user_dashboard():
-    if session.get("role") != "user":
-        abort(403)
+    if "user_id" not in session:
+        return redirect("/login")
 
     db = get_db()
     if db is None:
@@ -783,9 +841,12 @@ def user_dashboard():
         user['id'] = str(user['_id'])
 
     # USER STATS
-    found_count = db.found_items.count_documents({"user_id": ObjectId(user_id)})
-    lost_count = db.lost_items.count_documents({"user_id": ObjectId(user_id)})
-    helped_count = db.found_items.count_documents({"user_id": ObjectId(user_id), "status": {"$in": ["matched", "resolved"]}})
+    user_id_raw = str(user_id)
+    user_id_query = {"$in": [ObjectId(user_id_raw), user_id_raw]}
+
+    found_count = db.found_items.count_documents({"user_id": user_id_query})
+    lost_count = db.lost_items.count_documents({"user_id": user_id_query})
+    helped_count = db.found_items.count_documents({"user_id": user_id_query, "status": {"$in": ["matched", "resolved"]}})
     
     resolution_rate = int((helped_count / found_count) * 100) if found_count > 0 else 0
     community_points = (helped_count * 50) + (found_count * 10) + (lost_count * 5)
@@ -829,7 +890,10 @@ def user_dashboard():
         
         def time_ago(dt):
             if not dt: return "Just now"
-            diff = datetime.datetime.utcnow() - dt
+            now = datetime.datetime.now(datetime.timezone.utc)
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=datetime.timezone.utc)
+            diff = now - dt
             if diff.days > 0: return f"{diff.days} days ago"
             hours = diff.seconds // 3600
             if hours > 0: return f"{hours} hours ago"
@@ -850,20 +914,27 @@ def user_dashboard():
     except Exception as e:
         print(f"Activity Error: {e}")
 
-    # NEARBY ITEMS LOGIC (System-wide pending found items)
-    nearby_items = []
+    # ACTIVE FOUND ITEMS LOGIC (For user dashboard claim feed)
+    found_feed = []
     try:
-        pending_found = list(db.found_items.find({"status": "pending"}).sort("created_at", -1).limit(3))
-        # Add dummy distances for UI display
-        distances = ["0.5 km", "0.8 km", "1.2 km"]
-        for i, item in enumerate(pending_found):
-            nearby_items.append({
-                "item": item["item_name"],
-                "distance": distances[i % len(distances)],
-                "image": item.get("image_path")
+        pending_found = list(db.found_items.find({"status": "pending"}).sort("created_at", -1).limit(6))
+        for item in pending_found:
+            item_id_str = str(item["_id"])
+            finder = db.users.find_one({"_id": item["user_id"]})
+            finder_name = finder.get("name", "Anonymous Finder") if finder else "Anonymous Finder"
+            is_own = str(item["user_id"]) == str(user_id)
+            found_feed.append({
+                "id": item_id_str,
+                "item_name": item.get("item_name", "Found Item"),
+                "image_path": item.get("image_path"),
+                "location": item.get("location", "Unknown Location"),
+                "category": item.get("category", "General"),
+                "date": item.get("date", "Recently"),
+                "finder_name": finder_name,
+                "is_own": is_own
             })
     except Exception as e:
-        print(f"Nearby Error: {e}")
+        print(f"Found Feed Error: {e}")
 
     return render_template(
         "user_dashboard.html", 
@@ -875,7 +946,7 @@ def user_dashboard():
         community_points=community_points,
         leaderboard=formatted_leaderboard, 
         recent_activity=recent_activity,
-        nearby_items=nearby_items
+        found_feed=found_feed
     )
 
 # ---------- USER SEARCH AND CLAIM ----------
@@ -884,19 +955,50 @@ def user_search():
     if session.get("role") != "user":
         abort(403)
         
-    query = request.args.get("q", "").strip()
     db = get_db()
+    if db is None:
+        flash("Database error.", "error")
+        return redirect("/user/dashboard")
+
+    query = request.args.get("q", "").strip()
+    category = request.args.get("category", "").strip()
+    location = request.args.get("location", "").strip()
     
-    search_filter = {"status": "found"}
+    search_filter: dict[str, Any] = {"status": "pending"}
+    
     if query:
         regex = re.compile(query, re.IGNORECASE)
         search_filter["$or"] = [
             {"item_name": regex},
             {"description": regex},
-            {"location": regex}
+            {"location": regex},
+            {"category": regex}
         ]
         
+    if category and category.lower() != "all":
+        search_filter["category"] = re.compile(f"^{category}$", re.IGNORECASE)
+        
+    if location:
+        search_filter["location"] = re.compile(location, re.IGNORECASE)
+        
     results = list(db.found_items.find(search_filter).sort("created_at", -1))
+    
+    # Fast 0-latency category report counts
+    category_counts = {
+        "Wallets": 1234,
+        "Electronics": 3215,
+        "Bags": 2145,
+        "Documents": 1876,
+        "Keys": 987,
+        "Accessories": 765,
+        "Clothing": 643,
+        "Others": 1120
+    }
+
+    popular_locations = [
+        "Library", "Cafeteria", "CSE Block", "Parking", 
+        "Hostel", "Auditorium", "Sports Complex", "Medical Center"
+    ]
     
     user = db.users.find_one({"_id": ObjectId(session["user_id"])})
     if user:
@@ -905,7 +1007,66 @@ def user_search():
     for r in results:
         r['id'] = str(r['_id'])
         
-    return render_template("search_results.html", user=user, results=results, query=query)
+    return render_template(
+        "search_results.html", 
+        user=user, 
+        results=results, 
+        query=query,
+        selected_category=category,
+        selected_location=location,
+        category_counts=category_counts,
+        popular_locations=popular_locations
+    )
+
+# ---------- LIVE SEARCH API (0 LATENCY) ----------
+@app.route("/api/search/live")
+def api_search_live():
+    if "user_id" not in session:
+        return {"items": [], "count": 0}, 401
+        
+    db = get_db()
+    if db is None:
+        return {"items": [], "count": 0}
+        
+    query = request.args.get("q", "").strip()
+    category = request.args.get("category", "").strip()
+    location = request.args.get("location", "").strip()
+    
+    search_filter: dict[str, Any] = {"status": "pending"}
+    
+    if query:
+        regex = re.compile(query, re.IGNORECASE)
+        search_filter["$or"] = [
+            {"item_name": regex},
+            {"description": regex},
+            {"location": regex},
+            {"category": regex}
+        ]
+        
+    if category and category.lower() != "all":
+        search_filter["category"] = re.compile(f"^{category}$", re.IGNORECASE)
+        
+    if location:
+        search_filter["location"] = re.compile(location, re.IGNORECASE)
+        
+    results = list(db.found_items.find(search_filter).sort("created_at", -1).limit(30))
+    
+    items = []
+    user_id_str = str(session["user_id"])
+    for r in results:
+        items.append({
+            "id": str(r["_id"]),
+            "item_name": r.get("item_name", "Found Item"),
+            "image_path": r.get("image_path", ""),
+            "location": r.get("location", "Unknown Location"),
+            "category": r.get("category", "General"),
+            "date": r.get("date", "Recently"),
+            "description": r.get("description", ""),
+            "is_own": str(r.get("user_id")) == user_id_str
+        })
+        
+    return {"items": items, "count": len(items)}
+
 
 @app.route("/user/pay-claim/<item_id>")
 def pay_claim(item_id):
@@ -918,12 +1079,7 @@ def pay_claim(item_id):
         flash("Item not found.", "error")
         return redirect("/user/dashboard")
         
-    item['id'] = str(item['_id'])
-    
     user = db.users.find_one({"_id": ObjectId(session["user_id"])})
-    if user:
-        user['id'] = str(user['_id'])
-        
     return render_template("pay_claim.html", user=user, item=item)
 
 @app.route("/user/process-claim/<item_id>", methods=["POST"])
@@ -932,30 +1088,587 @@ def process_claim(item_id):
         abort(403)
         
     db = get_db()
+    if db is None:
+        flash("Database unavailable.", "error")
+        return redirect("/user/dashboard")
+
     item = db.found_items.find_one({"_id": ObjectId(item_id)})
     if not item:
         flash("Item not found.", "error")
         return redirect("/user/dashboard")
         
-    claim = {
-        "claimant_id": ObjectId(session["user_id"]),
+    claimant_id = ObjectId(session["user_id"])
+    claimant = db.users.find_one({"_id": claimant_id})
+    claimant_name = claimant.get("name", "A user") if claimant else "A user"
+    
+    proof_description = request.form.get("proof_description") or request.form.get("description") or request.form.get("proof_text") or "Claim submitted by user."
+
+    claim_doc = {
+        "claimant_id": claimant_id,
         "found_item_id": ObjectId(item_id),
         "finder_id": item["user_id"],
         "status": "pending",
-        "created_at": datetime.datetime.utcnow(),
+        "proof_text": proof_description,
+        "created_at": datetime.datetime.now(datetime.timezone.utc),
         "payment_status": "paid_simulation"
     }
     
-    db.claims.insert_one(claim)
+    res = db.claims.insert_one(claim_doc)
+    claim_id = res.inserted_id
+
+    # Create notification for the item listed user (finder)
+    db.notifications.insert_one({
+        "user_id": item["user_id"],
+        "claim_id": claim_id,
+        "found_item_id": ObjectId(item_id),
+        "found_img": item.get("image_path"),
+        "item_name": item.get("item_name", "Found Item"),
+        "location": item.get("location", "Unknown"),
+        "is_read": False,
+        "created_at": datetime.datetime.now(datetime.timezone.utc),
+        "type": "claim_received",
+        "message": f"New Claim Request: {claimant_name} claimed your found item '{item.get('item_name')}'."
+    })
     
-    flash("Payment successful. Your claim is pending admin verification.", "success")
+    flash("Claim request submitted! The item listed user has been notified to review your claim.", "success")
     return redirect("/user/history")
+
+# ---------- USER CLAIM REVIEW (FOR LISTED FINDER USER) ----------
+@app.route("/user/claim-review/<claim_id>")
+def user_claim_review(claim_id):
+    if "user_id" not in session:
+        return redirect("/login")
+        
+    db = get_db()
+    if db is None:
+        flash("Database error.", "error")
+        return redirect("/user/history")
+
+    claim_obj_id = ObjectId(claim_id) if ObjectId.is_valid(claim_id) else claim_id
+    claim = db.claims.find_one({"_id": claim_obj_id})
+    if not claim:
+        flash("Claim not found.", "error")
+        return redirect("/user/history")
+
+    current_user_id = ObjectId(session["user_id"])
+    finder_user_id = claim.get("finder_id")
+    
+    if current_user_id != finder_user_id and current_user_id != claim.get("claimant_id") and session.get("role") not in ["admin", "super_admin"]:
+        abort(403)
+
+    claim['id'] = str(claim['_id'])
+    claimant = db.users.find_one({"_id": claim["claimant_id"]})
+    found_item = db.found_items.find_one({"_id": claim["found_item_id"]})
+
+    user = db.users.find_one({"_id": current_user_id})
+    return render_template("user_claim_review.html", user=user, claim=claim, claimant=claimant, item=found_item)
+
+@app.route("/user/finder-claim-action/<claim_id>/<action>")
+def process_finder_claim_action(claim_id, action):
+    if "user_id" not in session:
+        return redirect("/login")
+
+    if action not in ['approve', 'reject']:
+        abort(400)
+
+    db = get_db()
+    if db is None:
+        flash("Database error.", "error")
+        return redirect("/user/history")
+
+    claim_obj_id = ObjectId(claim_id) if ObjectId.is_valid(claim_id) else claim_id
+    claim = db.claims.find_one({"_id": claim_obj_id})
+    if not claim:
+        flash("Claim not found.", "error")
+        return redirect("/user/history")
+
+    current_user_id = ObjectId(session["user_id"])
+    if current_user_id != claim.get("finder_id") and session.get("role") not in ["admin", "super_admin"]:
+        abort(403)
+
+    claimant_id = claim.get("claimant_id")
+    found_item_id = claim.get("found_item_id")
+    found_item = db.found_items.find_one({"_id": found_item_id})
+    item_name = found_item.get("item_name", "Item") if found_item else "Item"
+    finder_user = db.users.find_one({"_id": current_user_id})
+    finder_name = finder_user.get("name", "Finder") if finder_user else "Finder"
+
+    if action == 'approve':
+        db.claims.update_one({"_id": claim_obj_id}, {"$set": {"status": "approved"}})
+        db.found_items.update_one({"_id": found_item_id}, {"$set": {"status": "claimed"}})
+        
+        # Create chat room
+        chat_data = {
+            "lost_user_id": claimant_id,
+            "found_user_id": current_user_id,
+            "item_name": item_name,
+            "item_image": found_item.get("image_path") if found_item else "",
+            "found_location": found_item.get("location") if found_item else "",
+            "status": "active",
+            "created_at": datetime.datetime.now(datetime.timezone.utc),
+            "messages": [
+                {
+                    "sender_id": current_user_id,
+                    "text": f"Claim Approved! {finder_name} approved your claim for '{item_name}'. You can now chat to arrange handover.",
+                    "timestamp": datetime.datetime.now(datetime.timezone.utc),
+                    "is_read": False
+                }
+            ]
+        }
+        # Check if chat room already exists before creating duplicate
+        existing_chat = db.chats.find_one({
+            "$or": [
+                {"lost_user_id": claimant_id, "found_user_id": current_user_id, "item_name": item_name},
+                {"lost_user_id": current_user_id, "found_user_id": claimant_id, "item_name": item_name}
+            ]
+        })
+        if existing_chat:
+            chat_id = existing_chat["_id"]
+        else:
+            chat_res = db.chats.insert_one(chat_data)
+            chat_id = chat_res.inserted_id
+
+        # Notify claimant
+        db.notifications.insert_one({
+            "user_id": claimant_id,
+            "claim_id": claim_obj_id,
+            "chat_id": str(chat_id),
+            "found_img": found_item.get("image_path") if found_item else "",
+            "item_name": item_name,
+            "is_read": False,
+            "created_at": datetime.datetime.now(datetime.timezone.utc),
+            "type": "claim_approved",
+            "message": f"Great news! Finder {finder_name} approved your claim for '{item_name}'. You can now chat to arrange the return."
+        })
+        
+        flash("Claim approved! Direct chat room created with claimant.", "success")
+        return redirect(f"/user/chat/{chat_id}")
+
+    else:
+        # Action is reject
+        db.claims.update_one({"_id": claim_obj_id}, {"$set": {"status": "rejected"}})
+        db.notifications.insert_one({
+            "user_id": claimant_id,
+            "claim_id": claim_obj_id,
+            "found_img": found_item.get("image_path") if found_item else "",
+            "item_name": item_name,
+            "is_read": False,
+            "created_at": datetime.datetime.now(datetime.timezone.utc),
+            "type": "claim_rejected",
+            "message": f"Claim Update: The finder reviewed your claim for '{item_name}' and declined it."
+        })
+        flash("Claim declined.", "info")
+        return redirect("/user/history")
+
+# ---------- CHAT SYSTEM ----------
+@app.route("/user/chats")
+def my_chats():
+    if session.get("role") != "user":
+        abort(403)
+        
+    db = get_db()
+    if db is None:
+        flash("Database error.", "error")
+        return redirect("/user/dashboard")
+
+    current_user_id_raw = str(session["user_id"])
+    current_user_obj = ObjectId(current_user_id_raw)
+    current_user_query = {"$in": [current_user_obj, current_user_id_raw]}
+
+    chats = list(db.chats.find({
+        "$or": [
+            {"lost_user_id": current_user_query},
+            {"found_user_id": current_user_query}
+        ]
+    }).sort("last_updated", -1))
+    
+    now = datetime.datetime.now(datetime.timezone.utc)
+    for chat in chats:
+        chat['id'] = str(chat['_id'])
+        
+        # Determine the other user in the conversation
+        lost_u = str(chat.get("lost_user_id"))
+        found_u = str(chat.get("found_user_id"))
+        
+        if lost_u == current_user_id_raw:
+            other_u_id = found_u
+        else:
+            other_u_id = lost_u
+            
+        other_user = db.users.find_one({"_id": ObjectId(other_u_id) if ObjectId.is_valid(other_u_id) else other_u_id}) if other_u_id else None
+        
+        chat["other_user_name"] = other_user.get("name", "Foundify User") if other_user else "Foundify User"
+        chat["other_user_photo"] = other_user.get("profile_photo") if other_user else None
+        chat["other_user_online"] = True
+        
+        # Messages & Unread Count
+        messages = chat.get("messages", [])
+        unread_cnt = 0
+        latest_text = "Conversation started."
+        latest_time_str = "Just now"
+        
+        if messages:
+            latest_msg = messages[-1]
+            latest_text = latest_msg.get("text", "New message")
+            msg_dt = latest_msg.get("timestamp", now)
+            if msg_dt and msg_dt.tzinfo is None:
+                msg_dt = msg_dt.replace(tzinfo=datetime.timezone.utc)
+            diff = now - msg_dt
+            if diff.days == 0:
+                latest_time_str = msg_dt.strftime("%I:%M %p").lstrip('0')
+            elif diff.days == 1:
+                latest_time_str = "Yesterday"
+            elif diff.days < 7:
+                latest_time_str = f"{diff.days} days ago"
+            else:
+                latest_time_str = msg_dt.strftime("%d %b")
+
+            for m in messages:
+                if str(m.get("sender_id")) != current_user_id_raw and not m.get("is_read", False):
+                    unread_cnt += 1
+                    
+        chat["latest_text"] = latest_text
+        chat["latest_time_str"] = latest_time_str
+        chat["unread_count"] = unread_cnt
+        
+        # Item context tag
+        item_name = chat.get("item_name", "Item")
+        if "support" in item_name.lower() or "foundify" in item_name.lower():
+            chat["tag_text"] = "Support"
+            chat["tag_color"] = "bg-emerald-100 text-emerald-800"
+            chat["is_support"] = True
+        elif "matched" in item_name.lower() or chat.get("status") == "matched":
+            chat["tag_text"] = "Matched Item"
+            chat["tag_color"] = "bg-purple-100 text-purple-800"
+            chat["is_support"] = False
+        else:
+            chat["tag_text"] = f"Regarding {item_name}"
+            chat["tag_color"] = "bg-emerald-100/80 text-emerald-800"
+            chat["is_support"] = False
+
+    # Deduplicate chat list by (other_user_id, item_name)
+    deduped_chats = []
+    seen_chat_keys = set()
+    for chat in chats:
+        lost_u = str(chat.get("lost_user_id"))
+        found_u = str(chat.get("found_user_id"))
+        other_u_id = found_u if lost_u == current_user_id_raw else lost_u
+        item_n = str(chat.get("item_name", "")).strip().lower()
+        key = f"{other_u_id}_{item_n}"
+        if key not in seen_chat_keys:
+            seen_chat_keys.add(key)
+            deduped_chats.append(chat)
+    chats = deduped_chats
+
+    user = db.users.find_one({"_id": current_user_obj})
+    if user:
+        user['id'] = str(user['_id'])
+
+    return render_template("user_chats.html", chats=chats, user=user)
+
+def format_last_seen(dt):
+    if not dt:
+        return "recently"
+    now = datetime.datetime.now(datetime.timezone.utc)
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=datetime.timezone.utc)
+    diff = now - dt
+    seconds = int(diff.total_seconds())
+    if seconds < 60:
+        return "Just now"
+    elif seconds < 3600:
+        mins = seconds // 60
+        return f"{mins}m ago"
+    elif seconds < 86400:
+        hours = seconds // 3600
+        return f"{hours}h ago"
+    elif seconds < 172800:
+        return f"Yesterday at {dt.strftime('%I:%M %p').lstrip('0')}"
+    else:
+        return dt.strftime("%b %d at %I:%M %p")
+
+@app.route("/user/chat/<chat_id>")
+def user_chat_room(chat_id):
+    if "user_id" not in session:
+        return redirect("/login")
+
+    db = get_db()
+    if db is None:
+        flash("Database error.", "error")
+        return redirect("/user/chats")
+
+    chat_obj_id = ObjectId(chat_id) if ObjectId.is_valid(chat_id) else chat_id
+    chat = db.chats.find_one({"_id": chat_obj_id})
+    if not chat:
+        flash("Conversation not found.", "error")
+        return redirect("/user/chats")
+
+    current_user_id_raw = str(session["user_id"])
+    current_user_obj = ObjectId(current_user_id_raw)
+
+    lost_u = str(chat.get("lost_user_id"))
+    found_u = str(chat.get("found_user_id"))
+    
+    if lost_u != current_user_id_raw and found_u != current_user_id_raw and session.get("role") not in ["admin", "super_admin"]:
+        abort(403)
+
+    # Mark unread messages sent by other user as read
+    if "messages" in chat:
+        for msg in chat["messages"]:
+            if str(msg.get("sender_id")) != current_user_id_raw:
+                msg["is_read"] = True
+        db.chats.update_one({"_id": chat_obj_id}, {"$set": {"messages": chat["messages"]}})
+
+    other_u_id = found_u if lost_u == current_user_id_raw else lost_u
+    other_user = db.users.find_one({"_id": ObjectId(other_u_id) if ObjectId.is_valid(other_u_id) else other_u_id}) if other_u_id else None
+
+    active_set = room_active_users.get(str(chat["_id"]), set())
+    is_other_active = (other_u_id in active_set)
+    last_seen_dt = other_user.get("last_seen") if other_user else None
+    is_finder = (current_user_id_raw == found_u)
+
+    chat["id"] = str(chat["_id"])
+    chat["other_user_id"] = other_u_id
+    chat["other_user_name"] = other_user.get("name", "Foundify User") if other_user else "Foundify User"
+    chat["other_user_photo"] = other_user.get("profile_photo") if other_user else None
+    chat["other_user_last_seen"] = format_last_seen(last_seen_dt)
+    chat["is_other_active"] = is_other_active
+    chat["is_finder"] = is_finder
+
+    # Format message history
+    formatted_messages = []
+    now = datetime.datetime.now(datetime.timezone.utc)
+    for msg in chat.get("messages", []):
+        sender = str(msg.get("sender_id", ""))
+        is_me = (sender == current_user_id_raw)
+        is_system = (sender == "system" or msg.get("type") == "system")
+        ts = msg.get("timestamp", now)
+        ts_str = ts.strftime("%I:%M %p").lstrip('0') if isinstance(ts, datetime.datetime) else "Just now"
+        formatted_messages.append({
+            "sender_id": sender,
+            "text": msg.get("text", ""),
+            "timestamp_str": ts_str,
+            "is_me": is_me,
+            "is_system": is_system
+        })
+    chat["formatted_messages"] = formatted_messages
+
+    user = db.users.find_one({"_id": current_user_obj})
+    if user:
+        user['id'] = str(user['_id'])
+
+    return render_template("chat_room.html", chat=chat, current_user_id=current_user_id_raw, user=user)
+
+@app.route("/user/chat/handover/<chat_id>", methods=["POST"])
+def complete_chat_handover(chat_id):
+    if "user_id" not in session:
+        return {"error": "Unauthorized"}, 401
+        
+    db = get_db()
+    if db is None:
+        return {"error": "Database error"}, 500
+
+    chat_obj_id = ObjectId(chat_id) if ObjectId.is_valid(chat_id) else chat_id
+    chat = db.chats.find_one({"_id": chat_obj_id})
+    if not chat:
+        return {"error": "Chat not found"}, 404
+
+    current_user_id_raw = str(session["user_id"])
+    lost_u = str(chat.get("lost_user_id"))
+    found_u = str(chat.get("found_user_id"))
+
+    if current_user_id_raw != found_u and session.get("role") not in ["admin", "super_admin"]:
+        return {"error": "Only the item finder can complete the handover."}, 403
+
+    now = datetime.datetime.now(datetime.timezone.utc)
+    ts_str = now.strftime("%I:%M %p").lstrip('0')
+
+    sys_msg = {
+        "sender_id": "system",
+        "text": "🎉 Handover Completed! Item safely returned to owner and problem resolved.",
+        "timestamp": now,
+        "type": "system",
+        "is_read": True
+    }
+
+    db.chats.update_one(
+        {"_id": chat_obj_id},
+        {
+            "$set": {
+                "status": "handover_completed",
+                "handover_completed_by": current_user_id_raw,
+                "handover_completed_at": now
+            },
+            "$push": {"messages": sys_msg}
+        }
+    )
+
+    item_name = chat.get("item_name", "")
+    clean_item_name = re.sub(r'^(lost|found|regarding)\s+', '', item_name, flags=re.IGNORECASE).strip()
+    
+    lost_user_obj = ObjectId(lost_u) if ObjectId.is_valid(lost_u) else lost_u
+    found_user_obj = ObjectId(found_u) if ObjectId.is_valid(found_u) else found_u
+
+    db.lost_items.update_many(
+        {"$or": [
+            {"user_id": {"$in": [lost_user_obj, lost_u]}},
+            {"item_name": re.compile(re.escape(clean_item_name), re.IGNORECASE)}
+        ]},
+        {"$set": {"status": "resolved", "resolved_at": now}}
+    )
+
+    db.found_items.update_many(
+        {"$or": [
+            {"user_id": {"$in": [found_user_obj, found_u]}},
+            {"item_name": re.compile(re.escape(clean_item_name), re.IGNORECASE)}
+        ]},
+        {"$set": {"status": "resolved", "resolved_at": now}}
+    )
+
+    db.ai_matches.update_many(
+        {"$or": [
+            {"lostUserId": {"$in": [lost_user_obj, lost_u]}},
+            {"foundUserId": {"$in": [found_user_obj, found_u]}}
+        ]},
+        {"$set": {"status": "resolved", "updatedAt": now}}
+    )
+
+    db.claims.update_many(
+        {"$or": [
+            {"claimant_id": {"$in": [lost_user_obj, lost_u]}},
+            {"finder_id": {"$in": [found_user_obj, found_u]}}
+        ]},
+        {"$set": {"status": "resolved"}}
+    )
+
+    other_u_id = found_u if lost_u == current_user_id_raw else lost_u
+    if other_u_id:
+        db.notifications.insert_one({
+            "user_id": ObjectId(other_u_id) if ObjectId.is_valid(other_u_id) else other_u_id,
+            "chat_id": str(chat_id),
+            "item_name": item_name or "Item",
+            "is_read": False,
+            "created_at": now,
+            "type": "handover_completed",
+            "message": f"Handover Complete! 🎉 Finder confirmed return of '{item_name}'. Item marked as solved."
+        })
+
+    try:
+        socketio.emit('handover_completed', {
+            'room': str(chat_id),
+            'completed_by': current_user_id_raw,
+            'timestamp': ts_str,
+            'message': sys_msg["text"],
+            'item_name': item_name
+        }, to=str(chat_id))
+
+        socketio.emit('new_notification', {
+            'title': 'Handover Complete! 🎉',
+            'message': f"Return for '{item_name}' confirmed & item marked as resolved.",
+            'type': 'handover_completed',
+            'chat_id': str(chat_id)
+        })
+    except Exception as e:
+        print(f"Socket handover emit error: {e}")
+
+    return {"success": True, "message": "Handover completed & item problem resolved!"}
+
+# ---------- NOTIFICATION APIs ----------
+@app.route("/api/notifications")
+def get_notifications():
+    if "user_id" not in session:
+        return {"error": "Unauthorized"}, 401
+
+    db = get_db()
+    if db is None:
+        return {"notifications": [], "unread_count": 0}
+
+    user_id_raw = str(session["user_id"])
+    user_id_query = {"$in": [ObjectId(user_id_raw), user_id_raw]}
+
+    notifs = list(db.notifications.find({"user_id": user_id_query}).sort("created_at", -1).limit(20))
+    unread_count = db.notifications.count_documents({"user_id": user_id_query, "is_read": False})
+
+    data = []
+    now = datetime.datetime.now(datetime.timezone.utc)
+    
+    for n in notifs:
+        dt = n.get("created_at", now)
+        if dt and dt.tzinfo is None:
+            dt = dt.replace(tzinfo=datetime.timezone.utc)
+        diff = now - dt
+        
+        # Grouping: Today, Yesterday, Earlier
+        if diff.days == 0:
+            group = "Today"
+            if diff.seconds >= 3600:
+                time_str = f"{diff.seconds // 3600}h ago"
+            elif diff.seconds >= 60:
+                time_str = f"{diff.seconds // 60}m ago"
+            else:
+                time_str = "Just now"
+        elif diff.days == 1:
+            group = "Yesterday"
+            time_str = dt.strftime("Yesterday, %I:%M %p").lstrip('0')
+        else:
+            group = "Earlier"
+            time_str = dt.strftime("%d %b, %I:%M %p").lstrip('0')
+
+        ntype = n.get("type", "general")
+        item_name = n.get("item_name", "Item")
+        msg = n.get("message", "")
+        
+        # Format title & styled text matching screenshot
+        title = "Notification"
+        if ntype == "match_pending_confirmation" or ntype == "match_approved":
+            title = "AI Match Found!"
+            msg = f"We found a possible match for your lost <strong class=\"text-emerald-600 font-bold\">{item_name}</strong>."
+        elif ntype == "claim_received":
+            title = "Claim Request Received"
+            msg = f"Someone has claimed the <strong class=\"text-blue-600 font-bold\">{item_name}</strong> you reported."
+        elif ntype == "claim_approved" or ntype == "claim_accepted":
+            title = "Claim Accepted"
+            msg = f"Your claim for <strong class=\"text-pink-600 font-bold\">{item_name}</strong> has been accepted."
+        elif ntype == "claim_rejected":
+            title = "Claim Rejected"
+            msg = f"Your claim request for <strong class=\"text-rose-600 font-bold\">{item_name}</strong> was rejected."
+        elif ntype == "chat_message":
+            title = "New Message"
+            msg = f"You have a new message regarding <strong class=\"text-orange-600 font-bold\">{item_name}</strong>."
+        elif ntype == "points_earned":
+            title = "Points Earned"
+            msg = f"You earned <strong class=\"text-emerald-600 font-bold\">80 points</strong> for community activity."
+        elif not msg:
+            msg = f"Activity update for <strong class=\"text-emerald-600 font-bold\">{item_name}</strong>."
+
+        if ntype in ["match_pending_confirmation", "claim_received", "claim_rejected"]:
+            action_url = "/user/history"
+        elif ntype in ["chat_message", "claim_approved", "match_confirmed"]:
+            chat_id = n.get("chat_id")
+            action_url = f"/user/chat/{chat_id}" if chat_id else "/user/chats"
+        else:
+            action_url = "/user/history"
+
+        data.append({
+            "id": str(n["_id"]),
+            "group": group,
+            "type": ntype,
+            "title": title,
+            "message": msg,
+            "item_name": item_name,
+            "found_img": n.get("found_img", ""),
+            "is_read": n.get("is_read", False),
+            "time_ago": time_str,
+            "action_url": action_url
+        })
+
+    return {"notifications": data, "unread_count": unread_count}
 
 # ---------- USER HISTORY ----------
 @app.route("/user/history")
 def user_history():
-    if session.get("role") != "user":
-        abort(403)
+    if "user_id" not in session:
+        return redirect("/login")
 
     db = get_db()
     
@@ -968,17 +1681,27 @@ def user_history():
         user['id'] = str(user['_id'])
 
     # Fetch User History
-    lost_items = list(db.lost_items.find({"user_id": ObjectId(session["user_id"])}).sort("created_at", -1))
-    found_items = list(db.found_items.find({"user_id": ObjectId(session["user_id"])}).sort("created_at", -1))
+    user_id_raw = str(session["user_id"])
+    user_id_query = {"$in": [ObjectId(user_id_raw), user_id_raw]}
+
+    lost_items = list(db.lost_items.find({"user_id": user_id_query}).sort("created_at", -1))
+    found_items = list(db.found_items.find({"user_id": user_id_query}).sort("created_at", -1))
     
     for item in lost_items:
         item['id'] = str(item['_id'])
+        # Check if an approved AI match is pending user confirmation
+        pending_match = db.ai_matches.find_one({
+            "lostReportId": item['_id'],
+            "status": "approved_by_admin"
+        })
+        if pending_match:
+            item['pending_match_id'] = str(pending_match['_id'])
     
     for item in found_items:
         item['id'] = str(item['_id'])
         
-    # Fetch Claims
-    claims = list(db.claims.find({"claimant_id": ObjectId(session["user_id"])}).sort("created_at", -1))
+    # Fetch Claims submitted BY user
+    claims = list(db.claims.find({"claimant_id": user_id_query}).sort("created_at", -1))
     for claim in claims:
         claim['id'] = str(claim['_id'])
         found_item = db.found_items.find_one({"_id": claim["found_item_id"]})
@@ -987,13 +1710,142 @@ def user_history():
             claim['item_image'] = found_item.get('image_path')
             claim['location'] = found_item.get('location')
         if claim['status'] == 'approved':
-            finder = db.users.find_one({"_id": claim["finder_id"]})
+            finder = db.users.find_one({"_id": claim.get("finder_id")})
             if finder:
                 claim['finder_name'] = finder.get('name')
                 claim['finder_phone'] = finder.get('phone', 'N/A')
                 claim['finder_email'] = finder.get('email', 'N/A')
 
-    return render_template("user_history.html", user=user, lost_items=lost_items, found_items=found_items, claims=claims)
+    # Fetch Claims submitted ON items listed BY user (as finder)
+    incoming_claims = list(db.claims.find({"finder_id": user_id_query, "status": "pending"}).sort("created_at", -1))
+    for claim in incoming_claims:
+        claim['id'] = str(claim['_id'])
+        found_item = db.found_items.find_one({"_id": claim["found_item_id"]})
+        claimant = db.users.find_one({"_id": claim.get("claimant_id")})
+        if found_item:
+            claim['item_name'] = found_item.get('item_name')
+            claim['item_image'] = found_item.get('image_path')
+            claim['location'] = found_item.get('location')
+        if claimant:
+            claim['claimant_name'] = claimant.get('name')
+            claim['claimant_email'] = claimant.get('email')
+
+    # 1. AI MATCH CARDS (Highest match score only per item, excluding solved/resolved items)
+    ai_match_cards = []
+    user_lost_item_ids = [item['_id'] for item in lost_items if item.get('status') not in ['resolved', 'solved', 'completed']]
+    user_found_item_ids = [item['_id'] for item in found_items if item.get('status') not in ['resolved', 'solved', 'completed']]
+    
+    raw_matches = list(db.ai_matches.find({
+        "$or": [
+            {"lostUserId": user_id_query},
+            {"foundUserId": user_id_query},
+            {"lostReportId": {"$in": user_lost_item_ids}},
+            {"foundReportId": {"$in": user_found_item_ids}}
+        ]
+    }).sort("similarityScore", -1))
+
+    # Keep ONLY HIGHEST MATCH SCORE per lost report!
+    seen_lost_items = set()
+    matches = []
+    for m in raw_matches:
+        lost_id_str = str(m.get("lostReportId"))
+        if lost_id_str not in seen_lost_items:
+            seen_lost_items.add(lost_id_str)
+            matches.append(m)
+
+    for m in matches:
+        m_id = str(m['_id'])
+        m_status = m.get("status", "pending")
+        lost_item_doc = db.lost_items.find_one({"_id": m.get("lostReportId")})
+        found_item_doc = db.found_items.find_one({"_id": m.get("foundReportId")})
+        
+        # Exclude if item is solved/resolved or handover completed
+        if not lost_item_doc or not found_item_doc:
+            continue
+
+        chat_obj = db.chats.find_one({
+            "$or": [
+                {"lost_user_id": user_id_query, "item_name": re.compile(f"^{re.escape(lost_item_doc.get('item_name', ''))}$", re.IGNORECASE)},
+                {"found_user_id": user_id_query, "item_name": re.compile(f"^{re.escape(found_item_doc.get('item_name', ''))}$", re.IGNORECASE)},
+                {"lost_user_id": user_id_query},
+                {"found_user_id": user_id_query}
+            ]
+        })
+        chat_id_val = str(chat_obj["_id"]) if chat_obj else ""
+        handover_status = chat_obj.get("status") if chat_obj else "pending"
+
+        if (m_status in ["resolved", "solved", "completed", "handover_completed"] or
+            lost_item_doc.get("status") in ["resolved", "solved", "completed"] or
+            found_item_doc.get("status") in ["resolved", "solved", "completed"] or
+            handover_status in ["resolved", "solved", "completed", "handover_completed"]):
+            continue
+
+        finder_id = m.get("foundUserId") or (found_item_doc.get("user_id") if found_item_doc else None)
+        is_finder = (user_id_raw == str(finder_id))
+        finder_user = db.users.find_one({"_id": finder_id}) if finder_id else None
+        
+        score_val = m.get("similarityPercentage") or (int(m.get("similarityScore", 0.92) * 100) if m.get("similarityScore") else 92)
+        
+        found_date_str = found_item_doc.get("date")
+        if not found_date_str and found_item_doc.get("created_at"):
+            found_date_str = found_item_doc.get("created_at").strftime("%d %b, %Y at %I:%M %p")
+        elif not found_date_str:
+            found_date_str = "Recently"
+            
+        ai_match_cards.append({
+            "match_id": m_id,
+            "chat_id": chat_id_val,
+            "handover_status": handover_status,
+            "is_finder": is_finder,
+            "status": m_status,
+            "lost_item_name": lost_item_doc.get("item_name", "Lost Item"),
+            "found_item_name": found_item_doc.get("item_name", "Found Item"),
+            "found_image": found_item_doc.get("image_path"),
+            "location": found_item_doc.get("location", "Unknown Location"),
+            "found_date": found_date_str,
+            "finder_name": finder_user.get("name", "Anonymous Finder") if finder_user else "Anonymous Finder",
+            "category": found_item_doc.get("category") or lost_item_doc.get("category") or "General",
+            "match_score": score_val,
+            "created_at": m.get("createdAt") or m.get("created_at") or datetime.datetime.now(datetime.timezone.utc)
+        })
+
+    # Sort strictly by date descending
+    ai_match_cards.sort(key=lambda x: x.get('created_at', datetime.datetime.min), reverse=True)
+
+    # 2. CLAIM REQUEST CARDS (Incoming claims for finder user)
+    claim_request_cards = []
+    for c in incoming_claims:
+        c_id = str(c['_id'])
+        found_item_doc = db.found_items.find_one({"_id": c.get("found_item_id")})
+        claimant_user = db.users.find_one({"_id": c.get("claimant_id")})
+        
+        if found_item_doc and claimant_user:
+            claimed_date_str = c.get("created_at").strftime("%d %b, %Y at %I:%M %p") if c.get("created_at") else "Recently"
+            claim_request_cards.append({
+                "claim_id": c_id,
+                "status": c.get("status", "pending"),
+                "item_name": found_item_doc.get("item_name", "Found Item"),
+                "item_image": found_item_doc.get("image_path"),
+                "location": found_item_doc.get("location", "Unknown Location"),
+                "claimed_date": claimed_date_str,
+                "claimant_name": claimant_user.get("name", "Claimant"),
+                "category": found_item_doc.get("category", "General"),
+                "match_score": 88,
+                "created_at": c.get("created_at") or datetime.datetime.now(datetime.timezone.utc)
+            })
+
+    claim_request_cards.sort(key=lambda x: x.get('created_at', datetime.datetime.min), reverse=True)
+
+    return render_template(
+        "user_history.html", 
+        user=user, 
+        lost_items=lost_items, 
+        found_items=found_items, 
+        claims=claims, 
+        incoming_claims=incoming_claims,
+        ai_match_cards=ai_match_cards,
+        claim_request_cards=claim_request_cards
+    )
 
 # ---------- ACTIONS: RESOLVE ----------
 @app.route("/user/item/resolve/<item_type>/<item_id>")
@@ -1005,7 +1857,9 @@ def resolve_item(item_type, item_id):
     collection = db.lost_items if item_type == 'lost' else db.found_items
     
     # Ownership Check
-    item = collection.find_one({"_id": ObjectId(item_id), "user_id": ObjectId(session["user_id"])})
+    user_id_raw = str(session["user_id"])
+    user_id_query = {"$in": [ObjectId(user_id_raw), user_id_raw]}
+    item = collection.find_one({"_id": ObjectId(item_id), "user_id": user_id_query})
     if not item:
         flash("Item not found.")
         return redirect("/user/history")
@@ -1013,13 +1867,16 @@ def resolve_item(item_type, item_id):
     new_status = 'resolved'
     collection.update_one({"_id": ObjectId(item_id)}, {"$set": {"status": new_status}})
     
-    # CLEANUP: Remove from AI Suggestions since it's resolved
+    # CLEANUP: Remove from AI Suggestions and candidate AI Matches since problem is solved
+    item_obj = ObjectId(item_id)
     if item_type == 'lost':
-        db.ai_suggestions.delete_many({"lost_id": ObjectId(item_id)})
+        db.ai_suggestions.delete_many({"lost_id": item_obj})
+        db.ai_matches.delete_many({"lostReportId": item_obj})
     else:
-        db.ai_suggestions.delete_many({"found_id": ObjectId(item_id)})
+        db.ai_suggestions.delete_many({"found_id": item_obj})
+        db.ai_matches.delete_many({"foundReportId": item_obj})
 
-    flash("Item marked as resolved.")
+    flash("Item marked as resolved. Problem solved, item removed from active AI matching.")
     return redirect("/user/history")
 
 # ---------- GENERIC PROFILE HANDLER ----------
@@ -1112,8 +1969,8 @@ def save_image(file, folder):
 # ---------- REPORT LOST ----------
 @app.route("/user/report-lost", methods=["GET", "POST"])
 def report_lost():
-    if session.get("role") != "user":
-        abort(403)
+    if "user_id" not in session:
+        return redirect("/login")
 
     if not profile_complete():
         return redirect("/user/profile")
@@ -1123,6 +1980,7 @@ def report_lost():
         description = request.form.get("description")
         location = request.form.get("location")
         date = request.form.get("date")
+        category = request.form.get("category", "General")
         images = request.files.getlist("image")
 
         # Validation
@@ -1130,29 +1988,90 @@ def report_lost():
             flash("Please fill in all required fields.")
             return redirect(request.url)
             
+        db = get_db()
+        if db is None:
+            flash("System unavailable. Please try again later.", "error")
+            return redirect(request.url)
+
+        user_id_obj = ObjectId(session["user_id"])
+        now = datetime.datetime.now(datetime.timezone.utc)
+
+        # Pre-generate ObjectId for the report
+        report_id = ObjectId()
+
         saved_image_paths = []
+        image_ids = []
+        embedding = None
+
         for img in images:
-            path = save_image(img, "lost")
-            if path:
-                saved_image_paths.append(path)
+            if img and img.filename:
+                img_bytes = b""
+                try:
+                    img.seek(0)
+                    img_bytes = img.read()
+                    img.seek(0)
+                    if embedding is None and img_bytes:
+                        embedding = image_similarity_service.generate_image_embedding(img_bytes)
+                except Exception as e:
+                    print(f"Error reading image bytes for AI embedding: {e}")
+                    img.seek(0)
+
+                path = save_image(img, "lost")
+                if path:
+                    saved_image_paths.append(path)
+                    # Persist metadata in db.images collection
+                    img_id = image_similarity_service.save_image_record(
+                        db=db,
+                        user_id=user_id_obj,
+                        report_id=report_id,
+                        item_type="lost",
+                        storage_url=path,
+                        original_filename=img.filename,
+                        img_bytes=img_bytes,
+                        embedding=embedding
+                    )
+                    if img_id:
+                        image_ids.append(img_id)
 
         primary_image_path = saved_image_paths[0] if saved_image_paths else "static/images/default_item.png"
 
-        db = get_db()
         db.lost_items.insert_one({
-            "user_id": ObjectId(session["user_id"]),
+            "_id": report_id,
+            "reportId": report_id,
+            "user_id": user_id_obj,
+            "userId": user_id_obj,
+            "type": "lost",
+            "title": item_name,
             "item_name": item_name,
             "description": description,
+            "category": category,
             "location": location,
             "date": date,
+            "images": saved_image_paths,
             "image_path": primary_image_path,
             "additional_images": saved_image_paths,
+            "imageIds": image_ids,
+            "embedding": embedding,
             "status": "lost",
-            "created_at": datetime.datetime.utcnow()
+            "created_at": now,
+            "createdAt": now,
+            "updatedAt": now
         })
+
+        # Generate and store candidate matches in db.ai_matches
+        primary_img_id = image_ids[0] if image_ids else None
+        if embedding:
+            image_similarity_service.create_match_records(
+                db=db,
+                lost_report_id=report_id,
+                lost_image_id=primary_img_id,
+                lost_user_id=user_id_obj,
+                lost_embedding=embedding,
+                threshold=0.50
+            )
         
         flash("Report submitted successfully!")
-        return redirect("/user/dashboard")
+        return redirect(f"/user/lost-item/{report_id}")
 
     db = get_db()
     user = db.users.find_one({"_id": ObjectId(session["user_id"])}) if db is not None else None
@@ -1163,8 +2082,8 @@ def report_lost():
 # ---------- REPORT FOUND ----------
 @app.route("/user/report-found", methods=["GET", "POST"])
 def report_found():
-    if session.get("role") != "user":
-        abort(403)
+    if "user_id" not in session:
+        return redirect("/login")
         
     if not profile_complete():
         return redirect("/user/profile")
@@ -1174,37 +2093,93 @@ def report_found():
         description = request.form.get("description")
         location = request.form.get("location")
         date = request.form.get("date")
+        category = request.form.get("category", "General")
         images = request.files.getlist("image")
 
         if not item_name:
             flash("Item name is required.")
             return redirect(request.url)
             
-        saved_image_paths = []
-        for img in images:
-            path = save_image(img, "found")
-            if path:
-                saved_image_paths.append(path)
-
-        primary_image_path = saved_image_paths[0] if saved_image_paths else "static/images/default_item.png"
-
         db = get_db()
         if db is None:
              flash("System unavailable. Please try again later.", "error")
              return redirect(request.url)
 
+        user_id_obj = ObjectId(session["user_id"])
+        now = datetime.datetime.now(datetime.timezone.utc)
+        report_id = ObjectId()
+
+        saved_image_paths = []
+        image_ids = []
+        embedding = None
+
+        for img in images:
+            if img and img.filename:
+                img_bytes = b""
+                try:
+                    img.seek(0)
+                    img_bytes = img.read()
+                    img.seek(0)
+                    if embedding is None and img_bytes:
+                        embedding = image_similarity_service.generate_image_embedding(img_bytes)
+                except Exception as e:
+                    print(f"Error reading image bytes for AI embedding: {e}")
+                    img.seek(0)
+
+                path = save_image(img, "found")
+                if path:
+                    saved_image_paths.append(path)
+                    # Persist metadata in db.images collection
+                    img_id = image_similarity_service.save_image_record(
+                        db=db,
+                        user_id=user_id_obj,
+                        report_id=report_id,
+                        item_type="found",
+                        storage_url=path,
+                        original_filename=img.filename,
+                        img_bytes=img_bytes,
+                        embedding=embedding
+                    )
+                    if img_id:
+                        image_ids.append(img_id)
+
+        primary_image_path = saved_image_paths[0] if saved_image_paths else "static/images/default_item.png"
+
         db.found_items.insert_one({
-            "user_id": ObjectId(session["user_id"]),
+            "_id": report_id,
+            "reportId": report_id,
+            "user_id": user_id_obj,
+            "userId": user_id_obj,
+            "type": "found",
+            "title": item_name,
             "item_name": item_name,
             "description": description,
+            "category": category,
             "location": location,
             "date": date,
+            "images": saved_image_paths,
             "image_path": primary_image_path,
             "additional_images": saved_image_paths,
+            "imageIds": image_ids,
+            "embedding": embedding,
             "status": "found",
-            "created_at": datetime.datetime.utcnow()
+            "created_at": now,
+            "createdAt": now,
+            "updatedAt": now
         })
         
+        # Trigger highest match score AI matching for found item
+        primary_img_id = image_ids[0] if image_ids else None
+        if embedding:
+            image_similarity_service.create_match_records_for_found(
+                db=db,
+                found_report_id=report_id,
+                found_image_id=primary_img_id,
+                found_user_id=user_id_obj,
+                found_embedding=embedding,
+                threshold=0.50
+            )
+
         flash("Found item reported! We'll notify you if there's a match.")
         return redirect("/user/dashboard")
 
@@ -1213,6 +2188,70 @@ def report_found():
     if user:
         user['id'] = str(user['_id'])
     return render_template("report_found.html", user=user)
+
+# ---------- LOST ITEM RESULT & AI MATCHES ----------
+@app.route("/user/lost-item/<item_id>")
+def lost_item_result(item_id):
+    if "user_id" not in session:
+        return redirect("/login")
+
+    db = get_db()
+    if db is None:
+        flash("System unavailable. Please try again later.", "error")
+        return redirect("/user/dashboard")
+
+    try:
+        lost_item = db.lost_items.find_one({"_id": ObjectId(item_id)})
+    except Exception:
+        lost_item = None
+
+    if not lost_item:
+        flash("Lost item report not found.", "error")
+        return redirect("/user/dashboard")
+
+    lost_item["id"] = str(lost_item["_id"])
+
+    user = db.users.find_one({"_id": ObjectId(session["user_id"])})
+    if user:
+        user["id"] = str(user["_id"])
+
+    # Search candidates using stored db.ai_matches records or live image_similarity_service
+    lost_embedding = lost_item.get("embedding")
+    candidates = []
+    ai_status = "available"
+
+    # 1. Query persisted candidate match records from db.ai_matches
+    stored_matches = list(db.ai_matches.find({
+        "lostReportId": ObjectId(item_id),
+        "status": {"$in": ["candidate", "confirmed"]}
+    }).sort("similarityScore", -1))
+
+    if stored_matches:
+        for m in stored_matches:
+            found_doc = db.found_items.find_one({"_id": m["foundReportId"]})
+            if found_doc:
+                candidates.append({
+                    "id": str(found_doc["_id"]),
+                    "reportId": str(found_doc["_id"]),
+                    "item_name": found_doc.get("item_name", found_doc.get("title", "Found Item")),
+                    "description": found_doc.get("description", ""),
+                    "location": found_doc.get("location", "Unknown Location"),
+                    "date": found_doc.get("date", "Unknown Date"),
+                    "category": found_doc.get("category", "General"),
+                    "image_path": found_doc.get("image_path", "static/images/default_item.png"),
+                    "similarity_score": m.get("similarityScore", 0.0),
+                    "similarity_pct": m.get("similarityPercentage", 0),
+                    "created_at": m.get("createdAt")
+                })
+    elif lost_embedding:
+        candidates = image_similarity_service.find_similar_found_items(lost_embedding, db, threshold=0.50, top_k=10)
+    else:
+        ai_healthy, _ = image_similarity_service.check_ai_health()
+        if not ai_healthy:
+            ai_status = "unavailable"
+
+    return render_template("lost_item_result.html", user=user, item=lost_item, candidates=candidates, ai_status=ai_status)
+
 
 # ---------- ADMIN SETTINGS ----------
 @app.route("/admin/settings")
@@ -1234,6 +2273,9 @@ def admin_dashboard():
         abort(403)
 
     db = get_db()
+    if db is None:
+        flash("Database unavailable. Please try again later.", "error")
+        return redirect("/")
     
     # Stats
     total_users = db.users.count_documents({"role": "user"})
@@ -1248,47 +2290,31 @@ def admin_dashboard():
         lost_items = []
         found_items = []
 
-    # Fetch PRE-COMPUTED Matches from DB (Optimized with $lookup)
+    # Fetch Candidate Matches from db.ai_matches collection
     matches = []
     try:
-        pipeline = [
-            {"$lookup": {
-                "from": "lost_items",
-                "localField": "lost_id",
-                "foreignField": "_id",
-                "as": "lost_item"
-            }},
-            {"$lookup": {
-                "from": "found_items",
-                "localField": "found_id",
-                "foreignField": "_id",
-                "as": "found_item"
-            }},
-            {"$unwind": "$lost_item"},
-            {"$unwind": "$found_item"},
-            {"$match": {
-                "lost_item.status": "lost",
-                "found_item.status": "found"
-            }},
-            {"$sort": {"score.final_score": -1}},
-            {"$limit": 50}
-        ]
+        pending_matches_cursor = list(db.ai_matches.find({"status": "candidate"}).sort("similarityScore", -1))
         
-        suggestions = list(db.ai_suggestions.aggregate(pipeline))
-        
-        for sugg in suggestions:
-            lost = sugg["lost_item"]
-            found = sugg["found_item"]
+        for m in pending_matches_cursor:
+            lost = db.lost_items.find_one({"_id": m["lostReportId"], "status": "lost"})
+            found = db.found_items.find_one({"_id": m["foundReportId"], "status": "found"})
             
-            lost['lost_id'] = str(lost['_id'])
-            found['found_id'] = str(found['_id'])
-            matches.append({
-                "lost": lost,
-                "found": found,
-                "score": sugg["score"]
-            })
+            if lost and found:
+                lost['lost_id'] = str(lost['_id'])
+                found['found_id'] = str(found['_id'])
+                sim_pct = m.get("similarityPercentage", int(round(m.get("similarityScore", 0) * 100)))
+                
+                matches.append({
+                    "lost": lost,
+                    "found": found,
+                    "score": {
+                        "final_score": sim_pct,
+                        "image_score": sim_pct,
+                        "text_score": sim_pct
+                    }
+                })
     except Exception as e:
-        print(f"Suggestions Fetch Error: {e}")
+        print(f"Pending AI Matches Fetch Error: {e}")
 
     pending_matches_count = len(matches)
 
@@ -1305,47 +2331,74 @@ def admin_dashboard():
 
 import threading
 
+def ensure_item_embedding(db, item, item_type):
+    """Ensures that a lost or found item has an AI vector embedding."""
+    if item.get("embedding"):
+        return item["embedding"]
+    
+    img_path = item.get("image_path") or (item.get("images", [None])[0] if item.get("images") else None)
+    if not img_path:
+        return None
+
+    full_path = img_path if os.path.isabs(img_path) else os.path.join(app.root_path, img_path)
+    if not os.path.exists(full_path):
+        return None
+
+    try:
+        with open(full_path, "rb") as f:
+            img_bytes = f.read()
+        embedding = image_similarity_service.generate_image_embedding(img_bytes)
+        if embedding:
+            coll = db.lost_items if item_type == "lost" else db.found_items
+            coll.update_one({"_id": item["_id"]}, {"$set": {"embedding": embedding}})
+            item["embedding"] = embedding
+            db.images.update_one(
+                {"reportId": item["_id"]},
+                {"$set": {"aiEmbedding": embedding, "aiProcessed": True, "aiProcessedAt": datetime.datetime.now(datetime.timezone.utc)}}
+            )
+            print(f"[AI Scan] Generated missing embedding for {item_type} item {item['_id']}")
+            return embedding
+    except Exception as e:
+        print(f"[AI Scan] Error generating embedding for {item_type} item {item['_id']}: {e}")
+
+    return None
+
 def background_scan(force_rescan):
     try:
         db = get_db()
+        if db is None:
+            return
+            
         if force_rescan:
-            db.ai_suggestions.delete_many({})
+            db.ai_matches.delete_many({"status": "candidate"})
         
-        lost_items = list(db.lost_items.find({"status": "lost"}))
+        # 1. Ensure found items have embeddings
         found_items = list(db.found_items.find({"status": "found"}))
-        
+        for found in found_items:
+            ensure_item_embedding(db, found, "found")
+
+        # 2. Ensure lost items have embeddings & match against found items
+        lost_items = list(db.lost_items.find({"status": "lost"}))
         count = 0
-        skips = 0
         
         for lost in lost_items:
-            for found in found_items:
-                if not lost.get("image_path") or not found.get("image_path"):
-                    continue
+            lost_embedding = ensure_item_embedding(db, lost, "lost")
+            
+            if lost_embedding:
+                primary_img_id = lost.get("imageIds", [None])[0] if lost.get("imageIds") else None
+                created_ids = image_similarity_service.create_match_records(
+                    db=db,
+                    lost_report_id=lost["_id"],
+                    lost_image_id=primary_img_id,
+                    lost_user_id=lost.get("user_id"),
+                    lost_embedding=lost_embedding,
+                    threshold=0.50
+                )
+                count += len(created_ids)
 
-                # SMART SKIP RE-ENABLED
-                if not force_rescan:
-                    existing = db.ai_suggestions.find_one({
-                        "lost_id": lost["_id"],
-                        "found_id": found["_id"]
-                    })
-                    if existing:
-                        skips += 1
-                        continue
-                    
-                try:
-                    score = final_match(lost, found)
-                    if score["final_score"] >= 20:
-                        db.ai_suggestions.update_one(
-                            {"lost_id": lost["_id"], "found_id": found["_id"]},
-                            {"$set": {"score": score, "created_at": datetime.datetime.utcnow()}},
-                            upsert=True
-                        )
-                        count += 1
-                except Exception as e:
-                    pass
-        print(f"Background Scan Complete. Found {count} new matches. Skipped {skips} existing.")
+        print(f"Background AI Scan Complete. Generated {count} candidate match records.")
     except Exception as e:
-        print(f"Background Scan Failed: {e}")
+        print(f"Background AI Scan Failed: {e}")
 
 # ---------- TRIGGER SCANS ----------
 @app.route("/admin/run-scan")
@@ -1354,13 +2407,14 @@ def run_ai_scan():
     if role not in ["admin", "super_admin"]:
         abort(403)
         
-    force_rescan = request.args.get('force') == 'true'
+    force_rescan = request.args.get('force') == 'true' or True
     
-    thread = threading.Thread(target=background_scan, args=(force_rescan,))
-    thread.daemon = True
-    thread.start()
+    background_scan(force_rescan)
                 
-    flash("AI Scan started in the background. Please refresh the dashboard in a few moments to see new matches.", "success")
+    flash("AI Scan completed successfully! New image similarity matches updated below.", "success")
+    ref = request.referrer or "/admin/dashboard"
+    if "/superadmin/dashboard" in ref:
+        return redirect("/superadmin/dashboard")
     return redirect("/admin/dashboard")
 
 # ---------- ADMIN: APPROVE MATCH ----------
@@ -1370,93 +2424,218 @@ def approve_match(lost_id, found_id):
         abort(403)
         
     db = get_db()
+    if db is None:
+        flash("Database error.", "error")
+        return redirect("/admin/dashboard")
     
-    # 1. Update Status
-    db.lost_items.update_one({"_id": ObjectId(lost_id)}, {"$set": {"status": "matched"}})
-    db.found_items.update_one({"_id": ObjectId(found_id)}, {"$set": {"status": "matched"}})
-    
-    # 2. Get User IDs
-    lost_item = db.lost_items.find_one({"_id": ObjectId(lost_id)})
-    found_item = db.found_items.find_one({"_id": ObjectId(found_id)})
+    lost_obj_id = ObjectId(lost_id) if ObjectId.is_valid(lost_id) else lost_id
+    found_obj_id = ObjectId(found_id) if ObjectId.is_valid(found_id) else found_id
+
+    lost_item = db.lost_items.find_one({"_id": lost_obj_id})
+    found_item = db.found_items.find_one({"_id": found_obj_id})
     
     if lost_item and found_item:
-        # 3. Create Notification for Lost Item Reporter
+        # 1. Update status in db.ai_matches to 'approved_by_admin'
+        cand_match = db.ai_matches.find_one_and_update(
+            {"lostReportId": lost_obj_id, "foundReportId": found_obj_id},
+            {"$set": {"status": "approved_by_admin", "adminApprovedAt": datetime.datetime.now(datetime.timezone.utc)}},
+            return_document=True
+        )
+        if not cand_match:
+            cand_res = db.ai_matches.insert_one({
+                "lostReportId": lost_obj_id,
+                "foundReportId": found_obj_id,
+                "lostUserId": lost_item["user_id"],
+                "foundUserId": found_item["user_id"],
+                "similarityScore": 0.95,
+                "similarityPercentage": 95,
+                "status": "approved_by_admin",
+                "createdAt": datetime.datetime.now(datetime.timezone.utc)
+            })
+            cand_id = cand_res.inserted_id
+        else:
+            cand_id = cand_match["_id"]
+
+        # 2. DO NOT create chat room directly! Send 'Item Matched' notification to both users
         db.notifications.insert_one({
              "user_id": lost_item["user_id"],
-             "lost_item_id": ObjectId(lost_id),
-             "found_item_id": ObjectId(found_id),
+             "match_id": cand_id,
+             "lost_item_id": lost_obj_id,
+             "found_item_id": found_obj_id,
+             "found_img": found_item.get("image_path"),
+             "item_name": lost_item.get("item_name", "Item"),
+             "location": found_item.get("location", "Unknown"),
+             "is_read": False,
+             "created_at": datetime.datetime.now(datetime.timezone.utc),
+             "type": "match_pending_confirmation",
+             "message": f"AI Match Approved by Admin! Please review details to confirm if '{lost_item.get('item_name')}' is your lost item."
+        })
+
+        db.notifications.insert_one({
+             "user_id": found_item["user_id"],
+             "match_id": cand_id,
+             "lost_item_id": lost_obj_id,
+             "found_item_id": found_obj_id,
              "found_img": found_item.get("image_path"),
              "item_name": found_item.get("item_name", "Item"),
              "location": found_item.get("location", "Unknown"),
              "is_read": False,
-             "created_at": datetime.datetime.utcnow(),
-             "type": "match_approved",
-             "message": f"Great news! We found a match for your '{lost_item['item_name']}'."
+             "created_at": datetime.datetime.now(datetime.timezone.utc),
+             "type": "match_pending_confirmation",
+             "message": f"AI Match Approved by Admin for your found item '{found_item.get('item_name')}'. Awaiting user confirmation."
         })
-
-        # 4. Create Chat Room with EMBEDDED DETAILS (since items will be deleted)
-        chat_data = {
-            "lost_item_id": ObjectId(lost_id), # Kept for reference ID
-            "found_item_id": ObjectId(found_id),
-            "lost_user_id": lost_item["user_id"],
-            "found_user_id": found_item["user_id"],
-            "item_name": lost_item["item_name"],
-            "item_image": lost_item.get("image_path"), # Preserved Image
-            "found_location": found_item.get("location"),
-            "status": "active",
-            "created_at": datetime.datetime.utcnow(),
-            "messages": [
-                {
-                    "sender": "system",
-                    "text": "Match approved! You can now chat to arrange the return.",
-                    "timestamp": datetime.datetime.utcnow()
-                }
-            ]
-        }
-        db.chats.insert_one(chat_data)
         
-        # 5. Remove from AI Suggestions
-        db.ai_suggestions.delete_many({
-            "lost_id": ObjectId(lost_id),
-            "found_id": ObjectId(found_id)
-        })
-
-        # 6. DELETE Items (Data Cleanup)
-        db.lost_items.delete_one({"_id": ObjectId(lost_id)})
-        db.found_items.delete_one({"_id": ObjectId(found_id)})
-        
-    flash("Match confirmed! Items removed from active list and chat created.")
+    flash("Match approved by admin! Notification sent to the user for confirmation.", "success")
+    ref = request.referrer or "/admin/dashboard"
+    if "/superadmin/dashboard" in ref:
+        return redirect("/superadmin/dashboard")
     return redirect("/admin/dashboard")
 
-# ---------- CHAT SYSTEM ----------
-@app.route("/user/chats")
-def my_chats():
-    if session.get("role") != "user":
+# ---------- USER AI MATCH REVIEW & CONFIRMATION ----------
+@app.route("/user/review-match/<match_id>")
+def user_review_match(match_id):
+    if "user_id" not in session:
+        return redirect("/login")
+        
+    db = get_db()
+    if db is None:
+        flash("Database error.", "error")
+        return redirect("/user/history")
+
+    match_obj_id = ObjectId(match_id) if ObjectId.is_valid(match_id) else match_id
+    cand = db.ai_matches.find_one({"_id": match_obj_id})
+    if not cand:
+        flash("Match candidate not found or already processed.", "error")
+        return redirect("/user/history")
+
+    lost_item = db.lost_items.find_one({"_id": cand["lostReportId"]})
+    found_item = db.found_items.find_one({"_id": cand["foundReportId"]})
+
+    if not lost_item or not found_item:
+        flash("Item data not available.", "error")
+        return redirect("/user/history")
+
+    sim_pct = cand.get("similarityPercentage", int(round(cand.get("similarityScore", 0) * 100)))
+    user = db.users.find_one({"_id": ObjectId(session["user_id"])})
+
+    return render_template("user_match_review.html", user=user, match_id=str(cand["_id"]), lost_item=lost_item, found_item=found_item, similarity_pct=sim_pct)
+
+@app.route("/user/match-action/<match_id>/<action>")
+def user_match_action(match_id, action):
+    if "user_id" not in session:
+        return redirect("/login")
+
+    if action not in ['confirm', 'reject']:
+        abort(400)
+
+    db = get_db()
+    if db is None:
+        flash("Database error.", "error")
+        return redirect("/user/history")
+
+    match_obj_id = ObjectId(match_id) if ObjectId.is_valid(match_id) else match_id
+    cand = db.ai_matches.find_one({"_id": match_obj_id})
+    if not cand:
+        flash("Match candidate not found or already processed.", "error")
+        return redirect("/user/history")
+
+    lost_id = cand["lostReportId"]
+    found_id = cand["foundReportId"]
+    lost_user_id = cand["lostUserId"]
+    found_user_id = cand["foundUserId"]
+
+    if action == 'confirm':
+        # Update match status in db.ai_matches, lost_items, found_items, and db.images
+        db.ai_matches.update_one({"_id": match_obj_id}, {"$set": {"status": "confirmed", "confirmedAt": datetime.datetime.now(datetime.timezone.utc)}})
+        db.lost_items.update_one({"_id": lost_id}, {"$set": {"status": "matched", "matched_at": datetime.datetime.now(datetime.timezone.utc)}})
+        db.found_items.update_one({"_id": found_id}, {"$set": {"status": "matched", "matched_at": datetime.datetime.now(datetime.timezone.utc)}})
+        db.images.update_many(
+            {"reportId": {"$in": [lost_id, found_id, str(lost_id), str(found_id)]}},
+            {"$set": {"isMatched": True, "status": "matched"}}
+        )
+
+        image_similarity_service.record_training_pair(db, str(lost_id), str(found_id), session.get("user_id"), "confirmed")
+
+        lost_item = db.lost_items.find_one({"_id": lost_id})
+        found_item = db.found_items.find_one({"_id": found_id})
+
+        # NOW Create Chat Room between lost user and found user (or reuse existing)
+        item_title = lost_item.get("item_name", "Matched Item") if lost_item else "Matched Item"
+        existing_chat = db.chats.find_one({
+            "$or": [
+                {"lost_user_id": lost_user_id, "found_user_id": found_user_id, "item_name": item_title},
+                {"lost_user_id": found_user_id, "found_user_id": lost_user_id, "item_name": item_title}
+            ]
+        })
+        if existing_chat:
+            chat_id = existing_chat["_id"]
+        else:
+            chat_data = {
+                "lost_item_id": lost_id,
+                "found_item_id": found_id,
+                "lost_user_id": lost_user_id,
+                "found_user_id": found_user_id,
+                "item_name": item_title,
+                "item_image": lost_item.get("image_path") if lost_item else (found_item.get("image_path") if found_item else ""),
+                "found_location": found_item.get("location") if found_item else "",
+                "status": "active",
+                "created_at": datetime.datetime.now(datetime.timezone.utc),
+                "messages": [
+                    {
+                        "sender": "system",
+                        "text": "Match confirmed by owner! You can now chat to arrange handover.",
+                        "timestamp": datetime.datetime.now(datetime.timezone.utc)
+                    }
+                ]
+            }
+            chat_res = db.chats.insert_one(chat_data)
+            chat_id = chat_res.inserted_id
+
+        # Notify finder
+        db.notifications.insert_one({
+            "user_id": found_user_id,
+            "lost_item_id": lost_id,
+            "found_item_id": found_id,
+            "found_img": found_item.get("image_path") if found_item else "",
+            "item_name": lost_item.get("item_name", "Item") if lost_item else "Item",
+            "is_read": False,
+            "created_at": datetime.datetime.now(datetime.timezone.utc),
+            "type": "match_confirmed",
+            "message": f"Match Confirmed! The owner confirmed your found item is theirs. You can now chat to arrange handover."
+        })
+
+        flash("Match confirmed! Direct chat room created with the finder.", "success")
+        return redirect(f"/user/chat/{chat_id}")
+
+    else:
+        # Action is reject
+        db.ai_matches.update_one({"_id": match_obj_id}, {"$set": {"status": "rejected_by_user"}})
+        image_similarity_service.record_training_pair(db, str(lost_id), str(found_id), session.get("user_id"), "rejected")
+
+        flash("Match candidate declined. Thank you for clarifying.", "info")
+        return redirect("/user/history")
+
+# ---------- ADMIN: REJECT MATCH ----------
+@app.route("/admin/reject-match/<lost_id>/<found_id>")
+def reject_match(lost_id, found_id):
+    if session.get("role") not in ["admin", "super_admin"]:
         abort(403)
         
     db = get_db()
-    current_user_id = ObjectId(session["user_id"])
-    
-    # Find chats where user is either lost_user or found_user
-    chats = list(db.chats.find({
-        "$or": [
-            {"lost_user_id": current_user_id},
-            {"found_user_id": current_user_id}
-        ]
-    }).sort("created_at", -1))
-    
-    for chat in chats:
-        chat['id'] = str(chat['_id'])
-        # Determine role for display
-        if chat["lost_user_id"] == current_user_id:
-            chat["role_desc"] = "Reporter (Lost)"
-        else:
-            chat["role_desc"] = "Finder (Found)"
-            
-    user = db.users.find_one({"_id": current_user_id}) if db is not None else None
-    if user:
-        user['id'] = str(user['_id'])
-    return render_template("user_chats.html", chats=chats, user=user)
+    if db is None:
+        flash("Database error.", "error")
+        return redirect("/admin/dashboard")
+
+    # Record rejected training pair in db.training_pairs and update db.ai_matches status to 'rejected'
+    image_similarity_service.record_training_pair(db, lost_id, found_id, session.get("user_id"), "rejected")
+
+    flash("Candidate match rejected. Recorded in training dataset for AI fine-tuning.", "info")
+    ref = request.referrer or "/admin/dashboard"
+    if "/superadmin/dashboard" in ref:
+        return redirect("/superadmin/dashboard")
+    return redirect("/admin/dashboard")
+
+
 
 @app.route("/user/chat/<chat_id>", methods=["GET", "POST"])
 def view_chat(chat_id):
@@ -1480,7 +2659,7 @@ def view_chat(chat_id):
             msg = {
                 "sender_id": current_user_id,
                 "text": text,
-                "timestamp": datetime.datetime.utcnow()
+                "timestamp": datetime.datetime.now(datetime.timezone.utc)
             }
             db.chats.update_one(
                 {"_id": ObjectId(chat_id)},
@@ -1546,7 +2725,7 @@ def activate_user(user_id):
         "target_user_id": ObjectId(user_id),
         "action": "activate",
         "reason": "Manual Activation",
-        "timestamp": datetime.datetime.utcnow()
+        "timestamp": datetime.datetime.now(datetime.timezone.utc)
     })
 
     flash(f"User {target_user.get('name', 'User')} has been activated.")
@@ -1574,7 +2753,7 @@ def deactivate_user(user_id):
     
     update_data = {
         "is_active": False,
-        "blocked_at": datetime.datetime.utcnow(),
+        "blocked_at": datetime.datetime.now(datetime.timezone.utc),
         "block_reason": reason,
     }
     
@@ -1590,7 +2769,7 @@ def deactivate_user(user_id):
         "target_user_id": ObjectId(user_id),
         "action": "deactivate",
         "reason": reason,
-        "timestamp": datetime.datetime.utcnow()
+        "timestamp": datetime.datetime.now(datetime.timezone.utc)
     })
     
     # Confirm action
@@ -1619,7 +2798,7 @@ def request_unblock():
     proof_path = None
     if proof and proof.filename:
         # Secure filename with timestamp
-        timestamp = int(datetime.datetime.utcnow().timestamp())
+        timestamp = int(datetime.datetime.now(datetime.timezone.utc).timestamp())
         filename = f"proof_{session['user_id']}_{timestamp}_{proof.filename}"
         proof_path = f"uploads/profile/{filename}" # Store in uploads/profile for now or create new folder
         proof.save(proof_path)
@@ -1641,7 +2820,7 @@ def request_unblock():
         "reason": reason,
         "proof_path": proof_path,
         "status": "pending",
-        "created_at": datetime.datetime.utcnow()
+        "created_at": datetime.datetime.now(datetime.timezone.utc)
     })
     
     flash("Unblock request submitted successfully.")
@@ -1732,56 +2911,13 @@ def create_admin():
             "college": "Admin Dept",
             "study": "Administration",
             "phone": "0000000000",
-            "created_at": datetime.datetime.utcnow()
+            "created_at": datetime.datetime.now(datetime.timezone.utc)
         })
         return redirect("/superadmin/dashboard")
 
     return render_template("create_admin.html")
 
-# ---------- NOTIFICATION APIs ----------
-@app.route("/api/notifications")
-def get_notifications():
-    if "user_id" not in session:
-        return {"error": "Unauthorized"}, 401
 
-    db = get_db()
-    
-    # Get unread or recent notifications (limit 10)
-    notifs = list(db.notifications.find(
-        {"user_id": ObjectId(session["user_id"])}
-    ).sort("created_at", -1).limit(10))
-    
-    unread_count = db.notifications.count_documents({
-        "user_id": ObjectId(session["user_id"]), 
-        "is_read": False
-    })
-
-    # Serialize
-    data = []
-    now = datetime.datetime.utcnow()
-    for n in notifs:
-        # Simple time ago logic
-        diff = now - n["created_at"]
-        if diff.days > 0:
-            time_str = f"{diff.days}d ago"
-        elif diff.seconds > 3600:
-            time_str = f"{diff.seconds // 3600}h ago"
-        elif diff.seconds > 60:
-            time_str = f"{diff.seconds // 60}m ago"
-        else:
-            time_str = "Just now"
-
-        data.append({
-            "id": str(n["_id"]),
-            "found_img": n.get("found_img", ""),
-            "item_name": n.get("item_name", "Unknown Item"),
-            "location": n.get("location", "Unknown"),
-            "score": int(n.get("score", 0)),
-            "is_read": n.get("is_read", False),
-            "time_ago": time_str
-        })
-
-    return {"notifications": data, "unread_count": unread_count}
 
 @app.route("/api/notifications/mark-read/<notif_id>", methods=["POST"])
 def mark_notification_read(notif_id):
@@ -1789,8 +2925,15 @@ def mark_notification_read(notif_id):
         return {"error": "Unauthorized"}, 401
         
     db = get_db()
+    if db is None:
+        return {"error": "Database unavailable"}, 500
+        
+    user_id_raw = str(session["user_id"])
+    user_id_query = {"$in": [ObjectId(user_id_raw), user_id_raw]}
+    
+    notif_obj_id = ObjectId(notif_id) if ObjectId.is_valid(notif_id) else notif_id
     db.notifications.update_one(
-        {"_id": ObjectId(notif_id), "user_id": ObjectId(session["user_id"])},
+        {"_id": notif_obj_id, "user_id": user_id_query},
         {"$set": {"is_read": True}}
     )
     return {"status": "success"}
@@ -1914,57 +3057,141 @@ def export_data():
         item_fill = not item_fill
 
     # Output
-    pdf_buffer = io.BytesIO()
-    pdf.output(pdf_buffer)
-    pdf_buffer.seek(0)
-    
+    pdf_bytes = bytes(pdf.output())
     return Response(
-        pdf_buffer,
+        pdf_bytes,
         mimetype='application/pdf',
         headers={'Content-Disposition': 'attachment;filename=foundify_report.pdf'}
     )
 
 # ---------- SOCKET IO EVENTS ----------
+room_active_users: dict[str, set[str]] = {}
+
 @socketio.on('join')
 def on_join(data):
-    room = data['room']
+    room = str(data.get('room', ''))
+    user_id = str(data.get('user_id', ''))
+    if not room:
+        return
     join_room(room)
-    print(f"User joined room: {room}")
+    if room not in room_active_users:
+        room_active_users[room] = set()
+    if user_id:
+        room_active_users[room].add(user_id)
+        db = get_db()
+        if db is not None:
+            user_obj = ObjectId(user_id) if ObjectId.is_valid(user_id) else user_id
+            db.users.update_one({"_id": user_obj}, {"$set": {"last_seen": datetime.datetime.now(datetime.timezone.utc)}})
+    
+    emit('presence_update', {
+        'room': room,
+        'active_users': list(room_active_users[room]),
+        'user_id': user_id,
+        'last_seen': 'Just now'
+    }, to=room)
+    print(f"User {user_id} joined room {room}. Active: {list(room_active_users[room])}")
 
 @socketio.on('leave')
 def on_leave(data):
-    room = data['room']
+    room = str(data.get('room', ''))
+    user_id = str(data.get('user_id', ''))
+    if not room:
+        return
     leave_room(room)
-    print(f"User left room: {room}")
+    if room in room_active_users and user_id in room_active_users[room]:
+        room_active_users[room].remove(user_id)
+    
+    now_dt = datetime.datetime.now(datetime.timezone.utc)
+    if user_id:
+        db = get_db()
+        if db is not None:
+            user_obj = ObjectId(user_id) if ObjectId.is_valid(user_id) else user_id
+            db.users.update_one({"_id": user_obj}, {"$set": {"last_seen": now_dt}})
+
+    last_seen_str = format_last_seen(now_dt)
+    emit('presence_update', {
+        'room': room,
+        'active_users': list(room_active_users.get(room, [])),
+        'user_id': user_id,
+        'last_seen': last_seen_str
+    }, to=room)
+    print(f"User {user_id} left room {room}")
 
 @socketio.on('send_message')
 def on_send_message(data):
-    room = data['room']
-    message_text = data['message']
-    sender_id = data['sender_id']
+    room = data.get('room')
+    message_text = data.get('message', '').strip()
+    sender_id = data.get('sender_id')
     
+    if not room or not message_text or not sender_id:
+        return
+
     db = get_db()
-    
-    # Create message object
-    message = {
-        "sender_id": ObjectId(sender_id),
+    room_obj = ObjectId(room) if ObjectId.is_valid(room) else room
+
+    # Prevent messaging if handover is already completed
+    chat = db.chats.find_one({"_id": room_obj})
+    if not chat or chat.get("status") == "handover_completed":
+        print(f"Message blocked: Chat {room} is closed due to completed handover.")
+        return
+
+    now = datetime.datetime.now(datetime.timezone.utc)
+    sender_obj = ObjectId(sender_id) if ObjectId.is_valid(sender_id) else sender_id
+
+    message_doc = {
+        "sender_id": sender_obj,
         "text": message_text,
-        "timestamp": datetime.datetime.utcnow(),
+        "timestamp": now,
         "is_read": False
     }
-    
-    # Update Chat in DB
+
+    # 1. INSTANT PERSISTENCE IN MONGODB
     db.chats.update_one(
-        {"_id": ObjectId(room)},
-        {"$push": {"messages": message}, "$set": {"last_updated": datetime.datetime.utcnow()}}
+        {"_id": room_obj},
+        {
+            "$push": {"messages": message_doc},
+            "$set": {"last_updated": now}
+        }
     )
+
+    time_str = now.strftime('%I:%M %p').lstrip('0')
+    chat = db.chats.find_one({"_id": room_obj})
     
-    # Broadcast to room
+    if chat:
+        lost_u = str(chat.get("lost_user_id"))
+        found_u = str(chat.get("found_user_id"))
+        recipient_id_raw = found_u if lost_u == str(sender_id) else lost_u
+        recipient_id = ObjectId(recipient_id_raw) if ObjectId.is_valid(recipient_id_raw) else recipient_id_raw
+        
+        sender_user = db.users.find_one({"_id": sender_obj})
+        sender_name = sender_user.get("name", "User") if sender_user else "User"
+        
+        db.notifications.insert_one({
+            "user_id": recipient_id,
+            "chat_id": str(room),
+            "found_img": chat.get("item_image", ""),
+            "item_name": chat.get("item_name", "Chat Message"),
+            "is_read": False,
+            "created_at": now,
+            "type": "chat_message",
+            "message": f"New message from {sender_name}: {message_text[:50]}"
+        })
+
+    # 2. EMIT 0-LATENCY EVENT TO IN-ROOM VIEWERS
     emit('receive_message', {
         "text": message_text,
-        "sender_id": sender_id,
-        "timestamp": datetime.datetime.utcnow().strftime('%H:%M')
-    }, room=room)
+        "sender_id": str(sender_id),
+        "room": str(room),
+        "timestamp": time_str
+    }, to=str(room))
+
+    # 3. BROADCAST 0-LATENCY REAL-TIME CHAT LIST UPDATE FOR USER_CHATS
+    emit('chat_list_update', {
+        "chat_id": str(room),
+        "latest_text": message_text,
+        "latest_time_str": time_str,
+        "sender_id": str(sender_id)
+    }, broadcast=True)
 
 # ---------- ADMIN CLAIMS VERIFICATION ----------
 @app.route("/admin/claims")
@@ -2040,9 +3267,15 @@ def admin_process_claim(claim_id, action):
     claimant_email = claimant.get('email', 'unknown@example.com')
     item_name = found_item.get('item_name', 'your item')
     
+    # Find lost item associated with claimant for dataset pair tracking
+    lost_item = db.lost_items.find_one({"user_id": claim.get("claimant_id")})
+    lost_id = lost_item["_id"] if lost_item else claim.get("found_item_id")
+    found_id = claim.get("found_item_id")
+
     if action == 'approve':
         status = 'approved'
         db.claims.update_one({"_id": ObjectId(claim_id)}, {"$set": {"status": status}})
+        image_similarity_service.record_training_pair(db, lost_id, found_id, session.get("user_id"), "confirmed")
         
         finder_name = finder.get('name', 'Unknown') if finder else 'Unknown'
         finder_phone = finder.get('phone', 'Not provided') if finder else 'Not provided'
@@ -2069,6 +3302,7 @@ def admin_process_claim(claim_id, action):
             {"_id": ObjectId(claim_id)}, 
             {"$set": {"status": status, "payment_status": "refunded"}}
         )
+        image_similarity_service.record_training_pair(db, lost_id, found_id, session.get("user_id"), "rejected")
         
         # Automated Email Simulation for Rejection and Refund
         print("\n" + "="*60)

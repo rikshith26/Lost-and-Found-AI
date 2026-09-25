@@ -1,0 +1,470 @@
+<!-- 0-LATENCY TOP HEADER SEARCH COMPONENT (Real App Interactive Search) -->
+<div class="relative w-64 sm:w-80 md:w-96" id="topSearchBarContainer">
+    <!-- SEARCH INPUT FIELD -->
+    <div class="relative flex items-center">
+        <!-- Search Icon (Clickable to execute search in-page) -->
+        <button type="button" onclick="executeHeaderSearch()" title="Click to Search" class="absolute left-3.5 text-gray-400 hover:text-emerald-600 transition-colors flex items-center justify-center p-1 focus:outline-none z-10 cursor-pointer">
+            <span class="material-symbols-outlined text-xl">search</span>
+        </button>
+        
+        <input type="text" 
+               id="topHeaderSearchInput" 
+               name="q" 
+               value="{{ query if query is defined else '' }}"
+               placeholder="Search items, locations..." 
+               onfocus="openSearchDropdown(event)" 
+               onkeyup="handleSearchKeyup(event)" 
+               oninput="handleSearchInput(event)"
+               autocomplete="off" 
+               class="w-full bg-gray-50/90 border border-gray-200/90 rounded-2xl py-2.5 pl-11 pr-10 text-xs focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 outline-none text-textDark placeholder-gray-400 transition-all shadow-xs">
+        
+        <!-- Clear / Close Button -->
+        <button type="button" id="clearHeaderSearchBtn" onclick="clearHeaderSearch()" class="hidden absolute right-3 text-gray-400 hover:text-gray-600 p-1 focus:outline-none z-10 cursor-pointer">
+            <span class="material-symbols-outlined text-base">close</span>
+        </button>
+    </div>
+
+    <!-- 0-LATENCY LIVE SEARCH DROPDOWN PANEL -->
+    <div id="topSearchDropdown" class="hidden absolute left-0 top-full mt-2 w-[340px] sm:w-[420px] md:w-[480px] bg-white border border-gray-200/90 rounded-2xl shadow-2xl z-50 overflow-hidden divide-y divide-gray-100 text-left transition-all duration-150">
+        
+        <!-- PANEL HEADER -->
+        <div class="px-4 py-3 bg-gray-50/80 flex items-center justify-between">
+            <span class="text-xs font-bold text-gray-900 uppercase tracking-wider flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-base text-emerald-600">manage_search</span> Quick Search & Categories
+            </span>
+            <button type="button" onclick="closeSearchDropdown()" class="text-gray-400 hover:text-gray-600 text-xs font-bold flex items-center gap-0.5 cursor-pointer">
+                ESC <span class="material-symbols-outlined text-sm">close</span>
+            </button>
+        </div>
+
+        <div class="max-h-[70vh] overflow-y-auto hide-scrollbar p-4 space-y-5">
+            
+            <!-- LIVE SEARCH RESULTS CONTAINER (WHEN TYPING) -->
+            <div id="dropdownLiveResults" class="hidden space-y-2">
+                <div class="flex items-center justify-between border-b border-gray-100 pb-2">
+                    <span class="text-xs font-extrabold text-gray-900">Matching Items</span>
+                    <span id="liveResultCount" class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">0 matches</span>
+                </div>
+                <div id="liveResultItems" class="space-y-2 max-h-60 overflow-y-auto hide-scrollbar">
+                    <!-- Dynamic live cards populated instantly -->
+                </div>
+            </div>
+
+            <!-- BROWSE BY CATEGORY -->
+            <div id="dropdownCategoriesSection" class="space-y-3">
+                <h4 class="text-xs font-extrabold text-gray-900 tracking-tight">Browse by Category</h4>
+                <div class="grid grid-cols-4 gap-2">
+                    <button type="button" onclick="selectSearchCategory('Wallets')" class="bg-gray-50 hover:bg-emerald-50 border border-gray-100 hover:border-emerald-200 rounded-xl p-2.5 text-center transition-all group flex flex-col items-center gap-1 cursor-pointer">
+                        <span class="material-symbols-outlined text-emerald-600 text-lg">account_balance_wallet</span>
+                        <span class="text-[10px] font-bold text-gray-800 group-hover:text-emerald-700">Wallets</span>
+                    </button>
+                    <button type="button" onclick="selectSearchCategory('Electronics')" class="bg-gray-50 hover:bg-emerald-50 border border-gray-100 hover:border-emerald-200 rounded-xl p-2.5 text-center transition-all group flex flex-col items-center gap-1 cursor-pointer">
+                        <span class="material-symbols-outlined text-emerald-600 text-lg">smartphone</span>
+                        <span class="text-[10px] font-bold text-gray-800 group-hover:text-emerald-700">Electronics</span>
+                    </button>
+                    <button type="button" onclick="selectSearchCategory('Bags')" class="bg-gray-50 hover:bg-emerald-50 border border-gray-100 hover:border-emerald-200 rounded-xl p-2.5 text-center transition-all group flex flex-col items-center gap-1 cursor-pointer">
+                        <span class="material-symbols-outlined text-emerald-600 text-lg">backpack</span>
+                        <span class="text-[10px] font-bold text-gray-800 group-hover:text-emerald-700">Bags</span>
+                    </button>
+                    <button type="button" onclick="selectSearchCategory('Documents')" class="bg-gray-50 hover:bg-emerald-50 border border-gray-100 hover:border-emerald-200 rounded-xl p-2.5 text-center transition-all group flex flex-col items-center gap-1 cursor-pointer">
+                        <span class="material-symbols-outlined text-emerald-600 text-lg">badge</span>
+                        <span class="text-[10px] font-bold text-gray-800 group-hover:text-emerald-700">Documents</span>
+                    </button>
+                    <button type="button" onclick="selectSearchCategory('Keys')" class="bg-gray-50 hover:bg-amber-50 border border-gray-100 hover:border-amber-200 rounded-xl p-2.5 text-center transition-all group flex flex-col items-center gap-1 cursor-pointer">
+                        <span class="material-symbols-outlined text-amber-600 text-lg">key</span>
+                        <span class="text-[10px] font-bold text-gray-800 group-hover:text-amber-700">Keys</span>
+                    </button>
+                    <button type="button" onclick="selectSearchCategory('Accessories')" class="bg-gray-50 hover:bg-orange-50 border border-gray-100 hover:border-orange-200 rounded-xl p-2.5 text-center transition-all group flex flex-col items-center gap-1 cursor-pointer">
+                        <span class="material-symbols-outlined text-orange-600 text-lg">watch</span>
+                        <span class="text-[10px] font-bold text-gray-800 group-hover:text-orange-700">Accessories</span>
+                    </button>
+                    <button type="button" onclick="selectSearchCategory('Clothing')" class="bg-gray-50 hover:bg-pink-50 border border-gray-100 hover:border-pink-200 rounded-xl p-2.5 text-center transition-all group flex flex-col items-center gap-1 cursor-pointer">
+                        <span class="material-symbols-outlined text-pink-600 text-lg">styler</span>
+                        <span class="text-[10px] font-bold text-gray-800 group-hover:text-pink-700">Clothing</span>
+                    </button>
+                    <button type="button" onclick="selectSearchCategory('Others')" class="bg-gray-50 hover:bg-gray-100 border border-gray-100 hover:border-gray-200 rounded-xl p-2.5 text-center transition-all group flex flex-col items-center gap-1 cursor-pointer">
+                        <span class="material-symbols-outlined text-gray-600 text-lg">more_horiz</span>
+                        <span class="text-[10px] font-bold text-gray-800 group-hover:text-gray-900">Others</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- POPULAR LOCATIONS -->
+            <div id="dropdownLocationsSection" class="space-y-2 pt-2 border-t border-gray-100">
+                <h4 class="text-xs font-extrabold text-gray-900 tracking-tight">Popular Locations</h4>
+                <div class="flex flex-wrap gap-1.5">
+                    <button type="button" onclick="selectSearchLocation('Library')" class="bg-gray-50 hover:bg-emerald-50 border border-gray-100 px-3 py-1.5 rounded-full text-xs font-semibold text-gray-700 hover:text-emerald-700 transition-all flex items-center gap-1 cursor-pointer">
+                        <span class="material-symbols-outlined text-xs text-emerald-600">location_on</span> Library
+                    </button>
+                    <button type="button" onclick="selectSearchLocation('Cafeteria')" class="bg-gray-50 hover:bg-emerald-50 border border-gray-100 px-3 py-1.5 rounded-full text-xs font-semibold text-gray-700 hover:text-emerald-700 transition-all flex items-center gap-1 cursor-pointer">
+                        <span class="material-symbols-outlined text-xs text-emerald-600">location_on</span> Cafeteria
+                    </button>
+                    <button type="button" onclick="selectSearchLocation('CSE Block')" class="bg-gray-50 hover:bg-emerald-50 border border-gray-100 px-3 py-1.5 rounded-full text-xs font-semibold text-gray-700 hover:text-emerald-700 transition-all flex items-center gap-1 cursor-pointer">
+                        <span class="material-symbols-outlined text-xs text-emerald-600">location_on</span> CSE Block
+                    </button>
+                    <button type="button" onclick="selectSearchLocation('Parking')" class="bg-gray-50 hover:bg-emerald-50 border border-gray-100 px-3 py-1.5 rounded-full text-xs font-semibold text-gray-700 hover:text-emerald-700 transition-all flex items-center gap-1 cursor-pointer">
+                        <span class="material-symbols-outlined text-xs text-emerald-600">location_on</span> Parking
+                    </button>
+                    <button type="button" onclick="selectSearchLocation('Hostel')" class="bg-gray-50 hover:bg-emerald-50 border border-gray-100 px-3 py-1.5 rounded-full text-xs font-semibold text-gray-700 hover:text-emerald-700 transition-all flex items-center gap-1 cursor-pointer">
+                        <span class="material-symbols-outlined text-xs text-emerald-600">location_on</span> Hostel
+                    </button>
+                    <button type="button" onclick="selectSearchLocation('Auditorium')" class="bg-gray-50 hover:bg-emerald-50 border border-gray-100 px-3 py-1.5 rounded-full text-xs font-semibold text-gray-700 hover:text-emerald-700 transition-all flex items-center gap-1 cursor-pointer">
+                        <span class="material-symbols-outlined text-xs text-emerald-600">location_on</span> Auditorium
+                    </button>
+                    <button type="button" onclick="selectSearchLocation('Sports Complex')" class="bg-gray-50 hover:bg-emerald-50 border border-gray-100 px-3 py-1.5 rounded-full text-xs font-semibold text-gray-700 hover:text-emerald-700 transition-all flex items-center gap-1 cursor-pointer">
+                        <span class="material-symbols-outlined text-xs text-emerald-600">location_on</span> Sports Complex
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- PANEL FOOTER SEARCH TRIGGER BUTTON -->
+        <div class="p-3 bg-gray-50/80 border-t border-gray-100 flex items-center justify-between">
+            <span class="text-[11px] text-gray-500 font-medium">Click icon or button to view full items</span>
+            <button type="button" onclick="executeHeaderSearch()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer">
+                <span class="material-symbols-outlined text-sm">search</span> Search Items
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- IN-PAGE FULL SEARCH OVERLAY MODAL (0 Page Reload, 0 Navigation, 0 Latency) -->
+<div id="inPageSearchModal" class="hidden fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 overflow-hidden">
+    <div class="bg-white w-full max-w-4xl max-h-[90vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden border border-gray-100 animate-in fade-in zoom-in-95 duration-150">
+        
+        <!-- MODAL HEADER -->
+        <div class="px-6 py-4 bg-gradient-to-r from-gray-900 to-gray-800 text-white flex items-center justify-between shrink-0">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-emerald-400">
+                    <span class="material-symbols-outlined text-2xl">search</span>
+                </div>
+                <div>
+                    <h3 class="text-base font-extrabold text-white flex items-center gap-2">
+                        Foundify Live Search Results
+                        <span id="modalSearchBadge" class="text-xs bg-emerald-500/30 text-emerald-300 border border-emerald-400/30 px-2 py-0.5 rounded-full font-bold">0 Items</span>
+                    </h3>
+                    <p id="modalSearchSubtitle" class="text-xs text-gray-300 font-medium">Showing matching items from active database</p>
+                </div>
+            </div>
+            
+            <button type="button" onclick="closeInPageSearchModal()" class="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-gray-300 hover:text-white flex items-center justify-center transition-colors cursor-pointer focus:outline-none">
+                <span class="material-symbols-outlined text-xl">close</span>
+            </button>
+        </div>
+
+        <!-- SEARCH MODAL BODY -->
+        <div class="flex-1 overflow-y-auto p-6 space-y-6 hide-scrollbar bg-gray-50/50">
+            
+            <!-- QUICK CATEGORY FILTERS IN MODAL -->
+            <div class="flex items-center gap-2 overflow-x-auto hide-scrollbar pb-1">
+                <span class="text-xs font-bold text-gray-500 uppercase tracking-wider shrink-0 mr-1">Filter:</span>
+                <button type="button" onclick="filterModalByCategory('')" id="catFilterBtnAll" class="px-3 py-1.5 rounded-full text-xs font-bold bg-emerald-600 text-white shadow-xs transition-all shrink-0 cursor-pointer">All</button>
+                <button type="button" onclick="filterModalByCategory('Wallets')" class="px-3 py-1.5 rounded-full text-xs font-bold bg-white text-gray-700 border border-gray-200 hover:border-emerald-500 hover:text-emerald-700 transition-all shrink-0 cursor-pointer">Wallets</button>
+                <button type="button" onclick="filterModalByCategory('Electronics')" class="px-3 py-1.5 rounded-full text-xs font-bold bg-white text-gray-700 border border-gray-200 hover:border-emerald-500 hover:text-emerald-700 transition-all shrink-0 cursor-pointer">Electronics</button>
+                <button type="button" onclick="filterModalByCategory('Bags')" class="px-3 py-1.5 rounded-full text-xs font-bold bg-white text-gray-700 border border-gray-200 hover:border-emerald-500 hover:text-emerald-700 transition-all shrink-0 cursor-pointer">Bags</button>
+                <button type="button" onclick="filterModalByCategory('Documents')" class="px-3 py-1.5 rounded-full text-xs font-bold bg-white text-gray-700 border border-gray-200 hover:border-emerald-500 hover:text-emerald-700 transition-all shrink-0 cursor-pointer">Documents</button>
+                <button type="button" onclick="filterModalByCategory('Keys')" class="px-3 py-1.5 rounded-full text-xs font-bold bg-white text-gray-700 border border-gray-200 hover:border-emerald-500 hover:text-emerald-700 transition-all shrink-0 cursor-pointer">Keys</button>
+                <button type="button" onclick="filterModalByCategory('Accessories')" class="px-3 py-1.5 rounded-full text-xs font-bold bg-white text-gray-700 border border-gray-200 hover:border-emerald-500 hover:text-emerald-700 transition-all shrink-0 cursor-pointer">Accessories</button>
+            </div>
+
+            <!-- MODAL GRID RESULTS -->
+            <div id="modalSearchGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                <!-- Dynamically populated search cards -->
+            </div>
+
+            <div id="modalSearchEmptyState" class="hidden text-center py-16 space-y-3">
+                <div class="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto border border-emerald-100">
+                    <span class="material-symbols-outlined text-3xl">search_off</span>
+                </div>
+                <h4 class="text-base font-bold text-gray-900">No matching items found</h4>
+                <p class="text-xs text-gray-500 max-w-sm mx-auto">Try searching for different keywords, category names, or check popular locations above.</p>
+            </div>
+        </div>
+
+        <!-- MODAL FOOTER -->
+        <div class="px-6 py-3.5 bg-white border-t border-gray-100 flex items-center justify-between text-xs text-gray-500 shrink-0">
+            <span>Press <kbd class="px-1.5 py-0.5 bg-gray-100 border rounded font-mono text-[10px]">ESC</kbd> to close</span>
+            <button type="button" onclick="closeInPageSearchModal()" class="px-5 py-2 bg-gray-900 hover:bg-black text-white rounded-xl font-bold transition-colors cursor-pointer">
+                Back to Page
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let liveSearchDebounceTimer = null;
+    let currentModalQuery = '';
+    let currentModalCategory = '';
+    let currentModalLocation = '';
+
+    function openSearchDropdown(e) {
+        if (e) e.stopPropagation();
+        const dropdown = document.getElementById('topSearchDropdown');
+        if (dropdown) dropdown.classList.remove('hidden');
+    }
+
+    function closeSearchDropdown() {
+        const dropdown = document.getElementById('topSearchDropdown');
+        if (dropdown) dropdown.classList.add('hidden');
+    }
+
+    function clearHeaderSearch() {
+        const input = document.getElementById('topHeaderSearchInput');
+        if (input) {
+            input.value = '';
+            input.focus();
+        }
+        const clearBtn = document.getElementById('clearHeaderSearchBtn');
+        if (clearBtn) clearBtn.classList.add('hidden');
+        
+        const liveResultsContainer = document.getElementById('dropdownLiveResults');
+        if (liveResultsContainer) liveResultsContainer.classList.add('hidden');
+        
+        document.getElementById('dropdownCategoriesSection')?.classList.remove('hidden');
+        document.getElementById('dropdownLocationsSection')?.classList.remove('hidden');
+
+        // If on search page, trigger live filter reset
+        if (typeof filterSearchResultsLive === 'function') {
+            filterSearchResultsLive();
+        }
+    }
+
+    function handleSearchInput(e) {
+        const q = e.target.value.trim();
+        const clearBtn = document.getElementById('clearHeaderSearchBtn');
+        if (clearBtn) {
+            if (q) clearBtn.classList.remove('hidden');
+            else clearBtn.classList.add('hidden');
+        }
+        
+        openSearchDropdown(e);
+
+        // If on /user/search page, also perform live page DOM filtering instantly
+        if (typeof filterSearchResultsLive === 'function') {
+            const pageSearchInput = document.getElementById('searchInput');
+            if (pageSearchInput && pageSearchInput !== e.target) {
+                pageSearchInput.value = e.target.value;
+            }
+            filterSearchResultsLive();
+        }
+        
+        const liveResultsContainer = document.getElementById('dropdownLiveResults');
+        const categoriesSec = document.getElementById('dropdownCategoriesSection');
+        const locationsSec = document.getElementById('dropdownLocationsSection');
+        
+        if (!q) {
+            if (liveResultsContainer) liveResultsContainer.classList.add('hidden');
+            if (categoriesSec) categoriesSec.classList.remove('hidden');
+            if (locationsSec) locationsSec.classList.remove('hidden');
+            return;
+        }
+        
+        if (categoriesSec) categoriesSec.classList.add('hidden');
+        if (locationsSec) locationsSec.classList.add('hidden');
+        if (liveResultsContainer) liveResultsContainer.classList.remove('hidden');
+        
+        clearTimeout(liveSearchDebounceTimer);
+        liveSearchDebounceTimer = setTimeout(() => {
+            fetch('/api/search/live?q=' + encodeURIComponent(q))
+                .then(res => res.json())
+                .then(data => {
+                    const itemsList = document.getElementById('liveResultItems');
+                    const countBadge = document.getElementById('liveResultCount');
+                    if (!itemsList) return;
+                    
+                    if (countBadge) {
+                        countBadge.innerText = (data.items ? data.items.length : 0) + ' matches';
+                    }
+                    
+                    if (!data.items || data.items.length === 0) {
+                        itemsList.innerHTML = `<div class="p-4 text-center text-xs text-gray-400 italic">No matching items found for "${q}"</div>`;
+                        return;
+                    }
+                    
+                    itemsList.innerHTML = data.items.map(item => `
+                        <div onclick="triggerItemAction('${item.id}', '${item.item_name.replace(/'/g, "\\'")}')" class="flex items-center gap-3 p-2 hover:bg-emerald-50/70 rounded-xl transition-colors group cursor-pointer">
+                            <div class="w-10 h-10 rounded-lg bg-gray-100 overflow-hidden shrink-0 border border-gray-200">
+                                ${item.image_path ? `<img src="/${item.image_path}" class="w-full h-full object-cover">` : `<div class="w-full h-full flex items-center justify-center text-gray-400"><span class="material-symbols-outlined text-sm">image</span></div>`}
+                            </div>
+                            <div class="overflow-hidden flex-1">
+                                <h5 class="text-xs font-bold text-gray-900 group-hover:text-emerald-700 truncate">${item.item_name}</h5>
+                                <p class="text-[10px] text-gray-500 flex items-center gap-1">
+                                    <span class="material-symbols-outlined text-[12px] text-gray-400">location_on</span> ${item.location} &bull; <span class="font-semibold text-emerald-600">${item.category}</span>
+                                </p>
+                            </div>
+                            <span class="material-symbols-outlined text-sm text-emerald-600 opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
+                        </div>
+                    `).join('');
+                })
+                .catch(() => {});
+        }, 120);
+    }
+
+    function handleSearchKeyup(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            executeHeaderSearch();
+        } else if (e.key === 'Escape') {
+            closeSearchDropdown();
+            closeInPageSearchModal();
+        }
+    }
+
+    function executeHeaderSearch() {
+        closeSearchDropdown();
+        const input = document.getElementById('topHeaderSearchInput');
+        const q = input ? input.value.trim() : '';
+        
+        // If on /user/search page, execute live filter in-place without page reload
+        if (window.location.pathname === '/user/search' && typeof filterSearchResultsLive === 'function') {
+            const pageSearchInput = document.getElementById('searchInput');
+            if (pageSearchInput) pageSearchInput.value = q;
+            filterSearchResultsLive();
+            return;
+        }
+
+        // On any other page: Open instant In-Page Search Overlay Modal (0 Page Reload, 0 Navigation)
+        fetchAndRenderSearchModal(q, '', '');
+    }
+
+    function selectSearchCategory(cat) {
+        closeSearchDropdown();
+        const input = document.getElementById('topHeaderSearchInput');
+        if (input) input.value = '';
+        
+        if (window.location.pathname === '/user/search' && typeof selectCategoryFilter === 'function') {
+            selectCategoryFilter(cat);
+            return;
+        }
+
+        fetchAndRenderSearchModal('', cat, '');
+    }
+
+    function selectSearchLocation(loc) {
+        closeSearchDropdown();
+        const input = document.getElementById('topHeaderSearchInput');
+        if (input) input.value = '';
+
+        if (window.location.pathname === '/user/search' && typeof filterSearchResultsLive === 'function') {
+            const locInput = document.getElementById('locationInput');
+            if (locInput) locInput.value = loc;
+            filterSearchResultsLive();
+            return;
+        }
+
+        fetchAndRenderSearchModal('', '', loc);
+    }
+
+    function fetchAndRenderSearchModal(q, cat, loc) {
+        currentModalQuery = q;
+        currentModalCategory = cat;
+        currentModalLocation = loc;
+
+        const modal = document.getElementById('inPageSearchModal');
+        const modalGrid = document.getElementById('modalSearchGrid');
+        const emptyState = document.getElementById('modalSearchEmptyState');
+        const badge = document.getElementById('modalSearchBadge');
+        const subtitle = document.getElementById('modalSearchSubtitle');
+
+        if (!modal || !modalGrid) return;
+
+        modal.classList.remove('hidden');
+
+        let sub = [];
+        if (q) sub.push(`Keyword: "${q}"`);
+        if (cat) sub.push(`Category: "${cat}"`);
+        if (loc) sub.push(`Location: "${loc}"`);
+        subtitle.innerText = sub.length > 0 ? sub.join(" | ") : "All active reported found items";
+
+        modalGrid.innerHTML = `
+            <div class="col-span-full text-center py-12 text-sm font-semibold text-emerald-600 flex items-center justify-center gap-2">
+                <span class="material-symbols-outlined animate-spin text-xl">progress_activity</span>
+                Fetching matching items in real time...
+            </div>
+        `;
+        if (emptyState) emptyState.classList.add('hidden');
+
+        fetch(`/api/search/live?q=${encodeURIComponent(q)}&category=${encodeURIComponent(cat)}&location=${encodeURIComponent(loc)}`)
+            .then(res => res.json())
+            .then(data => {
+                const items = data.items || [];
+                if (badge) badge.innerText = `${items.length} Items`;
+
+                if (items.length === 0) {
+                    modalGrid.innerHTML = '';
+                    if (emptyState) emptyState.classList.remove('hidden');
+                    return;
+                }
+
+                if (emptyState) emptyState.classList.add('hidden');
+
+                modalGrid.innerHTML = items.map(item => `
+                    <div class="bg-white rounded-2xl border border-gray-200/90 overflow-hidden shadow-xs hover:shadow-md transition-all group flex flex-col justify-between">
+                        <div>
+                            <div class="h-40 bg-gray-100 relative overflow-hidden">
+                                ${item.image_path ? `<img src="/${item.image_path}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">` : `<div class="w-full h-full flex items-center justify-center text-gray-300"><span class="material-symbols-outlined text-3xl">image</span></div>`}
+                                <span class="absolute top-2.5 right-2.5 bg-emerald-600 text-white text-[10px] font-extrabold px-2.5 py-0.5 rounded-full shadow-xs uppercase tracking-wider">
+                                    ${item.category}
+                                </span>
+                            </div>
+                            <div class="p-4 space-y-1.5">
+                                <h4 class="font-bold text-gray-900 text-sm truncate group-hover:text-emerald-700 transition-colors">${item.item_name}</h4>
+                                <p class="text-xs text-gray-500 flex items-center gap-1">
+                                    <span class="material-symbols-outlined text-sm text-emerald-600">location_on</span> ${item.location}
+                                </p>
+                                ${item.description ? `<p class="text-[11px] text-gray-600 line-clamp-2 pt-1 leading-relaxed">${item.description}</p>` : ''}
+                            </div>
+                        </div>
+                        <div class="p-4 pt-0 border-t border-gray-50 mt-2">
+                            ${item.is_own ? 
+                                `<span class="w-full block text-center text-xs font-bold bg-gray-100 text-gray-500 py-2 rounded-xl">Your Listed Post</span>` : 
+                                `<button type="button" onclick="triggerItemAction('${item.id}', '${item.item_name.replace(/'/g, "\\'")}')" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2 rounded-xl shadow-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer">
+                                    <span class="material-symbols-outlined text-sm">front_hand</span> Claim Item
+                                </button>`
+                            }
+                        </div>
+                    </div>
+                `).join('');
+            })
+            .catch(err => {
+                modalGrid.innerHTML = `<div class="col-span-full text-center py-12 text-xs text-red-500 font-bold">Failed to load items. Please try again.</div>`;
+            });
+    }
+
+    function filterModalByCategory(cat) {
+        fetchAndRenderSearchModal(currentModalQuery, cat, currentModalLocation);
+    }
+
+    function closeInPageSearchModal() {
+        const modal = document.getElementById('inPageSearchModal');
+        if (modal) modal.classList.add('hidden');
+    }
+
+    function triggerItemAction(itemId, title) {
+        closeInPageSearchModal();
+        closeSearchDropdown();
+        
+        // If on user dashboard and openClaimModal exists, open claim modal directly
+        if (typeof openClaimModal === 'function') {
+            openClaimModal(itemId, title, 'Finder User', '');
+        } else {
+            window.location.href = `/user/pay-claim/${itemId}`;
+        }
+    }
+
+    // Close search dropdown on outside click
+    document.addEventListener('click', function(e) {
+        const container = document.getElementById('topSearchBarContainer');
+        if (container && !container.contains(e.target)) {
+            closeSearchDropdown();
+        }
+    });
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeSearchDropdown();
+            closeInPageSearchModal();
+        }
+    });
+</script>

@@ -1,84 +1,208 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="en" class="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Conversation // {{ chat.item_name }}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/memories.css') }}">
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <title>Chat // {{ chat.other_user_name }} - Foundify</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <style>
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .icon-fill { font-variation-settings: 'FILL' 1; }
+        body { background-color: #F8FAFC; color: #0F172A; font-family: 'Plus Jakarta Sans', sans-serif; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+    </style>
 </head>
+<body class="flex flex-col h-screen overflow-hidden bg-gray-50">
 
-<body class="layout-compact"
-    style="height: 100vh; display: flex; flex-direction: column; overflow: hidden; background: var(--bg-paper);">
+    <!-- HEADER -->
+    <header class="h-20 bg-white border-b border-gray-100 flex items-center justify-between px-4 md:px-8 shrink-0 z-20 shadow-xs">
+        <div class="flex items-center gap-4 min-w-0">
+            <a href="/user/chats" class="w-10 h-10 rounded-full bg-gray-50 hover:bg-gray-100 border border-gray-200/80 flex items-center justify-center text-gray-600 transition-colors shrink-0">
+                <span class="material-symbols-outlined text-xl">arrow_back</span>
+            </a>
+            
+            <div class="relative shrink-0">
+                {% if chat.other_user_photo %}
+                    <img src="/{{ chat.other_user_photo }}" class="w-11 h-11 rounded-full object-cover border border-gray-100 shadow-xs">
+                {% else %}
+                    <div class="w-11 h-11 rounded-full bg-emerald-600 text-white flex items-center justify-center font-extrabold text-base shadow-xs">
+                        {{ (chat.other_user_name or 'F')[0] | upper }}
+                    </div>
+                {% endif %}
+                <span id="userAvatarStatusDot" class="w-3.5 h-3.5 {% if chat.is_other_active %}bg-emerald-500 ring-2 ring-emerald-400/40{% else %}bg-gray-400{% endif %} rounded-full border-2 border-white absolute bottom-0 right-0 shadow-xs transition-colors duration-300"></span>
+            </div>
 
-    <!-- FIXED HEADER -->
-    <header
-        style="padding: 0.8rem 1rem; background: white; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; gap: 1rem; flex-shrink: 0; z-index: 10;">
-        <a href="/user/chats" class="btn-hope btn-soft"
-            style="padding: 0; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 50%;">
-            <span class="material-icons">arrow_back</span>
-        </a>
-        <div style="flex: 1; overflow: hidden;">
-            <h3 style="margin: 0; font-size: 1.1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{
-                chat.item_name }}</h3>
-            <span style="font-size: 0.8rem; color: var(--text-pencil); display: block;">Private Conversation</span>
+            <div class="min-w-0">
+                <h3 class="font-extrabold text-gray-900 text-base truncate flex items-center gap-1.5">
+                    {{ chat.other_user_name }}
+                    <span class="material-symbols-outlined text-emerald-600 text-sm icon-fill">verified</span>
+                </h3>
+                <div class="flex items-center gap-2 mt-0.5">
+                    <span class="text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full truncate">
+                        {{ chat.item_name }}
+                    </span>
+                    <span id="userStatusText" class="text-[11px] font-bold {% if chat.is_other_active %}text-emerald-600{% else %}text-gray-400{% endif %} flex items-center gap-1 transition-colors duration-300">
+                        &bull; {{ "Active Now" if chat.is_other_active else "Last seen " ~ (chat.other_user_last_seen or "recently") }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+            {% if chat.status == 'handover_completed' %}
+                <div id="handoverBadge" class="px-3.5 py-2 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 font-extrabold text-xs flex items-center gap-1.5 shadow-2xs">
+                    <span class="material-symbols-outlined text-base text-emerald-600 icon-fill">check_circle</span>
+                    <span>Handover Completed</span>
+                </div>
+            {% else %}
+                <button id="handoverBtn" onclick="openHandoverModal()" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs flex items-center gap-1.5 shadow-sm transition-all hover:shadow-md cursor-pointer active:scale-95">
+                    <span class="material-symbols-outlined text-base">handshake</span>
+                    <span>Complete Handover</span>
+                </button>
+            {% endif %}
+
+            <a href="/user/chats" class="text-xs font-bold text-gray-400 hover:text-gray-600 transition-colors hidden md:block">
+                All Messages &rarr;
+            </a>
         </div>
     </header>
 
-    <!-- SCROLLABLE MESSAGES -->
-    <div id="messages"
-        style="flex: 1; overflow-y: auto; padding: 1rem; display: flex; flex-direction: column; gap: 0.5rem; background: #fffcf5;">
-        {% for msg in chat.messages %}
-        <div class="chat-bubble {{ 'me' if msg.is_me else 'them' }}">
-            {{ msg.text }}
-            <div style="font-size: 0.65rem; opacity: 0.7; margin-top: 0.3rem; text-align: right;">
-                {{ msg.timestamp.strftime('%H:%M') }}
-            </div>
-        </div>
+    <!-- MESSAGES STREAM CONTAINER -->
+    <div id="messagesContainer" class="flex-1 overflow-y-auto hide-scrollbar p-4 md:p-6 space-y-3 bg-[#F8FAFC]">
+        {% for msg in chat.formatted_messages %}
+            {% if msg.is_system %}
+                <div class="my-4 flex justify-center">
+                    <div class="bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs font-bold px-4 py-2.5 rounded-2xl flex items-center gap-2 shadow-2xs">
+                        <span class="material-symbols-outlined text-emerald-600 text-lg icon-fill">verified</span>
+                        <span>{{ msg.text }}</span>
+                    </div>
+                </div>
+            {% else %}
+                <div class="flex flex-col {{ 'items-end' if msg.is_me else 'items-start' }} space-y-1">
+                    <div class="max-w-[82%] sm:max-w-[70%] px-4 py-3 rounded-2xl text-sm leading-relaxed shadow-xs {{ 'bg-emerald-600 text-white rounded-br-xs' if msg.is_me else 'bg-white border border-gray-200/80 text-gray-900 rounded-bl-xs' }}">
+                        {{ msg.text }}
+                    </div>
+                    <span class="text-[10px] text-gray-400 font-medium px-1">{{ msg.timestamp_str }}</span>
+                </div>
+            {% endif %}
         {% endfor %}
     </div>
 
-    <!-- FLOATING INPUT -->
-    <div
-        style="position: fixed; bottom: 0; left: 0; width: 100%; pointer-events: none; padding: 1rem 1rem calc(1.5rem + env(safe-area-inset-bottom)) 1rem; background: linear-gradient(to top, rgba(253, 251, 247, 1) 20%, rgba(253, 251, 247, 0)); z-index: 20;">
-        <div
-            style="pointer-events: auto; background: white; border-radius: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); padding: 0.5rem 0.5rem 0.5rem 1.5rem; display: flex; align-items: center; gap: 0.5rem; border: 1px solid rgba(0,0,0,0.05); max-width: 600px; margin: 0 auto;">
-            <input type="text" id="messageInput" class="input-field" placeholder="Type a message..." autocomplete="off"
-                style="border: none; background: transparent; padding: 0.5rem 0; flex: 1; box-shadow: none; font-size: 1rem;">
+    <!-- FLOATING INPUT BAR / CLOSED BANNER -->
+    {% if chat.status == 'handover_completed' %}
+        <div id="inputBarContainer" class="p-4 bg-emerald-50 border-t border-emerald-100 text-center shrink-0">
+            <p class="text-xs font-bold text-emerald-800 flex items-center justify-center gap-1.5">
+                <span class="material-symbols-outlined text-base text-emerald-600 icon-fill">lock</span>
+                <span>This conversation is closed because the handover has been completed.</span>
+            </p>
+        </div>
+    {% else %}
+        <div id="inputBarContainer" class="p-3 md:p-4 bg-white border-t border-gray-100 shrink-0">
+            <div class="max-w-3xl mx-auto flex items-center gap-2 bg-gray-50 border border-gray-200/90 rounded-full p-1.5 pl-5 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/20 transition-all">
+                <input type="text" id="messageInput" placeholder="Write a message..." autocomplete="off" class="w-full bg-transparent text-sm text-gray-800 placeholder-gray-400 border-none outline-none focus:ring-0 py-2">
+                <button onclick="sendMessage()" id="sendBtn" class="w-10 h-10 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center shrink-0 shadow-sm transition-colors cursor-pointer">
+                    <span class="material-symbols-outlined text-lg icon-fill ml-0.5">send</span>
+                </button>
+            </div>
+        </div>
+    {% endif %}
 
-            <button onclick="sendMessage()" class="btn-hope"
-                style="padding: 0; border-radius: 50%; width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; min-height: 45px; background: var(--accent-sky); color: white; box-shadow: 0 4px 12px rgba(84, 160, 255, 0.3);">
-                <span class="material-icons" style="font-size: 1.3rem; margin-left: 3px;">send</span>
-            </button>
+    <!-- HANDOVER CONFIRMATION MODAL -->
+    <div id="handoverModal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-md rounded-3xl p-6 shadow-2xl border border-gray-100 space-y-5">
+            <div class="flex items-center justify-between">
+                <div class="w-11 h-11 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                    <span class="material-symbols-outlined text-2xl">handshake</span>
+                </div>
+                <button onclick="closeHandoverModal()" class="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 flex items-center justify-center transition-colors cursor-pointer">
+                    <span class="material-symbols-outlined text-lg">close</span>
+                </button>
+            </div>
+
+            <div>
+                <h3 class="text-lg font-extrabold text-gray-900">Complete Item Handover</h3>
+                <p class="text-xs text-gray-500 font-medium mt-1 leading-relaxed">
+                    Confirm return & verification of <strong class="text-gray-900">{{ chat.item_name }}</strong> with <strong class="text-gray-900">{{ chat.other_user_name }}</strong>.
+                </p>
+            </div>
+
+            <div class="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 space-y-3">
+                <label class="flex items-start gap-3 cursor-pointer">
+                    <input type="checkbox" id="verifyItemCheck" onchange="toggleHandoverConfirmBtn()" class="mt-0.5 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500 w-4 h-4 cursor-pointer">
+                    <span class="text-xs text-gray-700 font-semibold leading-snug">
+                        I verify that the item exchange & handover is physically complete.
+                    </span>
+                </label>
+
+                <label class="flex items-start gap-3 cursor-pointer">
+                    <input type="checkbox" id="verifyPaymentCheck" onchange="toggleHandoverConfirmBtn()" class="mt-0.5 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500 w-4 h-4 cursor-pointer">
+                    <span class="text-xs text-gray-700 font-semibold leading-snug">
+                        Finder reward & fee payment status: <span class="text-emerald-700 font-bold bg-emerald-100 px-1.5 py-0.5 rounded-sm text-[10px]">Paid & Verified</span>
+                    </span>
+                </label>
+            </div>
+
+            <div class="flex items-center gap-3 pt-2">
+                <button onclick="closeHandoverModal()" class="flex-1 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-extrabold text-xs rounded-xl transition-colors cursor-pointer">
+                    Cancel
+                </button>
+                <button id="confirmHandoverBtn" disabled onclick="submitHandover()" class="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed text-white font-extrabold text-xs rounded-xl shadow-xs transition-all cursor-pointer flex items-center justify-center gap-1.5">
+                    <span class="material-symbols-outlined text-base">task_alt</span>
+                    <span>Confirm Handover</span>
+                </button>
+            </div>
         </div>
     </div>
 
-    <!-- SPACER for fixed input -->
-    <div style="height: 100px; flex-shrink: 0;"></div>
-
+    <!-- SOCKET.IO REALTIME SCRIPT -->
     <script>
         const socket = io();
-        const roomId = "{{ chat._id }}";
-        const currentUserId = "{{ current_user_id }}"; // Server must inject this
-        const messagesContainer = document.getElementById('messages');
+        const roomId = "{{ chat.id }}";
+        const currentUserId = "{{ current_user_id }}";
+        const otherUserId = "{{ chat.other_user_id }}";
+        const container = document.getElementById('messagesContainer');
         const input = document.getElementById('messageInput');
 
-        socket.emit('join', { room: roomId });
+        // Join room with user ID for active presence tracking
+        socket.emit('join', { room: roomId, user_id: currentUserId });
+
+        // Handle active/offline presence updates
+        socket.on('presence_update', (data) => {
+            const activeUsers = data.active_users || [];
+            const isOtherActive = activeUsers.includes(otherUserId);
+            const statusDot = document.getElementById('userAvatarStatusDot');
+            const statusText = document.getElementById('userStatusText');
+
+            if (isOtherActive) {
+                if (statusDot) statusDot.className = "w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-white absolute bottom-0 right-0 shadow-xs ring-2 ring-emerald-400/40";
+                if (statusText) {
+                    statusText.className = "text-[11px] font-bold text-emerald-600 flex items-center gap-1 transition-colors duration-300";
+                    statusText.innerHTML = "&bull; Active Now";
+                }
+            } else {
+                const lastSeenStr = (data.user_id === otherUserId && data.last_seen) ? data.last_seen : "{{ chat.other_user_last_seen or 'recently' }}";
+                if (statusDot) statusDot.className = "w-3.5 h-3.5 bg-gray-400 rounded-full border-2 border-white absolute bottom-0 right-0 shadow-xs";
+                if (statusText) {
+                    statusText.className = "text-[11px] font-medium text-gray-400 flex items-center gap-1 transition-colors duration-300";
+                    statusText.innerHTML = `&bull; Last seen ${lastSeenStr}`;
+                }
+            }
+        });
 
         function scrollToBottom() {
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            if (container) {
+                container.scrollTop = container.scrollHeight;
+            }
         }
-        // Scroll on load
         window.onload = scrollToBottom;
+        setTimeout(scrollToBottom, 100);
 
         function sendMessage() {
             const text = input.value.trim();
             if (text) {
-                // Optimistic UI Update
-                // appendMessage(text, 'me'); 
-
                 socket.emit('send_message', { room: roomId, message: text, sender_id: currentUserId });
                 input.value = '';
                 input.focus();
@@ -90,74 +214,103 @@
         });
 
         socket.on('receive_message', (data) => {
-            // If we used optimistic update, we might need to handle dupes or id checks, 
-            // but for now let's just use the server event
-            appendMessage(data.text, data.sender_id === currentUserId ? 'me' : 'them', data.timestamp);
+            appendMessage(data.text, data.sender_id === currentUserId, data.timestamp);
         });
 
-        function appendMessage(text, type, timeStr) {
-            const div = document.createElement('div');
-            div.className = `chat-bubble ${type}`;
-            // Simple time if not provided
-            const time = timeStr || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        function appendMessage(text, isMe, timeStr) {
+            const wrap = document.createElement('div');
+            wrap.className = `flex flex-col ${isMe ? 'items-end' : 'items-start'} space-y-1 animate-in fade-in slide-in-from-bottom-2 duration-150`;
+            
+            const bubble = document.createElement('div');
+            bubble.className = `max-w-[82%] sm:max-w-[70%] px-4 py-3 rounded-2xl text-sm leading-relaxed shadow-xs ${isMe ? 'bg-emerald-600 text-white rounded-br-xs' : 'bg-white border border-gray-200/80 text-gray-900 rounded-bl-xs'}`;
+            bubble.innerText = text;
 
-            div.innerHTML = `
-                ${text}
-                <div style="font-size: 0.65rem; opacity: 0.7; margin-top: 0.3rem; text-align: right;">
-                    ${time}
+            const timeSpan = document.createElement('span');
+            timeSpan.className = 'text-[10px] text-gray-400 font-medium px-1';
+            const formattedTime = timeStr || new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
+            timeSpan.innerText = formattedTime;
+
+            wrap.appendChild(bubble);
+            wrap.appendChild(timeSpan);
+            container.appendChild(wrap);
+            scrollToBottom();
+        }
+
+        // Handover modal & API methods
+        function openHandoverModal() {
+            const modal = document.getElementById('handoverModal');
+            if (modal) modal.classList.remove('hidden');
+        }
+
+        function closeHandoverModal() {
+            const modal = document.getElementById('handoverModal');
+            if (modal) modal.classList.add('hidden');
+        }
+
+        function toggleHandoverConfirmBtn() {
+            const c1 = document.getElementById('verifyItemCheck').checked;
+            const c2 = document.getElementById('verifyPaymentCheck').checked;
+            const btn = document.getElementById('confirmHandoverBtn');
+            if (btn) btn.disabled = !(c1 && c2);
+        }
+
+        async function submitHandover() {
+            const btn = document.getElementById('confirmHandoverBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="material-symbols-outlined text-base animate-spin">sync</span> Processing...';
+
+            try {
+                const res = await fetch(`/user/chat/handover/${roomId}`, { method: 'POST' });
+                const data = await res.json();
+                if (data.success) {
+                    closeHandoverModal();
+                    renderHandoverCompletedUI();
+                } else {
+                    alert(data.error || 'Failed to complete handover');
+                    btn.disabled = false;
+                    btn.innerText = 'Confirm Handover';
+                }
+            } catch(err) {
+                console.error(err);
+                alert('An error occurred. Please try again.');
+                btn.disabled = false;
+                btn.innerText = 'Confirm Handover';
+            }
+        }
+
+        function renderHandoverCompletedUI() {
+            const btn = document.getElementById('handoverBtn');
+            if (btn) {
+                btn.outerHTML = `
+                    <div id="handoverBadge" class="px-3.5 py-2 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 font-extrabold text-xs flex items-center gap-1.5 shadow-2xs">
+                        <span class="material-symbols-outlined text-base text-emerald-600 icon-fill">check_circle</span>
+                        <span>Handover Completed</span>
+                    </div>
+                `;
+            }
+        }
+
+        socket.on('handover_completed', (data) => {
+            renderHandoverCompletedUI();
+            appendSystemMessage(data.message || '🎉 Handover Completed! Item safely returned and verified.');
+        });
+
+        function appendSystemMessage(text) {
+            const wrap = document.createElement('div');
+            wrap.className = 'my-4 flex justify-center animate-in fade-in duration-200';
+            wrap.innerHTML = `
+                <div class="bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs font-bold px-4 py-2.5 rounded-2xl flex items-center gap-2 shadow-2xs">
+                    <span class="material-symbols-outlined text-emerald-600 text-lg icon-fill">verified</span>
+                    <span>${text}</span>
                 </div>
             `;
-            messagesContainer.appendChild(div);
+            container.appendChild(wrap);
             scrollToBottom();
         }
 
         window.onbeforeunload = () => {
-            socket.emit('leave', { room: roomId });
+            socket.emit('leave', { room: roomId, user_id: currentUserId });
         };
-
-        // Mobile viewport height fix
-        const setVh = () => {
-            const vh = window.innerHeight * 0.01;
-            document.documentElement.style.setProperty('--vh', `${vh}px`);
-        };
-        window.addEventListener('resize', setVh);
-        setVh();
     </script>
-
-    <style>
-        /* Scoped overrides for this page */
-        body {
-            /* Fallback for browsers that don't support custom properties */
-            height: 100vh;
-            /* Use custom property for actual viewport height on mobile */
-            height: calc(var(--vh, 1vh) * 100);
-        }
-
-        .chat-bubble {
-            max-width: 80%;
-            padding: 0.8rem 1rem;
-            border-radius: 18px;
-            font-size: 0.95rem;
-            line-height: 1.4;
-            position: relative;
-            word-wrap: break-word;
-        }
-
-        .chat-bubble.me {
-            background: var(--accent-sky);
-            color: white;
-            align-self: flex-end;
-            border-bottom-right-radius: 4px;
-        }
-
-        .chat-bubble.them {
-            background: white;
-            border: 1px solid #eee;
-            align-self: flex-start;
-            border-bottom-left-radius: 4px;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-        }
-    </style>
 </body>
-
 </html>

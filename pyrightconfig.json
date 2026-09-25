@@ -1,0 +1,17 @@
+{
+  "include": [
+    "."
+  ],
+  "executionEnvironments": [
+    {
+      "root": ".",
+      "pythonVersion": "3.10",
+      "extraPaths": [
+        "C:\\Users\\MOSHIN\\AppData\\Local\\Programs\\Python\\Python310\\Lib\\site-packages",
+        "c:\\Users\\MOSHIN\\OneDrive\\Desktop\\FOUNDIFY"
+      ]
+    }
+  ],
+  "reportMissingImports": "none",
+  "reportMissingModuleSource": "none"
+}

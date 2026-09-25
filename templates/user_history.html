@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>History // Foundify</title>
+    <title>AI Match & Activity History // Foundify</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
@@ -52,19 +52,38 @@
                 </button>
                 <form action="/user/search" method="GET" class="relative w-64 sm:w-80 md:w-96">
                     <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">search</span>
-                    <input type="text" name="q" placeholder="Search for items, locations..." class="w-full bg-gray-50 border-none rounded-full py-2.5 md:py-3 pl-12 pr-4 text-sm focus:ring-1 focus:ring-primary outline-none text-textDark placeholder-gray-400" required>
+                    <input type="text" name="q" placeholder="Search matches & history..." class="w-full bg-gray-50 border border-gray-200 rounded-2xl py-2.5 pl-12 pr-4 text-xs focus:ring-1 focus:ring-emerald-500 outline-none text-textDark placeholder-gray-400">
                 </form>
             </div>
             
-            <div class="flex items-center gap-6">
-                <button class="relative text-textMuted hover:text-textDark transition-colors">
-                    <span class="material-symbols-outlined">notifications</span>
-                    <span class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white">3</span>
-                </button>
-                <button class="relative text-textMuted hover:text-textDark transition-colors">
-                    <span class="material-symbols-outlined">chat_bubble</span>
-                    <span class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white">1</span>
-                </button>
+            <div class="flex items-center gap-4">
+                <!-- NOTIFICATION BELL & LIVE DROPDOWN -->
+                <div class="relative">
+                    <button id="notifBellBtn" onclick="toggleNotifDropdown(event)" class="relative p-2 text-gray-500 hover:text-gray-900 focus:outline-none transition-colors rounded-full hover:bg-gray-100 flex items-center justify-center">
+                        <span class="material-symbols-outlined text-2xl">notifications</span>
+                        <span id="notifBadge" class="hidden absolute top-0 right-0 w-4 h-4 bg-red-500 text-white text-[9px] font-extrabold rounded-full flex items-center justify-center border-2 border-white shadow-xs">0</span>
+                    </button>
+                    
+                    <!-- Notification Dropdown Panel -->
+                    <div id="notifDropdown" class="hidden absolute right-0 mt-3 w-80 sm:w-96 bg-white border border-gray-200/90 rounded-2xl shadow-2xl z-50 overflow-hidden divide-y divide-gray-100">
+                        <div class="px-4 py-3 bg-gray-50/80 flex items-center justify-between">
+                            <h4 class="text-xs font-bold text-gray-900 uppercase tracking-wider flex items-center gap-1.5">
+                                <span class="material-symbols-outlined text-base text-emerald-600">notifications</span> Live Notifications
+                            </h4>
+                            <span id="notifUnreadBadge" class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full">0 Unread</span>
+                        </div>
+                        
+                        <div id="notifList" class="max-h-80 overflow-y-auto divide-y divide-gray-50">
+                            <div class="p-6 text-center text-xs text-gray-400 italic">Loading updates...</div>
+                        </div>
+                        
+                        <div class="px-4 py-2.5 bg-gray-50/80 text-center">
+                            <a href="/user/history" class="text-xs font-bold text-emerald-600 hover:text-emerald-800 transition-colors">View All Activity & History &rarr;</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PROFILE AVATAR -->
                 <a href="/user/profile" class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm shadow-sm cursor-pointer border-2 border-white block">
                     {% if user.profile_photo %}
                         <img src="/{{ user.profile_photo }}" class="w-full h-full rounded-full object-cover">
@@ -75,136 +94,378 @@
             </div>
         </header>
 
+        <script src="/static/js/notifications_live.js"></script>
+
         <!-- SCROLL AREA -->
-        <div class="flex-1 overflow-y-auto hide-scrollbar p-8">
-            <div class="max-w-6xl mx-auto space-y-8 pb-10">
+        <div class="flex-1 overflow-y-auto hide-scrollbar p-4 md:p-8">
+            <div class="max-w-4xl mx-auto space-y-6 pb-12">
                 
-                <header class="mb-8">
-                    <h1 class="text-3xl font-extrabold text-textDark">History Log</h1>
-                    <p class="text-textMuted mt-1 text-sm">Track your reported items and claims.</p>
-                </header>
-
-                {% if lost_items or found_items or claims %}
-
-                <!-- CLAIMS (Moved to top as requested) -->
-                {% if claims %}
-                <div class="bg-white rounded border border-gray-200 shadow-sm overflow-hidden mb-8">
-                    <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
-                        <h3 class="text-lg font-bold text-gray-900 flex items-center gap-2"><span class="material-symbols-outlined text-gray-800">receipt_long</span> My Claim Requests</h3>
-                    </div>
-                    <div class="divide-y divide-gray-100">
-                        {% for claim in claims %}
-                        <div class="p-6 flex items-center gap-6 hover:bg-gray-50 transition-colors">
-                            <img src="/{{ claim.item_image }}" class="w-16 h-16 rounded object-cover border border-gray-200 shadow-sm shrink-0">
-                            
-                            <div class="flex-1 min-w-0">
-                                <h4 class="text-base font-bold text-textDark truncate">Claim: {{ claim.item_name }}</h4>
-                                {% if claim.status == 'approved' %}
-                                <p class="text-sm text-green-600 font-bold truncate mt-1">Finder: {{ claim.finder_name }} ({{ claim.finder_phone }}) - {{ claim.finder_email }}</p>
-                                {% else %}
-                                <p class="text-sm text-textMuted truncate mt-1">Waiting for admin approval...</p>
-                                {% endif %}
-                                <p class="text-xs text-textMuted mt-1 flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">location_on</span> {{ claim.location }}</p>
-                            </div>
-                            
-                            <div class="shrink-0 text-right w-32">
-                                {% if claim.status == 'pending' %}
-                                <span class="inline-flex items-center gap-1 bg-yellow-50 text-yellow-600 text-xs font-bold px-3 py-1.5 rounded-full">
-                                    <span class="material-symbols-outlined text-[14px]">hourglass_empty</span> Pending
-                                </span>
-                                {% elif claim.status == 'approved' %}
-                                <span class="inline-flex items-center gap-1 bg-green-50 text-green-600 text-xs font-bold px-3 py-1.5 rounded-full">
-                                    <span class="material-symbols-outlined text-[14px]">verified</span> Approved
-                                </span>
-                                {% else %}
-                                <span class="inline-flex items-center gap-1 bg-red-50 text-red-600 text-xs font-bold px-3 py-1.5 rounded-full">
-                                    <span class="material-symbols-outlined text-[14px]">cancel</span> Rejected
-                                </span>
-                                {% endif %}
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
+                <!-- PAGE HEADER (WITHOUT MESSAGES/AIMATCH TABS) -->
+                <div class="space-y-1 border-b border-gray-200/80 pb-4">
+                    <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight flex items-center gap-2.5">
+                        <span class="material-symbols-outlined text-emerald-600 text-3xl icon-fill">auto_awesome</span> AI Match & Activity History
+                    </h1>
+                    <p class="text-xs text-gray-500 font-medium">All AI match candidates, claims, and reported item histories listed chronologically by date.</p>
                 </div>
-                {% endif %}
 
-                <!-- LOST ITEMS -->
-                {% if lost_items %}
-                <div class="bg-white rounded border border-gray-200 shadow-sm overflow-hidden mb-8">
-                    <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
-                        <h3 class="text-lg font-bold text-gray-900 flex items-center gap-2"><span class="material-symbols-outlined text-gray-800">search_off</span> Lost Items</h3>
-                    </div>
-                    <div class="divide-y divide-gray-100">
-                        {% for item in lost_items %}
-                        <div class="p-6 flex items-center gap-6 hover:bg-gray-50 transition-colors">
-                            <img src="/{{ item.image_path }}" class="w-16 h-16 rounded object-cover border border-gray-200 shadow-sm shrink-0">
-                            
+                <!-- AI MATCH FOUND FEED SECTION HEADER -->
+                <div class="flex items-center justify-between pt-2">
+                    <h2 class="text-lg font-bold text-gray-900 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-emerald-600">auto_awesome</span> Live AI Match Feed
+                    </h2>
+                    <span class="text-xs font-bold text-emerald-600">Sorted by Date</span>
+                </div>
+
+                <!-- CARDS FEED (AI MATCH & CLAIM NOTIFICATIONS) -->
+                {% if ai_match_cards or claim_request_cards %}
+                    
+                    <!-- 1. AI MATCH CARDS -->
+                    {% for card in ai_match_cards %}
+                    <div class="bg-white border border-gray-200/80 rounded-2xl p-5 shadow-xs transition-shadow hover:shadow-md space-y-4">
+                        <!-- Top Row -->
+                        <div class="flex items-start gap-3">
+                            <div class="w-9 h-9 rounded-full bg-emerald-100/80 text-emerald-600 flex items-center justify-center shrink-0">
+                                <span class="material-symbols-outlined text-lg icon-fill">auto_awesome</span>
+                            </div>
                             <div class="flex-1 min-w-0">
-                                <h4 class="text-base font-bold text-textDark truncate">{{ item.item_name }}</h4>
-                                <p class="text-sm text-textMuted truncate mt-1">{{ item.description[:60] }}...</p>
-                                <div class="flex items-center gap-4 mt-2 text-xs text-textMuted">
-                                    <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">calendar_today</span> {{ item.date }}</span>
-                                    <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">location_on</span> {{ item.location }}</span>
+                                <div class="flex items-center gap-2">
+                                    <h3 class="font-extrabold text-gray-900 text-base">
+                                        {% if card.status == 'confirmed' %}
+                                            AI Match Confirmed!
+                                        {% else %}
+                                            AI Match Found!
+                                        {% endif %}
+                                    </h3>
+                                    {% if card.status == 'approved_by_admin' %}
+                                        <span class="bg-emerald-100 text-emerald-700 font-bold text-[11px] px-2.5 py-0.5 rounded-full">New Match</span>
+                                    {% elif card.status == 'confirmed' %}
+                                        <span class="bg-green-100 text-green-800 font-bold text-[11px] px-2.5 py-0.5 rounded-full">Handover Active</span>
+                                    {% else %}
+                                        <span class="bg-gray-100 text-gray-700 font-bold text-[11px] px-2.5 py-0.5 rounded-full">{{ card.status | capitalize }}</span>
+                                    {% endif %}
                                 </div>
-                            </div>
-                            
-                            <div class="shrink-0 text-center w-28">
-                                {% if item.status == 'lost' %}
-                                <span class="inline-block bg-red-50 text-red-600 text-xs font-bold px-3 py-1 rounded-full mb-2 w-full text-center border border-red-100">Lost</span>
-                                <a href="/user/item/resolve/lost/{{ item.id }}" class="text-xs font-bold text-primary hover:text-primary/80 block" onclick="return confirm('Found this item? Mark as resolved?')">Mark Resolved?</a>
-                                {% else %}
-                                <span class="inline-block bg-gray-100 text-gray-500 text-xs font-bold px-3 py-1 rounded-full w-full text-center">Resolved</span>
-                                {% endif %}
+                                <p class="text-xs text-gray-500 font-medium mt-0.5">
+                                    {% if card.status == 'confirmed' %}
+                                        Item ownership confirmed by owner. Handover in progress.
+                                    {% else %}
+                                        We found a possible match for your lost item.
+                                    {% endif %}
+                                </p>
                             </div>
                         </div>
-                        {% endfor %}
-                    </div>
-                </div>
-                {% endif %}
 
-                <!-- FOUND ITEMS -->
-                {% if found_items %}
-                <div class="bg-white rounded border border-gray-200 shadow-sm overflow-hidden mb-8">
-                    <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
-                        <h3 class="text-lg font-bold text-gray-900 flex items-center gap-2"><span class="material-symbols-outlined text-gray-800">volunteer_activism</span> Found Items</h3>
-                    </div>
-                    <div class="divide-y divide-gray-100">
-                        {% for item in found_items %}
-                        <div class="p-6 flex items-center gap-6 hover:bg-gray-50 transition-colors">
-                            <img src="/{{ item.image_path }}" class="w-16 h-16 rounded object-cover border border-gray-200 shadow-sm shrink-0">
-                            
-                            <div class="flex-1 min-w-0">
-                                <h4 class="text-base font-bold text-textDark truncate">{{ item.item_name }}</h4>
-                                <p class="text-sm text-textMuted truncate mt-1">{{ item.description[:60] }}...</p>
-                                <div class="flex items-center gap-4 mt-2 text-xs text-textMuted">
-                                    <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">calendar_today</span> {{ item.date }}</span>
-                                    <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">location_on</span> {{ item.location }}</span>
-                                </div>
-                            </div>
-                            
-                            <div class="shrink-0 text-center w-28">
-                                {% if item.status == 'found' %}
-                                <span class="inline-block bg-green-50 text-green-600 text-xs font-bold px-3 py-1 rounded-full w-full text-center border border-green-100">Active</span>
+                        <!-- Card Body -->
+                        <div class="flex flex-col sm:flex-row items-start gap-4">
+                            <div class="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-gray-100 overflow-hidden shrink-0 border border-gray-100 shadow-xs flex items-center justify-center">
+                                {% if card.found_image %}
+                                    <img src="{% if card.found_image.startswith('/') or card.found_image.startswith('http') %}{{ card.found_image }}{% else %}/{{ card.found_image }}{% endif %}" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                    <div class="hidden w-full h-full flex-col items-center justify-center text-gray-400 bg-gray-50">
+                                        <span class="material-symbols-outlined text-2xl">image</span>
+                                    </div>
                                 {% else %}
-                                <span class="inline-block bg-gray-100 text-gray-500 text-xs font-bold px-3 py-1 rounded-full w-full text-center">Resolved</span>
+                                    <div class="w-full h-full flex flex-col items-center justify-center text-gray-400 bg-gray-50">
+                                        <span class="material-symbols-outlined text-2xl">image</span>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="flex-1 min-w-0 space-y-1 text-xs text-gray-600 font-medium">
+                                <h4 class="text-base font-bold text-gray-900 leading-snug">Lost {{ card.lost_item_name }}</h4>
+                                <p class="flex items-center gap-1.5 pt-1 text-gray-700">
+                                    <span class="material-symbols-outlined text-[15px] text-gray-400 shrink-0">location_on</span>
+                                    <span class="truncate">Found near {{ card.location }}</span>
+                                </p>
+                                <p class="flex items-center gap-1.5 text-gray-700">
+                                    <span class="material-symbols-outlined text-[15px] text-gray-400 shrink-0">calendar_month</span>
+                                    <span>Found on {{ card.found_date }}</span>
+                                </p>
+                                <p class="flex items-center gap-1.5 text-gray-700">
+                                    <span class="material-symbols-outlined text-[15px] text-gray-400 shrink-0">person</span>
+                                    <span>Found by {{ card.finder_name }}</span>
+                                </p>
+                                <p class="flex items-center gap-1.5 text-gray-700">
+                                    <span class="material-symbols-outlined text-[15px] text-gray-400 shrink-0">category</span>
+                                    <span>Category: {{ card.category }}</span>
+                                </p>
+                                <p class="flex items-center gap-1.5 pt-1">
+                                    <span class="font-extrabold text-gray-900 text-xs"># Match Score:</span>
+                                    <span class="font-extrabold text-emerald-600 text-xs">{{ card.match_score }}%</span>
+                                </p>
+                            </div>
+
+                            <!-- Buttons (Right Column on desktop) -->
+                            <div class="w-full sm:w-44 flex sm:flex-col gap-2.5 pt-2 sm:pt-0 shrink-0">
+                                {% if card.status == 'approved_by_admin' %}
+                                    <a href="/user/review-match/{{ card.match_id }}" class="flex-1 bg-[#059669] hover:bg-[#047857] text-white font-bold text-xs py-2.5 px-4 rounded-xl shadow-xs transition-colors text-center inline-flex items-center justify-center">
+                                        View Details
+                                    </a>
+                                    <a href="/user/match-action/{{ card.match_id }}/reject" onclick="return confirm('Decline this match candidate?')" class="flex-1 bg-white border border-emerald-600 text-emerald-700 hover:bg-emerald-50 font-bold text-xs py-2.5 px-4 rounded-xl transition-colors text-center inline-flex items-center justify-center">
+                                        Not My Item
+                                    </a>
+                                {% elif card.status == 'confirmed' %}
+                                    <a href="{% if card.chat_id %}/user/chat/{{ card.chat_id }}{% else %}/user/chats{% endif %}" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-2.5 px-4 rounded-xl shadow-xs transition-colors text-center inline-flex items-center justify-center gap-1">
+                                        <span class="material-symbols-outlined text-sm">chat</span> Open Chat
+                                    </a>
+                                    {% if card.handover_status == 'handover_completed' or card.status == 'resolved' %}
+                                        <div class="flex-1 bg-emerald-50 border border-emerald-200 text-emerald-700 font-extrabold text-[11px] py-2 px-3 rounded-xl text-center inline-flex items-center justify-center gap-1 shadow-2xs">
+                                            <span class="material-symbols-outlined text-sm text-emerald-600 icon-fill">check_circle</span> Handover Complete
+                                        </div>
+                                    {% elif card.is_finder %}
+                                        <a href="{% if card.chat_id %}/user/chat/{{ card.chat_id }}{% else %}/user/chats{% endif %}" class="flex-1 bg-white border border-emerald-600 text-emerald-700 hover:bg-emerald-50 font-bold text-xs py-2 px-3 rounded-xl transition-colors text-center inline-flex items-center justify-center gap-1 cursor-pointer">
+                                            <span class="material-symbols-outlined text-sm">handshake</span> Complete Handover
+                                        </a>
+                                    {% else %}
+                                        <div class="flex-1 bg-amber-50 border border-amber-200 text-amber-800 font-extrabold text-[11px] py-2 px-3 rounded-xl text-center inline-flex items-center justify-center gap-1 shadow-2xs">
+                                            <span class="material-symbols-outlined text-sm text-amber-600">hourglass_top</span> Awaiting Handover
+                                        </div>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="text-xs font-bold text-gray-400 text-center block pt-2">Processed</span>
                                 {% endif %}
                             </div>
                         </div>
-                        {% endfor %}
                     </div>
-                </div>
-                {% endif %}
+                    {% endfor %}
+
+                    <!-- 2. CLAIM REQUEST CARDS -->
+                    {% for card in claim_request_cards %}
+                    <div class="bg-white border border-gray-200/80 rounded-2xl p-5 shadow-xs transition-shadow hover:shadow-md space-y-4">
+                        <!-- Top Row -->
+                        <div class="flex items-start gap-3">
+                            <div class="w-9 h-9 rounded-full bg-pink-100 text-pink-500 flex items-center justify-center shrink-0">
+                                <span class="material-symbols-outlined text-lg icon-fill">person</span>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2">
+                                    <h3 class="font-extrabold text-gray-900 text-base">Claim Request Received!</h3>
+                                    <span class="bg-pink-100 text-pink-700 font-bold text-[11px] px-2.5 py-0.5 rounded-full">New Claim</span>
+                                </div>
+                                <p class="text-xs text-gray-500 font-medium mt-0.5">Someone has claimed this item. Please review the claim.</p>
+                            </div>
+                        </div>
+
+                        <!-- Card Body -->
+                        <div class="flex flex-col sm:flex-row items-start gap-4">
+                            <div class="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-gray-100 overflow-hidden shrink-0 border border-gray-100 shadow-xs flex items-center justify-center">
+                                {% if card.item_image %}
+                                    <img src="{% if card.item_image.startswith('/') or card.item_image.startswith('http') %}{{ card.item_image }}{% else %}/{{ card.item_image }}{% endif %}" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                    <div class="hidden w-full h-full flex-col items-center justify-center text-gray-400 bg-gray-50">
+                                        <span class="material-symbols-outlined text-2xl">image</span>
+                                    </div>
+                                {% else %}
+                                    <div class="w-full h-full flex flex-col items-center justify-center text-gray-400 bg-gray-50">
+                                        <span class="material-symbols-outlined text-2xl">image</span>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="flex-1 min-w-0 space-y-1 text-xs text-gray-600 font-medium">
+                                <h4 class="text-base font-bold text-gray-900 leading-snug">{{ card.item_name }}</h4>
+                                <p class="flex items-center gap-1.5 pt-1 text-gray-700">
+                                    <span class="material-symbols-outlined text-[15px] text-gray-400 shrink-0">location_on</span>
+                                    <span class="truncate">Claimed near {{ card.location }}</span>
+                                </p>
+                                <p class="flex items-center gap-1.5 text-gray-700">
+                                    <span class="material-symbols-outlined text-[15px] text-gray-400 shrink-0">calendar_month</span>
+                                    <span>Claimed on {{ card.claimed_date }}</span>
+                                </p>
+                                <p class="flex items-center gap-1.5 text-gray-700">
+                                    <span class="material-symbols-outlined text-[15px] text-gray-400 shrink-0">person</span>
+                                    <span>Claimed by {{ card.claimant_name }}</span>
+                                </p>
+                                <p class="flex items-center gap-1.5 text-gray-700">
+                                    <span class="material-symbols-outlined text-[15px] text-gray-400 shrink-0">category</span>
+                                    <span>Category: {{ card.category }}</span>
+                                </p>
+                                <p class="flex items-center gap-1.5 pt-1">
+                                    <span class="font-extrabold text-gray-900 text-xs"># AI Match Score:</span>
+                                    <span class="font-extrabold text-emerald-600 text-xs">{{ card.match_score }}%</span>
+                                </p>
+                            </div>
+
+                            <!-- Buttons (Right Column on desktop) -->
+                            <div class="w-full sm:w-44 flex sm:flex-col gap-2.5 pt-2 sm:pt-0 shrink-0">
+                                {% if card.status == 'pending' %}
+                                    <a href="/user/claim-review/{{ card.claim_id }}" class="flex-1 bg-[#059669] hover:bg-[#047857] text-white font-bold text-xs py-2.5 px-4 rounded-xl shadow-xs transition-colors text-center inline-flex items-center justify-center">
+                                        View Claim
+                                    </a>
+                                    <a href="/user/finder-claim-action/{{ card.claim_id }}/reject" onclick="return confirm('Reject this claim request?')" class="flex-1 bg-white border border-pink-500 text-pink-600 hover:bg-pink-50 font-bold text-xs py-2.5 px-4 rounded-xl transition-colors text-center inline-flex items-center justify-center">
+                                        Reject Claim
+                                    </a>
+                                {% else %}
+                                    <span class="text-xs font-bold text-gray-400 text-center block pt-2">{{ card.status | capitalize }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
 
                 {% else %}
-                <!-- EMPTY STATE -->
-                <div class="bg-white p-12 rounded border border-gray-200 shadow-sm text-center">
-                    <div class="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-gray-200">
-                        <span class="material-symbols-outlined text-4xl text-gray-400">history_toggle_off</span>
+                    <div class="bg-white p-8 rounded-2xl border border-gray-200/80 shadow-xs text-center py-10">
+                        <div class="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                            <span class="material-symbols-outlined text-2xl icon-fill">auto_awesome</span>
+                        </div>
+                        <h3 class="text-sm font-bold text-gray-900">No Active AI Matches or Claims</h3>
+                        <p class="text-xs text-gray-500 mt-1 max-w-sm mx-auto">When an AI match is found or someone submits a claim on your items, match candidates will appear here.</p>
                     </div>
-                    <h3 class="text-lg font-bold text-gray-900 mb-2">No history yet</h3>
-                    <p class="text-gray-500 text-sm max-w-sm mx-auto">You haven't reported any items or made any claims yet.</p>
-                </div>
                 {% endif %}
+
+                <!-- FULL HISTORICAL RECORDS (ACCORDION / SECTIONS) -->
+                <div class="pt-6 space-y-6">
+                    <h2 class="text-lg font-bold text-gray-900 border-b border-gray-200 pb-2 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-gray-700">history_toggle_off</span> Complete Activity Records
+                    </h2>
+
+                    <!-- CLAIMS SUBMITTED BY ME -->
+                    {% if claims %}
+                    <div class="bg-white rounded-2xl border border-gray-200/80 shadow-xs overflow-hidden">
+                        <div class="px-5 py-3.5 border-b border-gray-100 bg-gray-50/70">
+                            <h3 class="text-xs font-bold text-gray-800 uppercase tracking-wider flex items-center gap-2">
+                                <span class="material-symbols-outlined text-base text-gray-600">receipt_long</span> My Submitted Claim Requests
+                            </h3>
+                        </div>
+                        <div class="divide-y divide-gray-100">
+                            {% for claim in claims %}
+                            <div class="p-4 flex items-center gap-4 hover:bg-gray-50/50 transition-colors">
+                                <div class="w-14 h-14 rounded-xl bg-gray-100 overflow-hidden border border-gray-200 shadow-xs shrink-0 flex items-center justify-center">
+                                    {% if claim.item_image %}
+                                        <img src="{% if claim.item_image.startswith('/') or claim.item_image.startswith('http') %}{{ claim.item_image }}{% else %}/{{ claim.item_image }}{% endif %}" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                        <div class="hidden w-full h-full flex-col items-center justify-center text-gray-400 bg-gray-50">
+                                            <span class="material-symbols-outlined text-lg">image</span>
+                                        </div>
+                                    {% else %}
+                                        <div class="w-full h-full flex flex-col items-center justify-center text-gray-400 bg-gray-50">
+                                            <span class="material-symbols-outlined text-lg">image</span>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="flex-1 min-w-0">
+                                    <h4 class="text-sm font-bold text-gray-900 truncate">Claim: {{ claim.item_name }}</h4>
+                                    {% if claim.status == 'approved' %}
+                                    <p class="text-xs text-emerald-600 font-bold truncate mt-0.5">Finder: {{ claim.finder_name }} ({{ claim.finder_email }})</p>
+                                    {% else %}
+                                    <p class="text-xs text-gray-500 truncate mt-0.5">Awaiting finder review...</p>
+                                    {% endif %}
+                                    <p class="text-[11px] text-gray-500 mt-0.5 flex items-center gap-1"><span class="material-symbols-outlined text-[13px]">location_on</span> {{ claim.location }}</p>
+                                </div>
+                                
+                                <div class="shrink-0 text-right">
+                                    {% if claim.status == 'pending' %}
+                                    <span class="inline-flex items-center gap-1 bg-amber-50 text-amber-700 text-[11px] font-bold px-2.5 py-1 rounded-full">
+                                        Pending
+                                    </span>
+                                    {% elif claim.status == 'approved' %}
+                                    <span class="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 text-[11px] font-bold px-2.5 py-1 rounded-full">
+                                        Approved
+                                    </span>
+                                    {% else %}
+                                    <span class="inline-flex items-center gap-1 bg-rose-50 text-rose-700 text-[11px] font-bold px-2.5 py-1 rounded-full">
+                                        Declined
+                                    </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- LOST ITEMS REPORTED BY ME -->
+                    {% if lost_items %}
+                    <div class="bg-white rounded-2xl border border-gray-200/80 shadow-xs overflow-hidden">
+                        <div class="px-5 py-3.5 border-b border-gray-100 bg-gray-50/70">
+                            <h3 class="text-xs font-bold text-gray-800 uppercase tracking-wider flex items-center gap-2">
+                                <span class="material-symbols-outlined text-base text-gray-600">search_off</span> My Reported Lost Items
+                            </h3>
+                        </div>
+                        <div class="divide-y divide-gray-100">
+                            {% for item in lost_items %}
+                            <div class="p-4 flex items-center gap-4 hover:bg-gray-50/50 transition-colors">
+                                <div class="w-14 h-14 rounded-xl bg-gray-100 overflow-hidden border border-gray-200 shadow-xs shrink-0 flex items-center justify-center">
+                                    {% if item.image_path %}
+                                        <img src="{% if item.image_path.startswith('/') or item.image_path.startswith('http') %}{{ item.image_path }}{% else %}/{{ item.image_path }}{% endif %}" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                        <div class="hidden w-full h-full flex-col items-center justify-center text-gray-400 bg-gray-50">
+                                            <span class="material-symbols-outlined text-lg">image</span>
+                                        </div>
+                                    {% else %}
+                                        <div class="w-full h-full flex flex-col items-center justify-center text-gray-400 bg-gray-50">
+                                            <span class="material-symbols-outlined text-lg">image</span>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="flex-1 min-w-0">
+                                    <h4 class="text-sm font-bold text-gray-900 truncate">{{ item.item_name }}</h4>
+                                    <p class="text-xs text-gray-500 truncate mt-0.5">{{ item.description[:60] }}...</p>
+                                    <div class="flex items-center gap-3 mt-1 text-[11px] text-gray-400">
+                                        <span>{{ item.date }}</span>
+                                        <span>•</span>
+                                        <span>{{ item.location }}</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="shrink-0 text-right">
+                                    {% if item.status == 'lost' %}
+                                    <span class="inline-block bg-rose-50 text-rose-700 text-[11px] font-bold px-2.5 py-1 rounded-full border border-rose-100">Lost</span>
+                                    {% elif item.status == 'matched' %}
+                                    <span class="inline-block bg-emerald-50 text-emerald-700 text-[11px] font-bold px-2.5 py-1 rounded-full border border-emerald-100">Matched</span>
+                                    {% else %}
+                                    <span class="inline-block bg-gray-100 text-gray-600 text-[11px] font-bold px-2.5 py-1 rounded-full">Resolved</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- FOUND ITEMS REPORTED BY ME -->
+                    {% if found_items %}
+                    <div class="bg-white rounded-2xl border border-gray-200/80 shadow-xs overflow-hidden">
+                        <div class="px-5 py-3.5 border-b border-gray-100 bg-gray-50/70">
+                            <h3 class="text-xs font-bold text-gray-800 uppercase tracking-wider flex items-center gap-2">
+                                <span class="material-symbols-outlined text-base text-gray-600">volunteer_activism</span> My Listed Found Items
+                            </h3>
+                        </div>
+                        <div class="divide-y divide-gray-100">
+                            {% for item in found_items %}
+                            <div class="p-4 flex items-center gap-4 hover:bg-gray-50/50 transition-colors">
+                                <div class="w-14 h-14 rounded-xl bg-gray-100 overflow-hidden border border-gray-200 shadow-xs shrink-0 flex items-center justify-center">
+                                    {% if item.image_path %}
+                                        <img src="{% if item.image_path.startswith('/') or item.image_path.startswith('http') %}{{ item.image_path }}{% else %}/{{ item.image_path }}{% endif %}" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                        <div class="hidden w-full h-full flex-col items-center justify-center text-gray-400 bg-gray-50">
+                                            <span class="material-symbols-outlined text-lg">image</span>
+                                        </div>
+                                    {% else %}
+                                        <div class="w-full h-full flex flex-col items-center justify-center text-gray-400 bg-gray-50">
+                                            <span class="material-symbols-outlined text-lg">image</span>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="flex-1 min-w-0">
+                                    <h4 class="text-sm font-bold text-gray-900 truncate">{{ item.item_name }}</h4>
+                                    <p class="text-xs text-gray-500 truncate mt-0.5">{{ item.description[:60] }}...</p>
+                                    <div class="flex items-center gap-3 mt-1 text-[11px] text-gray-400">
+                                        <span>{{ item.date }}</span>
+                                        <span>•</span>
+                                        <span>{{ item.location }}</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="shrink-0 text-right">
+                                    {% if item.status == 'found' %}
+                                    <span class="inline-block bg-emerald-50 text-emerald-700 text-[11px] font-bold px-2.5 py-1 rounded-full border border-emerald-100">Active</span>
+                                    {% else %}
+                                    <span class="inline-block bg-gray-100 text-gray-600 text-[11px] font-bold px-2.5 py-1 rounded-full">Resolved</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                </div>
             </div>
         </div>
     </main>
@@ -225,7 +486,7 @@
             </div>
             <span class="text-[9px] font-bold mt-1">REPORT</span>
         </a>
-        <a href="/user/history" class="flex flex-col items-center text-primary">
+        <a href="/user/history" class="flex flex-col items-center text-emerald-600">
             <span class="material-symbols-outlined icon-fill text-xl">history</span>
             <span class="text-[9px] font-bold mt-1">HISTORY</span>
         </a>
@@ -235,6 +496,14 @@
         </a>
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <script>
+        const socket = io();
+        socket.on('handover_completed', (data) => {
+            console.log("Live handover completed event received in history page:", data);
+            window.location.reload();
+        });
+    </script>
     <script src="{{ url_for('static', filename='js/memories_core.js') }}"></script>
 </body>
 </html>

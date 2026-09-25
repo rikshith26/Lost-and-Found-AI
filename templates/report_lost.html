@@ -52,15 +52,38 @@
                 </button>
                 <form action="/user/search" method="GET" class="relative w-64 sm:w-80 md:w-96">
                     <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">search</span>
-                    <input type="text" name="q" placeholder="Search for items, locations..." class="w-full bg-gray-50 border-none rounded-full py-2.5 md:py-3 pl-12 pr-4 text-sm focus:ring-1 focus:ring-primary outline-none text-textDark placeholder-gray-400" required>
+                    <input type="text" name="q" placeholder="Search for items, locations..." class="w-full bg-gray-50 border-none rounded-full py-2.5 md:py-3 pl-12 pr-4 text-sm focus:ring-1 focus:ring-primary outline-none text-textDark placeholder-gray-400">
                 </form>
             </div>
             
-            <div class="flex items-center gap-6">
-                <button class="relative text-textMuted hover:text-textDark transition-colors">
-                    <span class="material-symbols-outlined">notifications</span>
-                    <span class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white">3</span>
-                </button>
+            <div class="flex items-center gap-4">
+                <!-- NOTIFICATION BELL & LIVE DROPDOWN -->
+                <div class="relative">
+                    <button id="notifBellBtn" onclick="toggleNotifDropdown(event)" class="relative p-2 text-gray-500 hover:text-gray-900 focus:outline-none transition-colors rounded-full hover:bg-gray-100 flex items-center justify-center">
+                        <span class="material-symbols-outlined text-2xl">notifications</span>
+                        <span id="notifBadge" class="hidden absolute top-0 right-0 w-4 h-4 bg-red-500 text-white text-[9px] font-extrabold rounded-full flex items-center justify-center border-2 border-white shadow-xs">0</span>
+                    </button>
+                    
+                    <!-- Notification Dropdown Panel -->
+                    <div id="notifDropdown" class="hidden absolute right-0 mt-3 w-80 sm:w-96 bg-white border border-gray-200/90 rounded-2xl shadow-2xl z-50 overflow-hidden divide-y divide-gray-100 text-left">
+                        <div class="px-4 py-3 bg-gray-50/80 flex items-center justify-between">
+                            <h4 class="text-xs font-bold text-gray-900 uppercase tracking-wider flex items-center gap-1.5">
+                                <span class="material-symbols-outlined text-base text-emerald-600">notifications</span> Live Notifications
+                            </h4>
+                            <span id="notifUnreadBadge" class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full">0 Unread</span>
+                        </div>
+                        
+                        <div id="notifList" class="max-h-80 overflow-y-auto divide-y divide-gray-50">
+                            <div class="p-6 text-center text-xs text-gray-400 italic">Loading updates...</div>
+                        </div>
+                        
+                        <div class="px-4 py-2.5 bg-gray-50/80 text-center">
+                            <a href="/user/history" class="text-xs font-bold text-emerald-600 hover:text-emerald-800 transition-colors">View All Activity & History &rarr;</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PROFILE AVATAR -->
                 <a href="/user/profile" class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm shadow-sm cursor-pointer border-2 border-white block">
                     {% if user and user.profile_photo %}
                         <img src="/{{ user.profile_photo }}" class="w-full h-full rounded-full object-cover">
@@ -72,6 +95,8 @@
                 </a>
             </div>
         </header>
+
+        <script src="/static/js/notifications_live.js"></script>
 
         <!-- FORM SCROLL AREA -->
         <div class="flex-1 overflow-y-auto hide-scrollbar p-8 flex flex-col justify-center max-w-2xl mx-auto w-full">

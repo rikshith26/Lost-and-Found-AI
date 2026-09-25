@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Review Item Claim // Foundify</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#4f46e5",
+                        primaryLight: "#e0e7ff",
+                        textDark: "#0f172a",
+                        textMuted: "#64748b",
+                    },
+                    fontFamily: {
+                        sans: ["Plus Jakarta Sans", "sans-serif"],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        body { background-color: #FAFAFA; color: #191C1D; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body class="flex min-h-screen overflow-hidden">
+    {% include 'loader.html' %}
+    {% set active_page = 'history' %}
+    {% include 'user_sidebar.html' %}
+
+    <main class="flex-1 flex flex-col h-screen overflow-hidden bg-[#FAFAFA]">
+        <!-- TOP APP BAR -->
+        <header class="h-20 bg-white/80 backdrop-blur-md border-b border-gray-100 flex items-center justify-between px-6 md:px-8 z-10 shrink-0">
+            <div class="flex items-center gap-3">
+                <a href="/user/history" class="p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors flex items-center justify-center">
+                    <span class="material-symbols-outlined text-2xl">arrow_back</span>
+                </a>
+                <h2 class="text-xl font-bold text-gray-900">Review Item Claim Request</h2>
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="bg-yellow-50 border border-yellow-200 text-yellow-700 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+                    <span class="material-symbols-outlined text-sm">hourglass_empty</span> Status: Pending Your Approval
+                </span>
+            </div>
+        </header>
+
+        <!-- SCROLL AREA -->
+        <div class="flex-1 overflow-y-auto hide-scrollbar p-6 md:p-8">
+            <div class="max-w-4xl mx-auto space-y-8 pb-12">
+
+                <!-- INTRO NOTICE -->
+                <div class="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+                    <div class="flex items-start gap-4">
+                        <div class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0 border border-indigo-100">
+                            <span class="material-symbols-outlined text-2xl">gavel</span>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-gray-900">Claim Submitted For Your Found Item</h3>
+                            <p class="text-sm text-gray-600 mt-0.5">A community member submitted a claim for your listed found item. Verify claimant information below.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ITEM & CLAIMANT DETAILS GRID -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                    <!-- YOUR LISTED FOUND ITEM -->
+                    <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex flex-col">
+                        <div class="px-6 py-4 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
+                            <span class="text-xs font-bold uppercase tracking-wider text-green-600 flex items-center gap-1">
+                                <span class="material-symbols-outlined text-sm">volunteer_activism</span> Your Listed Item
+                            </span>
+                            <span class="text-xs text-gray-500 font-semibold">{{ item.date }}</span>
+                        </div>
+                        <div class="p-6 space-y-4 flex-1">
+                            <div class="w-full h-52 rounded-xl overflow-hidden border border-gray-200 bg-gray-100">
+                                <img src="/{{ item.image_path }}" alt="Found Item" class="w-full h-full object-cover">
+                            </div>
+                            <div>
+                                <h4 class="text-xl font-bold text-gray-900">{{ item.item_name }}</h4>
+                                <p class="text-sm text-gray-600 mt-2 leading-relaxed">{{ item.description }}</p>
+                            </div>
+                            <div class="pt-2 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">
+                                <span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">location_on</span> {{ item.location }}</span>
+                                <span class="bg-gray-100 px-2.5 py-1 rounded text-gray-700 font-medium">{{ item.category }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- CLAIMANT DETAILS & PROOF -->
+                    <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex flex-col">
+                        <div class="px-6 py-4 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
+                            <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 flex items-center gap-1">
+                                <span class="material-symbols-outlined text-sm">person</span> Claimant Profile
+                            </span>
+                            <span class="text-xs text-gray-500 font-semibold">Submitted Just Now</span>
+                        </div>
+                        <div class="p-6 space-y-6 flex-1">
+                            <div class="flex items-center gap-4">
+                                <div class="w-14 h-14 rounded-full bg-primaryLight text-primary flex items-center justify-center font-bold text-xl border border-primary/20 shrink-0">
+                                    {% if claimant and claimant.name %}
+                                        {{ claimant.name[0] | upper }}
+                                    {% else %}
+                                        C
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <h4 class="text-lg font-bold text-gray-900">{{ claimant.name if claimant else 'Claimant' }}</h4>
+                                    <p class="text-xs text-gray-500">{{ claimant.email if claimant else '' }}</p>
+                                    {% if claimant and claimant.phone %}
+                                    <p class="text-xs text-gray-500 font-medium mt-0.5"><span class="material-symbols-outlined text-xs">phone</span> {{ claimant.phone }}</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="bg-gray-50 rounded-xl p-4 border border-gray-100 space-y-2">
+                                <h5 class="text-xs font-bold text-gray-700 uppercase tracking-wider">Claim Description / Proof</h5>
+                                <p class="text-sm text-gray-600 leading-relaxed">{{ claim.proof_text or 'No specific proof description attached.' }}</p>
+                            </div>
+
+                            <div class="text-xs text-gray-400 font-medium">
+                                Payment Verification: <span class="text-green-600 font-bold">Verified Simulation</span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- FINDER ACTION BOX -->
+                <div class="bg-white rounded-2xl border border-gray-200 p-8 shadow-sm text-center max-w-xl mx-auto space-y-4">
+                    <h3 class="text-lg font-bold text-gray-900">Do you approve this claim?</h3>
+                    <p class="text-xs text-gray-500">Approving will open a direct chat room with the claimant to coordinate item return.</p>
+                    <div class="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+                        <a href="/user/finder-claim-action/{{ claim.id }}/approve" class="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-xl shadow-sm transition-colors flex items-center justify-center gap-2">
+                            <span class="material-symbols-outlined">check_circle</span> Approve Claim & Open Chat
+                        </a>
+                        <a href="/user/finder-claim-action/{{ claim.id }}/reject" class="w-full sm:w-auto bg-white border border-gray-300 hover:bg-gray-50 text-red-600 font-bold py-3 px-6 rounded-xl transition-colors flex items-center justify-center gap-2" onclick="return confirm('Reject this claim?')">
+                            <span class="material-symbols-outlined text-red-500">cancel</span> Reject Claim
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+</body>
+</html>

@@ -38,42 +38,8 @@
     {% include 'loader.html' %}
 
     <!-- SIDEBAR -->
-    <aside class="w-64 bg-white border-r border-gray-100 flex flex-col h-screen flex-shrink-0 z-20 hidden md:flex shadow-sm">
-        <div class="px-6 py-8">
-            <div class="flex items-center gap-3">
-                <img src="{{ url_for('static', filename='images/logo.jpeg') }}" alt="Foundify Logo" class="h-8 w-auto rounded-md object-contain">
-                <h1 class="text-xl font-bold text-gray-900 tracking-tight">Foundify</h1>
-            </div>
-            <p class="text-[10px] font-semibold uppercase tracking-widest text-primary mt-1">Super Admin</p>
-        </div>
-
-        <nav class="flex-1 overflow-y-auto hide-scrollbar px-4 space-y-2">
-            <a href="/superadmin/dashboard" class="flex items-center gap-3 px-4 py-3 text-textMuted hover:bg-gray-50 hover:text-textDark rounded-xl font-medium text-sm transition-colors">
-                <span class="material-symbols-outlined">dashboard</span> Dashboard
-            </a>
-            <a href="/admin/users" class="flex items-center gap-3 px-4 py-3 text-textMuted hover:bg-gray-50 hover:text-textDark rounded-xl font-medium text-sm transition-colors">
-                <span class="material-symbols-outlined">people</span> All Users
-            </a>
-            <a href="/superadmin/unblock-requests" class="flex items-center gap-3 px-4 py-3 bg-primaryLight text-primary rounded-xl font-semibold text-sm transition-colors shadow-sm border border-primary/10">
-                <span class="material-symbols-outlined icon-fill">lock_open</span> Unblock Requests
-            </a>
-            <a href="/superadmin/create-admin" class="flex items-center gap-3 px-4 py-3 text-textMuted hover:bg-gray-50 hover:text-textDark rounded-xl font-medium text-sm transition-colors">
-                <span class="material-symbols-outlined">person_add</span> Create Admin
-            </a>
-            <a href="/admin/settings" class="flex items-center gap-3 px-4 py-3 text-textMuted hover:bg-gray-50 hover:text-textDark rounded-xl font-medium text-sm transition-colors">
-                <span class="material-symbols-outlined">settings</span> System Settings
-            </a>
-            <a href="/superadmin/profile" class="flex items-center gap-3 px-4 py-3 text-textMuted hover:bg-gray-50 hover:text-textDark rounded-xl font-medium text-sm transition-colors">
-                <span class="material-symbols-outlined">account_circle</span> My Profile
-            </a>
-        </nav>
-
-        <div class="p-4 mt-auto">
-            <a href="/logout" class="w-full flex items-center justify-center gap-2 px-4 py-3 text-red-500 hover:bg-red-50 rounded-xl font-bold text-sm transition-colors">
-                <span class="material-symbols-outlined">logout</span> Logout
-            </a>
-        </div>
-    </aside>
+    {% set active_page = 'unblock_requests' %}
+    {% include 'admin_sidebar.html' %}
 
     <!-- MAIN CONTENT -->
     <main class="flex-1 flex flex-col h-screen overflow-hidden">

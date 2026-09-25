@@ -52,13 +52,13 @@
         <a href="/user/profile" class="flex items-center gap-3 px-4 py-2 {% if active_page == 'profile' %}bg-gray-100 text-gray-900 rounded font-medium text-sm transition-colors border border-gray-200{% else %}text-textMuted hover:bg-gray-50 hover:text-textDark rounded font-medium text-sm transition-colors{% endif %}">
             <span class="material-symbols-outlined text-[20px]">person</span> My Activity
         </a>
-        <a href="#" class="flex items-center gap-3 px-4 py-2 text-textMuted hover:bg-gray-50 hover:text-textDark rounded font-medium text-sm transition-colors">
+        <a href="/user/saved-items" class="flex items-center gap-3 px-4 py-2 {% if active_page == 'saved_items' %}bg-gray-100 text-gray-900 rounded font-medium text-sm transition-colors border border-gray-200{% else %}text-textMuted hover:bg-gray-50 hover:text-textDark rounded font-medium text-sm transition-colors{% endif %}">
             <span class="material-symbols-outlined text-[20px]">bookmark</span> Saved Items
         </a>
-        <a href="#" class="flex items-center gap-3 px-4 py-2 text-textMuted hover:bg-gray-50 hover:text-textDark rounded font-medium text-sm transition-colors">
+        <a href="/user/community" class="flex items-center gap-3 px-4 py-2 {% if active_page == 'community' %}bg-gray-100 text-gray-900 rounded font-medium text-sm transition-colors border border-gray-200{% else %}text-textMuted hover:bg-gray-50 hover:text-textDark rounded font-medium text-sm transition-colors{% endif %}">
             <span class="material-symbols-outlined text-[20px]">groups</span> Community
         </a>
-        <a href="#" class="flex items-center gap-3 px-4 py-2 text-textMuted hover:bg-gray-50 hover:text-textDark rounded font-medium text-sm transition-colors">
+        <a href="/user/settings" class="flex items-center gap-3 px-4 py-2 {% if active_page == 'settings' %}bg-gray-100 text-gray-900 rounded font-medium text-sm transition-colors border border-gray-200{% else %}text-textMuted hover:bg-gray-50 hover:text-textDark rounded font-medium text-sm transition-colors{% endif %}">
             <span class="material-symbols-outlined text-[20px]">settings</span> Settings
         </a>
     </nav>

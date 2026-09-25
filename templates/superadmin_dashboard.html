@@ -33,54 +33,8 @@
     {% include 'loader.html' %}
 
     <!-- SIDEBAR -->
-    <aside class="w-64 bg-white border-r border-gray-200 flex flex-col h-screen flex-shrink-0 z-20 hidden md:flex">
-        <div class="px-6 py-6 border-b border-gray-100">
-            <div class="flex items-center gap-3">
-                <img src="{{ url_for('static', filename='images/logo.jpeg') }}" alt="Foundify Logo" class="h-8 w-auto rounded object-contain">
-                <h1 class="text-xl font-bold text-gray-900 tracking-tight">Foundify</h1>
-            </div>
-            <p class="text-[10px] font-bold uppercase tracking-widest text-gray-500 mt-2">Super Admin</p>
-        </div>
-
-        <nav class="flex-1 overflow-y-auto hide-scrollbar px-4 py-4 space-y-1">
-            <a href="/superadmin/dashboard" class="flex items-center gap-3 px-4 py-2 bg-gray-100 text-gray-900 rounded font-medium text-sm transition-colors border border-gray-200">
-                <span class="material-symbols-outlined">dashboard</span> Dashboard
-            </a>
-            <a href="/admin/claims" class="flex items-center gap-3 px-4 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded font-medium text-sm transition-colors">
-                <span class="material-symbols-outlined">gavel</span> Verify Claims
-            </a>
-            <a href="/admin/users" class="flex items-center gap-3 px-4 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded font-medium text-sm transition-colors">
-                <span class="material-symbols-outlined">people</span> All Users
-            </a>
-            <a href="/superadmin/unblock-requests" class="flex items-center gap-3 px-4 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded font-medium text-sm transition-colors">
-                <span class="material-symbols-outlined">lock_open</span> Unblock Requests
-                {% if pending_unblocks > 0 %}
-                <span class="ml-auto bg-gray-800 text-white text-[10px] font-bold px-2 py-0.5 rounded">{{ pending_unblocks }}</span>
-                {% endif %}
-            </a>
-            <a href="/superadmin/create-admin" class="flex items-center gap-3 px-4 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded font-medium text-sm transition-colors">
-                <span class="material-symbols-outlined">person_add</span> Create Admin
-            </a>
-            <a href="/admin/settings" class="flex items-center gap-3 px-4 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded font-medium text-sm transition-colors">
-                <span class="material-symbols-outlined">settings</span> System Settings
-            </a>
-            <a href="/superadmin/profile" class="flex items-center gap-3 px-4 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded font-medium text-sm transition-colors">
-                <span class="material-symbols-outlined">account_circle</span> My Profile
-            </a>
-            <a href="/superadmin/id_card" class="flex items-center gap-3 px-4 py-2 bg-gray-900 text-white shadow-sm hover:bg-black rounded font-medium text-sm transition-colors mt-2">
-                <span class="material-symbols-outlined text-white">qr_code_2</span> Physical ID QR
-            </a>
-        </nav>
-
-        <div class="p-4 mt-auto border-t border-gray-100">
-            <a href="/admin/export-data" class="w-full bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 rounded py-2 px-4 flex items-center justify-center gap-2 font-medium text-sm transition-colors mb-2">
-                <span class="material-symbols-outlined text-lg">download</span> Export Data
-            </a>
-            <a href="/logout" class="w-full flex items-center justify-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded font-medium text-sm transition-colors">
-                <span class="material-symbols-outlined text-lg">logout</span> Logout
-            </a>
-        </div>
-    </aside>
+    {% set active_page = 'dashboard' %}
+    {% include 'admin_sidebar.html' %}
 
     <!-- MAIN CONTENT -->
     <main class="flex-1 flex flex-col h-screen overflow-hidden bg-gray-50">
@@ -163,6 +117,74 @@
                         </div>
                         {% endif %}
                     </a>
+                </div>
+
+                <!-- PENDING AI MATCHES SECTION -->
+                <div class="bg-white rounded border border-gray-200 shadow-sm overflow-hidden flex flex-col">
+                    <div class="p-6 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
+                        <h3 class="text-lg font-bold text-gray-900">Pending AI Verifications</h3>
+                        <span class="text-xs font-semibold text-gray-500">{{ matches|length }} matches found</span>
+                    </div>
+
+                    {% if matches %}
+                    <div class="overflow-x-auto p-4">
+                        <div class="space-y-4">
+                            {% for match in matches %}
+                            <div class="bg-white border border-gray-200 rounded p-4 flex flex-col md:flex-row items-center gap-6 shadow-sm hover:bg-gray-50 transition-colors">
+                                
+                                <!-- Images -->
+                                <div class="flex items-center gap-2 shrink-0">
+                                    <div class="relative w-16 h-16 rounded overflow-hidden border border-gray-200">
+                                        <img src="/{{ match.lost.image_path }}" class="w-full h-full object-cover">
+                                        <div class="absolute top-0 left-0 bg-gray-900 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-br">LOST</div>
+                                    </div>
+                                    <div class="w-4 h-[2px] bg-gray-300"></div>
+                                    <div class="relative w-16 h-16 rounded overflow-hidden border border-gray-200">
+                                        <img src="/{{ match.found.image_path }}" class="w-full h-full object-cover">
+                                        <div class="absolute top-0 right-0 bg-gray-900 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-bl">FOUND</div>
+                                    </div>
+                                </div>
+
+                                <!-- Text -->
+                                <div class="flex-1 min-w-0 text-center md:text-left">
+                                    <h4 class="text-base font-bold text-gray-900 truncate">{{ match.lost.item_name }}</h4>
+                                    <p class="text-sm text-gray-600 mb-1 truncate">Match in {{ match.found.location }}</p>
+                                    <p class="text-xs text-gray-400 font-medium">Lost: {{ match.lost.created_at.strftime('%b %d') if match.lost.created_at }} &middot; Found: {{ match.found.created_at.strftime('%b %d') if match.found.created_at }}</p>
+                                </div>
+
+                                <!-- Scores -->
+                                <div class="flex items-center gap-4 shrink-0">
+                                    <div class="w-14 h-14 rounded border {{ 'border-gray-800 text-gray-900' if match.score.final_score >= 70 else 'border-gray-400 text-gray-600' if match.score.final_score >= 40 else 'border-gray-200 text-gray-400' }} flex items-center justify-center font-bold text-sm bg-white">
+                                        {{ match.score.final_score }}%
+                                    </div>
+                                    <div class="flex flex-col gap-1">
+                                        <span class="text-[10px] font-bold text-gray-500 bg-gray-100 px-2 py-0.5 rounded text-center border border-gray-200">IMG: {{ match.score.image_score }}%</span>
+                                        <span class="text-[10px] font-bold text-gray-500 bg-gray-100 px-2 py-0.5 rounded text-center border border-gray-200">TXT: {{ match.score.text_score }}%</span>
+                                    </div>
+                                </div>
+
+                                <!-- Action -->
+                                <div class="shrink-0 w-full md:w-auto mt-4 md:mt-0 flex gap-2">
+                                    <a href="/admin/approve-match/{{ match.lost.lost_id }}/{{ match.found.found_id }}" class="w-full md:w-auto bg-primary hover:bg-primary/90 text-white px-5 py-2 rounded font-medium text-sm shadow-sm transition-colors text-center inline-block">
+                                        Approve
+                                    </a>
+                                    <a href="/admin/reject-match/{{ match.lost.lost_id }}/{{ match.found.found_id }}" class="w-full md:w-auto bg-white border border-gray-300 hover:bg-gray-100 text-gray-700 px-4 py-2 rounded font-medium text-sm shadow-sm transition-colors text-center inline-block">
+                                        Reject
+                                    </a>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="p-12 text-center flex flex-col items-center">
+                        <div class="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-4 border border-gray-200">
+                            <span class="material-symbols-outlined text-4xl text-gray-400">done_all</span>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900 mb-1">All Caught Up</h3>
+                        <p class="text-sm text-gray-500">There are no pending verifications requiring your attention.</p>
+                    </div>
+                    {% endif %}
                 </div>
 
                 <!-- RECENT ADMINS -->

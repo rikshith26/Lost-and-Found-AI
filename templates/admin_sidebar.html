@@ -1,0 +1,71 @@
+<!-- ADMIN & SUPER ADMIN DYNAMIC SIDEBAR -->
+<aside class="w-64 bg-white border-r border-gray-200 flex flex-col h-screen flex-shrink-0 z-20 hidden md:flex">
+    <div class="px-6 py-6 border-b border-gray-100">
+        <a href="{{ '/superadmin/dashboard' if session.get('role') == 'super_admin' else '/admin/dashboard' }}" class="flex items-center gap-3">
+            <img src="{{ url_for('static', filename='images/logo.jpeg') }}" alt="Foundify Logo" class="h-8 w-auto rounded object-contain">
+            <h1 class="text-xl font-bold text-gray-900 tracking-tight">Foundify</h1>
+        </a>
+        <p class="text-[10px] font-bold uppercase tracking-widest text-gray-500 mt-2">
+            {{ 'Super Admin' if session.get('role') == 'super_admin' else 'Moderator Desk' }}
+        </p>
+    </div>
+
+    <nav class="flex-1 overflow-y-auto hide-scrollbar px-4 py-4 space-y-1">
+        {% if session.get('role') == 'super_admin' %}
+            <a href="/superadmin/dashboard" class="flex items-center gap-3 px-4 py-2 {% if active_page == 'dashboard' %}bg-gray-100 text-gray-900 font-bold border border-gray-200{% else %}text-gray-600 hover:bg-gray-50 hover:text-gray-900{% endif %} rounded font-medium text-sm transition-colors">
+                <span class="material-symbols-outlined">dashboard</span> Dashboard
+            </a>
+            <a href="/admin/claims" class="flex items-center gap-3 px-4 py-2 {% if active_page == 'claims' %}bg-gray-100 text-gray-900 font-bold border border-gray-200{% else %}text-gray-600 hover:bg-gray-50 hover:text-gray-900{% endif %} rounded font-medium text-sm transition-colors">
+                <span class="material-symbols-outlined">gavel</span> Verify Claims
+            </a>
+            <a href="/admin/users" class="flex items-center gap-3 px-4 py-2 {% if active_page == 'users' %}bg-gray-100 text-gray-900 font-bold border border-gray-200{% else %}text-gray-600 hover:bg-gray-50 hover:text-gray-900{% endif %} rounded font-medium text-sm transition-colors">
+                <span class="material-symbols-outlined">people</span> All Users
+            </a>
+            <a href="/superadmin/unblock-requests" class="flex items-center gap-3 px-4 py-2 {% if active_page == 'unblock_requests' %}bg-gray-100 text-gray-900 font-bold border border-gray-200{% else %}text-gray-600 hover:bg-gray-50 hover:text-gray-900{% endif %} rounded font-medium text-sm transition-colors">
+                <span class="material-symbols-outlined">lock_open</span> Unblock Requests
+                {% if pending_unblocks and pending_unblocks > 0 %}
+                <span class="ml-auto bg-gray-800 text-white text-[10px] font-bold px-2 py-0.5 rounded">{{ pending_unblocks }}</span>
+                {% endif %}
+            </a>
+            <a href="/superadmin/create-admin" class="flex items-center gap-3 px-4 py-2 {% if active_page == 'create_admin' %}bg-gray-100 text-gray-900 font-bold border border-gray-200{% else %}text-gray-600 hover:bg-gray-50 hover:text-gray-900{% endif %} rounded font-medium text-sm transition-colors">
+                <span class="material-symbols-outlined">person_add</span> Create Admin
+            </a>
+            <a href="/admin/settings" class="flex items-center gap-3 px-4 py-2 {% if active_page == 'settings' %}bg-gray-100 text-gray-900 font-bold border border-gray-200{% else %}text-gray-600 hover:bg-gray-50 hover:text-gray-900{% endif %} rounded font-medium text-sm transition-colors">
+                <span class="material-symbols-outlined">settings</span> System Settings
+            </a>
+            <a href="/superadmin/profile" class="flex items-center gap-3 px-4 py-2 {% if active_page == 'profile' %}bg-gray-100 text-gray-900 font-bold border border-gray-200{% else %}text-gray-600 hover:bg-gray-50 hover:text-gray-900{% endif %} rounded font-medium text-sm transition-colors">
+                <span class="material-symbols-outlined">account_circle</span> My Profile
+            </a>
+            <a href="/superadmin/id_card" class="flex items-center gap-3 px-4 py-2 {% if active_page == 'id_card' %}bg-gray-800 text-white font-bold{% else %}bg-gray-900 text-white hover:bg-black{% endif %} shadow-sm rounded font-medium text-sm transition-colors mt-2">
+                <span class="material-symbols-outlined text-white">qr_code_2</span> Physical ID QR
+            </a>
+        {% else %}
+            <a href="/admin/dashboard" class="flex items-center gap-3 px-4 py-2 {% if active_page == 'dashboard' %}bg-gray-100 text-gray-900 font-bold border border-gray-200{% else %}text-gray-600 hover:bg-gray-50 hover:text-gray-900{% endif %} rounded font-medium text-sm transition-colors">
+                <span class="material-symbols-outlined">inbox</span> Inbox / Matches
+            </a>
+            <a href="/admin/claims" class="flex items-center gap-3 px-4 py-2 {% if active_page == 'claims' %}bg-gray-100 text-gray-900 font-bold border border-gray-200{% else %}text-gray-600 hover:bg-gray-50 hover:text-gray-900{% endif %} rounded font-medium text-sm transition-colors">
+                <span class="material-symbols-outlined">gavel</span> Verify Claims
+            </a>
+            <a href="/admin/users" class="flex items-center gap-3 px-4 py-2 {% if active_page == 'users' %}bg-gray-100 text-gray-900 font-bold border border-gray-200{% else %}text-gray-600 hover:bg-gray-50 hover:text-gray-900{% endif %} rounded font-medium text-sm transition-colors">
+                <span class="material-symbols-outlined">people</span> Manage Users
+            </a>
+            <a href="/admin/settings" class="flex items-center gap-3 px-4 py-2 {% if active_page == 'settings' %}bg-gray-100 text-gray-900 font-bold border border-gray-200{% else %}text-gray-600 hover:bg-gray-50 hover:text-gray-900{% endif %} rounded font-medium text-sm transition-colors">
+                <span class="material-symbols-outlined">settings</span> Settings
+            </a>
+            <a href="/admin/profile" class="flex items-center gap-3 px-4 py-2 {% if active_page == 'profile' %}bg-gray-100 text-gray-900 font-bold border border-gray-200{% else %}text-gray-600 hover:bg-gray-50 hover:text-gray-900{% endif %} rounded font-medium text-sm transition-colors">
+                <span class="material-symbols-outlined">account_circle</span> My Profile
+            </a>
+        {% endif %}
+    </nav>
+
+    <div class="p-4 mt-auto border-t border-gray-100 space-y-2">
+        {% if session.get('role') == 'super_admin' %}
+        <a href="/admin/export-data" class="flex items-center gap-2 px-4 py-2 text-gray-700 bg-gray-50 hover:bg-gray-100 rounded font-medium text-xs transition-colors w-full justify-center border border-gray-200">
+            <span class="material-symbols-outlined text-base">download</span> Export Data
+        </a>
+        {% endif %}
+        <a href="/logout" class="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded font-medium text-sm transition-colors w-full justify-center">
+            <span class="material-symbols-outlined text-lg">logout</span> {{ 'Logout' if session.get('role') == 'super_admin' else 'Leave Desk' }}
+        </a>
+    </div>
+</aside>

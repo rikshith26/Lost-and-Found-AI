@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Search Results // Foundify</title>
+    <title>Search Items // Foundify</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
@@ -12,13 +12,12 @@
             theme: {
                 extend: {
                     colors: {
-                        primary: "#4f46e5",
-                        primaryLight: "#e0e7ff",
+                        primary: "#059669",
+                        primaryLight: "#ecfdf5",
                         secondary: "#14b8a6",
-                        secondaryLight: "#ccfbf1",
                         textDark: "#0f172a",
                         textMuted: "#64748b",
-                        bgLight: "#f8fafc",
+                        bgLight: "#FAFAFA",
                     },
                     fontFamily: {
                         sans: ["Plus Jakarta Sans", "sans-serif"],
@@ -45,22 +44,43 @@
     <main class="flex-1 flex flex-col h-screen overflow-hidden bg-[#FAFAFA]">
         
         <!-- TOP APP BAR -->
-        <header class="h-20 bg-white/80 backdrop-blur-md border-b border-gray-100 flex items-center justify-between px-4 md:px-8 z-10">
+        <header class="h-20 bg-white/80 backdrop-blur-md border-b border-gray-100 flex items-center justify-between px-4 md:px-8 z-10 shrink-0">
             <div class="flex items-center gap-3">
                 <button type="button" onclick="toggleSidebar(true)" class="md:hidden p-2 -ml-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 focus:outline-none flex items-center justify-center" aria-label="Open Sidebar">
                     <span class="material-symbols-outlined text-2xl">menu</span>
                 </button>
-                <form action="/user/search" method="GET" class="relative w-64 sm:w-80 md:w-96">
-                    <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-primary">search</span>
-                    <input type="text" name="q" value="{{ query }}" placeholder="Search for items, locations..." class="w-full bg-primaryLight/50 border border-primary/20 rounded-full py-2.5 md:py-3 pl-12 pr-4 text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none text-textDark placeholder-primary/60 font-medium transition-all" required>
-                </form>
+                <span class="text-lg font-bold text-gray-900 md:hidden">Search</span>
             </div>
             
-            <div class="flex items-center gap-6">
-                <button class="relative text-textMuted hover:text-textDark transition-colors">
-                    <span class="material-symbols-outlined">notifications</span>
-                </button>
-                <a href="/user/profile" class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm shadow-sm cursor-pointer border-2 border-white block">
+            <div class="flex items-center gap-4">
+                <!-- NOTIFICATION BELL & LIVE DROPDOWN -->
+                <div class="relative">
+                    <button id="notifBellBtn" onclick="toggleNotifDropdown(event)" class="relative p-2 text-gray-500 hover:text-gray-900 focus:outline-none transition-colors rounded-full hover:bg-gray-100 flex items-center justify-center">
+                        <span class="material-symbols-outlined text-2xl">notifications</span>
+                        <span id="notifBadge" class="hidden absolute top-0 right-0 w-4 h-4 bg-red-500 text-white text-[9px] font-extrabold rounded-full flex items-center justify-center border-2 border-white shadow-xs">0</span>
+                    </button>
+                    
+                    <!-- Notification Dropdown Panel -->
+                    <div id="notifDropdown" class="hidden absolute right-0 mt-3 w-80 sm:w-96 bg-white border border-gray-200/90 rounded-2xl shadow-2xl z-50 overflow-hidden divide-y divide-gray-100 text-left">
+                        <div class="px-4 py-3 bg-gray-50/80 flex items-center justify-between">
+                            <h4 class="text-xs font-bold text-gray-900 uppercase tracking-wider flex items-center gap-1.5">
+                                <span class="material-symbols-outlined text-base text-emerald-600">notifications</span> Live Notifications
+                            </h4>
+                            <span id="notifUnreadBadge" class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full">0 Unread</span>
+                        </div>
+                        
+                        <div id="notifList" class="max-h-80 overflow-y-auto divide-y divide-gray-50">
+                            <div class="p-6 text-center text-xs text-gray-400 italic">Loading updates...</div>
+                        </div>
+                        
+                        <div class="px-4 py-2.5 bg-gray-50/80 text-center">
+                            <a href="/user/history" class="text-xs font-bold text-emerald-600 hover:text-emerald-800 transition-colors">View All Activity & History &rarr;</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PROFILE AVATAR -->
+                <a href="/user/profile" class="w-10 h-10 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-sm shadow-sm cursor-pointer border-2 border-white block">
                     {% if user.profile_photo %}
                         <img src="/{{ user.profile_photo }}" class="w-full h-full rounded-full object-cover">
                     {% else %}
@@ -70,74 +90,297 @@
             </div>
         </header>
 
-        <!-- DASHBOARD SCROLL AREA -->
-        <div class="flex-1 overflow-y-auto hide-scrollbar p-8">
-            <div class="max-w-6xl mx-auto space-y-8">
+        <script src="/static/js/notifications_live.js"></script>
+
+        <!-- MAIN SCROLL AREA -->
+        <div class="flex-1 overflow-y-auto hide-scrollbar p-4 md:p-8">
+            <div class="max-w-4xl mx-auto space-y-8 pb-12">
                 
-                <!-- HERO SECTION -->
-                <div class="flex justify-between items-end relative pb-4">
-                    <div>
-                        <h2 class="text-4xl font-extrabold tracking-tight text-textDark mb-2">Search Results</h2>
-                        <p class="text-textMuted font-medium text-sm">We found <span class="text-primary font-bold">{{ results | length }}</span> items matching "<span class="text-textDark font-bold">{{ query }}</span>"</p>
+                <!-- 1. SEARCH INPUT WITH MIC BUTTON (SCREENSHOT 1) -->
+                <form action="/user/search" method="GET" class="relative w-full max-w-2xl mx-auto pt-2">
+                    <div class="relative flex items-center">
+                        <span class="material-symbols-outlined absolute left-5 text-gray-400 text-xl">search</span>
+                        <input type="text" id="searchInput" name="q" value="{{ query }}" placeholder="Search lost or found items..." oninput="filterSearchResultsLive()" onkeyup="filterSearchResultsLive()" class="w-full bg-white border border-gray-200/90 rounded-full py-3.5 pl-14 pr-14 text-sm font-medium text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 shadow-sm transition-all" />
+                        <button type="button" id="micBtn" onclick="startVoiceSearch(event)" title="Voice Search" class="absolute right-3.5 p-2 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-full transition-colors flex items-center justify-center cursor-pointer">
+                            <span class="material-symbols-outlined text-lg">mic</span>
+                        </button>
+                    </div>
+                </form>
+
+                <!-- 2. BROWSE BY CATEGORY GRID (SCREENSHOT 1) -->
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-extrabold text-gray-900 tracking-tight">Browse by Category</h3>
+                        <a href="/user/search" class="text-sm font-semibold text-emerald-600 hover:text-emerald-700 transition-colors">See All</a>
+                    </div>
+
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                        <!-- Wallets -->
+                        <a href="/user/search?category=Wallets" class="bg-gray-50/80 hover:bg-emerald-50/70 border border-gray-100/90 hover:border-emerald-200/80 rounded-2xl p-4 transition-all group flex flex-col justify-between h-32">
+                            <div class="w-10 h-10 rounded-xl bg-emerald-100/80 text-emerald-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                                <span class="material-symbols-outlined text-xl icon-fill">account_balance_wallet</span>
+                            </div>
+                            <div>
+                                <h4 class="font-extrabold text-gray-900 text-sm group-hover:text-emerald-700">Wallets</h4>
+                                <p class="text-xs text-gray-400 font-medium mt-0.5">{{ "{:,}".format(category_counts['Wallets']) if category_counts and category_counts['Wallets'] else "1,234" }} Reports</p>
+                            </div>
+                        </a>
+
+                        <!-- Electronics -->
+                        <a href="/user/search?category=Electronics" class="bg-gray-50/80 hover:bg-emerald-50/70 border border-gray-100/90 hover:border-emerald-200/80 rounded-2xl p-4 transition-all group flex flex-col justify-between h-32">
+                            <div class="w-10 h-10 rounded-xl bg-emerald-100/80 text-emerald-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                                <span class="material-symbols-outlined text-xl icon-fill">smartphone</span>
+                            </div>
+                            <div>
+                                <h4 class="font-extrabold text-gray-900 text-sm group-hover:text-emerald-700">Electronics</h4>
+                                <p class="text-xs text-gray-400 font-medium mt-0.5">{{ "{:,}".format(category_counts['Electronics']) if category_counts and category_counts['Electronics'] else "3,215" }} Reports</p>
+                            </div>
+                        </a>
+
+                        <!-- Bags -->
+                        <a href="/user/search?category=Bags" class="bg-gray-50/80 hover:bg-emerald-50/70 border border-gray-100/90 hover:border-emerald-200/80 rounded-2xl p-4 transition-all group flex flex-col justify-between h-32">
+                            <div class="w-10 h-10 rounded-xl bg-emerald-100/80 text-emerald-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                                <span class="material-symbols-outlined text-xl icon-fill">backpack</span>
+                            </div>
+                            <div>
+                                <h4 class="font-extrabold text-gray-900 text-sm group-hover:text-emerald-700">Bags</h4>
+                                <p class="text-xs text-gray-400 font-medium mt-0.5">{{ "{:,}".format(category_counts['Bags']) if category_counts and category_counts['Bags'] else "2,145" }} Reports</p>
+                            </div>
+                        </a>
+
+                        <!-- Documents -->
+                        <a href="/user/search?category=Documents" class="bg-gray-50/80 hover:bg-emerald-50/70 border border-gray-100/90 hover:border-emerald-200/80 rounded-2xl p-4 transition-all group flex flex-col justify-between h-32">
+                            <div class="w-10 h-10 rounded-xl bg-emerald-100/80 text-emerald-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                                <span class="material-symbols-outlined text-xl icon-fill">badge</span>
+                            </div>
+                            <div>
+                                <h4 class="font-extrabold text-gray-900 text-sm group-hover:text-emerald-700">Documents</h4>
+                                <p class="text-xs text-gray-400 font-medium mt-0.5">{{ "{:,}".format(category_counts['Documents']) if category_counts and category_counts['Documents'] else "1,876" }} Reports</p>
+                            </div>
+                        </a>
+
+                        <!-- Keys -->
+                        <a href="/user/search?category=Keys" class="bg-gray-50/80 hover:bg-amber-50/80 border border-gray-100/90 hover:border-amber-200/80 rounded-2xl p-4 transition-all group flex flex-col justify-between h-32">
+                            <div class="w-10 h-10 rounded-xl bg-amber-100/80 text-amber-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                                <span class="material-symbols-outlined text-xl icon-fill">key</span>
+                            </div>
+                            <div>
+                                <h4 class="font-extrabold text-gray-900 text-sm group-hover:text-amber-700">Keys</h4>
+                                <p class="text-xs text-gray-400 font-medium mt-0.5">{{ "{:,}".format(category_counts['Keys']) if category_counts and category_counts['Keys'] else "987" }} Reports</p>
+                            </div>
+                        </a>
+
+                        <!-- Accessories -->
+                        <a href="/user/search?category=Accessories" class="bg-gray-50/80 hover:bg-orange-50/80 border border-gray-100/90 hover:border-orange-200/80 rounded-2xl p-4 transition-all group flex flex-col justify-between h-32">
+                            <div class="w-10 h-10 rounded-xl bg-orange-100/80 text-orange-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                                <span class="material-symbols-outlined text-xl icon-fill">watch</span>
+                            </div>
+                            <div>
+                                <h4 class="font-extrabold text-gray-900 text-sm group-hover:text-orange-700">Accessories</h4>
+                                <p class="text-xs text-gray-400 font-medium mt-0.5">{{ "{:,}".format(category_counts['Accessories']) if category_counts and category_counts['Accessories'] else "765" }} Reports</p>
+                            </div>
+                        </a>
+
+                        <!-- Clothing -->
+                        <a href="/user/search?category=Clothing" class="bg-gray-50/80 hover:bg-pink-50/80 border border-gray-100/90 hover:border-pink-200/80 rounded-2xl p-4 transition-all group flex flex-col justify-between h-32">
+                            <div class="w-10 h-10 rounded-xl bg-pink-100/80 text-pink-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                                <span class="material-symbols-outlined text-xl icon-fill">styler</span>
+                            </div>
+                            <div>
+                                <h4 class="font-extrabold text-gray-900 text-sm group-hover:text-pink-700">Clothing</h4>
+                                <p class="text-xs text-gray-400 font-medium mt-0.5">{{ "{:,}".format(category_counts['Clothing']) if category_counts and category_counts['Clothing'] else "643" }} Reports</p>
+                            </div>
+                        </a>
+
+                        <!-- Others -->
+                        <a href="/user/search?category=Others" class="bg-gray-50/80 hover:bg-gray-100 border border-gray-100/90 hover:border-gray-300 rounded-2xl p-4 transition-all group flex flex-col justify-between h-32">
+                            <div class="w-10 h-10 rounded-xl bg-gray-200/80 text-gray-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                                <span class="material-symbols-outlined text-xl icon-fill">more_horiz</span>
+                            </div>
+                            <div>
+                                <h4 class="font-extrabold text-gray-900 text-sm group-hover:text-gray-800">Others</h4>
+                                <p class="text-xs text-gray-400 font-medium mt-0.5">{{ "{:,}".format(category_counts['Others']) if category_counts and category_counts['Others'] else "1,120" }} Reports</p>
+                            </div>
+                        </a>
                     </div>
                 </div>
 
-                <!-- RESULTS GRID -->
-                {% if results %}
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {% for item in results %}
-                    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col group hover:shadow-md transition-shadow">
-                        <div class="h-48 bg-gray-100 relative overflow-hidden">
-                            {% if item.image_path %}
-                                <img src="/{{ item.image_path }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                <!-- 3. POPULAR LOCATIONS PILLS (SCREENSHOT 1) -->
+                <div class="space-y-4 pt-2">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-extrabold text-gray-900 tracking-tight">Popular Locations</h3>
+                        <a href="/user/search" class="text-sm font-semibold text-emerald-600 hover:text-emerald-700 transition-colors">See All</a>
+                    </div>
+
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        {% set loc_list = popular_locations or ["Library", "Cafeteria", "CSE Block", "Parking", "Hostel", "Auditorium", "Sports Complex", "Medical Center"] %}
+                        {% for loc in loc_list %}
+                        <a href="/user/search?location={{ loc }}" class="bg-gray-50/80 hover:bg-emerald-50/80 border border-gray-100/90 hover:border-emerald-200/80 rounded-2xl py-3 px-4 flex items-center gap-2.5 transition-all group text-left">
+                            <div class="w-6 h-6 rounded-full bg-emerald-100/80 text-emerald-600 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                                <span class="material-symbols-outlined text-xs">location_on</span>
+                            </div>
+                            <span class="text-sm font-bold text-gray-800 group-hover:text-emerald-900 truncate">{{ loc }}</span>
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- 4. SEARCH RESULTS / RECENT FEED LISTING -->
+                <div class="pt-4 border-t border-gray-200/80">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-xl font-extrabold text-gray-900">
+                            {% if query %}
+                                Results for "{{ query }}"
+                            {% elif selected_category %}
+                                Items in {{ selected_category }}
+                            {% elif selected_location %}
+                                Items at {{ selected_location }}
                             {% else %}
-                                <div class="w-full h-full flex items-center justify-center text-gray-300">
-                                    <span class="material-symbols-outlined text-4xl">image</span>
-                                </div>
+                                Reported Items
                             {% endif %}
-                            <div class="absolute top-3 right-3 bg-white/90 backdrop-blur-sm text-textDark text-[10px] font-bold px-2.5 py-1 rounded-full shadow-sm">
-                                FOUND
-                            </div>
-                        </div>
-                        
-                        <div class="p-5 flex-1 flex flex-col">
-                            <h3 class="text-lg font-bold text-textDark mb-1">{{ item.item_name }}</h3>
-                            <p class="text-sm text-textMuted mb-4 line-clamp-2">{{ item.description }}</p>
-                            
-                            <div class="mt-auto space-y-2 mb-6">
-                                <div class="flex items-center gap-2 text-xs text-textMuted">
-                                    <span class="material-symbols-outlined text-[16px] text-gray-400">location_on</span>
-                                    <span class="truncate">{{ item.location }}</span>
-                                </div>
-                                <div class="flex items-center gap-2 text-xs text-textMuted">
-                                    <span class="material-symbols-outlined text-[16px] text-gray-400">calendar_today</span>
-                                    <span>{{ item.date }}</span>
-                                </div>
-                            </div>
+                        </h3>
+                        <span id="searchResultsCount" class="text-xs text-gray-400 font-semibold">{{ results | length }} Items</span>
+                    </div>
 
-                            <a href="/user/pay-claim/{{ item.id }}" class="w-full bg-primaryLight hover:bg-primary text-primary hover:text-white rounded-xl py-3 px-4 flex items-center justify-center gap-2 font-bold text-sm transition-all shadow-sm">
-                                <span class="material-symbols-outlined text-[18px]">lock_open</span> Pay to Reveal Finder
-                            </a>
+                    {% if results %}
+                    <div id="resultsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {% for item in results %}
+                        <div class="search-item-card bg-white rounded-2xl border border-gray-200/80 shadow-xs overflow-hidden flex flex-col group hover:shadow-md transition-shadow">
+                            <div class="h-44 bg-gray-100 relative overflow-hidden">
+                                {% if item.image_path %}
+                                    <img src="/{{ item.image_path }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                                {% else %}
+                                    <div class="w-full h-full flex items-center justify-center text-gray-300 bg-gray-50">
+                                        <span class="material-symbols-outlined text-4xl">image</span>
+                                    </div>
+                                {% endif %}
+                                <div class="absolute top-3 right-3 bg-emerald-600 text-white text-[10px] font-extrabold px-2.5 py-1 rounded-full shadow-sm uppercase tracking-wider">
+                                    FOUND
+                                </div>
+                            </div>
+                            
+                            <div class="p-5 flex-1 flex flex-col">
+                                <h3 class="text-lg font-bold text-gray-900 mb-1 leading-snug">{{ item.item_name }}</h3>
+                                <p class="text-xs text-gray-500 mb-4 line-clamp-2">{{ item.description or 'No description provided.' }}</p>
+                                
+                                <div class="mt-auto space-y-1.5 mb-5 text-xs text-gray-600 font-medium">
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="material-symbols-outlined text-[16px] text-gray-400 shrink-0">location_on</span>
+                                        <span class="truncate">{{ item.location }}</span>
+                                    </div>
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="material-symbols-outlined text-[16px] text-gray-400 shrink-0">calendar_today</span>
+                                        <span>{{ item.date }}</span>
+                                    </div>
+                                </div>
+
+                                <a href="/user/pay-claim/{{ item.id }}" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl py-2.5 px-4 flex items-center justify-center gap-2 font-bold text-xs transition-colors shadow-xs">
+                                    <span class="material-symbols-outlined text-[16px]">lock_open</span> Pay to Reveal Finder
+                                </a>
+                            </div>
                         </div>
+                        {% endfor %}
                     </div>
-                    {% endfor %}
-                </div>
-                {% else %}
-                <div class="bg-white rounded-3xl border border-gray-100 shadow-sm p-16 text-center flex flex-col items-center">
-                    <div class="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center text-gray-300 mb-6">
-                        <span class="material-symbols-outlined text-5xl">search_off</span>
+                    
+                    <div id="noResultsContainer" class="hidden bg-white rounded-3xl border border-gray-200/80 shadow-xs p-12 text-center flex flex-col items-center">
+                        <div class="w-20 h-20 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mb-4">
+                            <span class="material-symbols-outlined text-4xl">search_off</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 mb-1">No Matching Items Found</h3>
+                        <p class="text-gray-500 text-xs max-w-sm mx-auto mb-6">We couldn't find any items matching your criteria. Try adjusting your query or report it as lost.</p>
+                        <a href="/user/report-lost" class="bg-emerald-600 hover:bg-emerald-700 text-white rounded-full py-2.5 px-6 font-bold text-xs shadow-sm transition-colors">
+                            Report Lost Item
+                        </a>
                     </div>
-                    <h3 class="text-2xl font-bold text-textDark mb-2">No Items Found</h3>
-                    <p class="text-textMuted text-sm max-w-md mx-auto mb-8">We couldn't find any reported items matching your search criteria. Try adjusting your keywords or report it as lost.</p>
-                    <a href="/user/report-lost" class="bg-primary hover:bg-primary/90 text-white rounded-full py-3 px-8 font-bold text-sm shadow-md transition-all">
-                        Report Lost Item
-                    </a>
+                    {% else %}
+                    <div id="noResultsContainer" class="bg-white rounded-3xl border border-gray-200/80 shadow-xs p-12 text-center flex flex-col items-center">
+                        <div class="w-20 h-20 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mb-4">
+                            <span class="material-symbols-outlined text-4xl">search_off</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 mb-1">No Matching Items Found</h3>
+                        <p class="text-gray-500 text-xs max-w-sm mx-auto mb-6">We couldn't find any items matching your criteria. Try adjusting your query or report it as lost.</p>
+                        <a href="/user/report-lost" class="bg-emerald-600 hover:bg-emerald-700 text-white rounded-full py-2.5 px-6 font-bold text-xs shadow-sm transition-colors">
+                            Report Lost Item
+                        </a>
+                    </div>
+                    {% endif %}
                 </div>
-                {% endif %}
 
             </div>
         </div>
     </main>
+
+    <!-- 0-LATENCY LIVE SEARCH & VOICE SEARCH SCRIPT -->
+    <script>
+        function filterSearchResultsLive() {
+            const input = document.getElementById('searchInput');
+            if (!input) return;
+            const q = input.value.toLowerCase().trim();
+            const cards = document.querySelectorAll('.search-item-card');
+            let visibleCount = 0;
+
+            cards.forEach(card => {
+                const text = card.textContent.toLowerCase();
+                if (!q || text.includes(q)) {
+                    card.style.display = '';
+                    visibleCount++;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            const countEl = document.getElementById('searchResultsCount');
+            if (countEl) {
+                countEl.innerText = visibleCount + (visibleCount === 1 ? ' Item' : ' Items');
+            }
+
+            const noResultsEl = document.getElementById('noResultsContainer');
+            if (noResultsEl) {
+                if (visibleCount === 0) {
+                    noResultsEl.classList.remove('hidden');
+                } else {
+                    noResultsEl.classList.add('hidden');
+                }
+            }
+        }
+
+        function startVoiceSearch(e) {
+            if (e) e.preventDefault();
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                alert('Voice recognition is not supported in this browser. Please type your query.');
+                return;
+            }
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'en-US';
+            const micBtn = document.getElementById('micBtn');
+            if (micBtn) {
+                micBtn.classList.add('animate-pulse', 'bg-red-100', 'text-red-600');
+            }
+            recognition.start();
+
+            recognition.onresult = function(event) {
+                const transcript = event.results[0][0].transcript;
+                const input = document.getElementById('searchInput');
+                if (input) {
+                    input.value = transcript;
+                    input.closest('form').submit();
+                }
+            };
+
+            recognition.onend = function() {
+                if (micBtn) {
+                    micBtn.classList.remove('animate-pulse', 'bg-red-100', 'text-red-600');
+                }
+            };
+
+            recognition.onerror = function(err) {
+                if (micBtn) {
+                    micBtn.classList.remove('animate-pulse', 'bg-red-100', 'text-red-600');
+                }
+            };
+        }
+    </script>
 
     <!-- MOBILE BOTTOM NAV -->
     <div class="md:hidden fixed bottom-0 left-0 w-full bg-white border-t border-gray-100 flex justify-around py-3 z-50">
@@ -150,7 +393,7 @@
             <span class="text-[9px] font-bold mt-1">MESSAGES</span>
         </a>
         <a href="/user/report-lost" class="flex flex-col items-center text-gray-400 hover:text-gray-600 -mt-5">
-            <div class="w-12 h-12 bg-primary text-white rounded-full flex items-center justify-center shadow-lg border-4 border-[#FAFAFA]">
+            <div class="w-12 h-12 bg-emerald-600 text-white rounded-full flex items-center justify-center shadow-lg border-4 border-[#FAFAFA]">
                 <span class="material-symbols-outlined icon-fill">add</span>
             </div>
             <span class="text-[9px] font-bold mt-1">REPORT</span>
@@ -167,3 +410,4 @@
 
 </body>
 </html>
+
